@@ -46,6 +46,19 @@ describe("decision API", () => {
     expect(body.admind.selected.format).toBe("pause_card");
   });
 
+  it("returns the S3 protected-context block and delivery shortfall", async () => {
+    const app = buildApi();
+    apps.push(app);
+    const response = await app.inject({ method: "GET", url: "/v1/scenarios/S3" });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.scenario.id).toBe("S3");
+    expect(body.baseline.outcome).toBe("scheduled");
+    expect(body.admind.outcome).toBe("blocked");
+    expect(body.admind.commercialShortfall).toBe(true);
+  });
+
   it("executes a valid decision request", async () => {
     const app = buildApi();
     apps.push(app);

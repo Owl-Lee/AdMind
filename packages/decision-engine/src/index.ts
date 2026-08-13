@@ -163,6 +163,8 @@ function baseline(request: DecisionRequest): DecisionResponse {
     commercialShortfall: false,
     summary: request.scenario.id === "S2"
       ? "传统暂停广告在用户查看画面时立即覆盖全屏，阻断了原本的查看任务。"
+      : request.scenario.id === "S3"
+        ? "传统规则命中高价保量活动后立即插播，没有识别受保护的受伤场景。"
       : "传统规则按预设广告点立即播放 15 秒全屏素材，未理解内容高潮。",
     audit: [
       {
@@ -274,4 +276,4 @@ export function decide(input: DecisionRequest): DecisionResponse {
   };
 }
 
-export { createS1Request, createS2Request } from "./fixtures";
+export { createS1Request, createS2Request, createS3Request } from "./fixtures";

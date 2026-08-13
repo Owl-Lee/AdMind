@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "1.0",
+  "analysisId": "curated-060b30c3b09c",
+  "provider": "curated",
+  "mode": "fixture",
+  "model": "human-authored demonstration baseline",
+  "generatedAt": "2026-08-13T00:00:00.000Z",
+  "media": {
+    "fileName": "admind-charge-demo-720p.mp4",
+    "durationSec": 89.5,
+    "sha256": "060b30c3b09c9734ac7806d940dcde7cc853e4bc73fd63a0eb9f6acb3300debe"
+  },
+  "segments": [
+    {
+      "id": "charge-setup",
+      "startSec": 0,
+      "endSec": 24,
+      "label": "任务建立",
+      "description": "角色进入设施并建立行动目标，叙事张力逐步上升。",
+      "narrativeIntensity": 0.34,
+      "motionIntensity": 0.28,
+      "audioIntensity": 0.31,
+      "dialogueActive": false,
+      "transitionConfidence": 0.32,
+      "sensitiveCategories": [],
+      "confidence": 0.86
+    },
+    {
+      "id": "charge-confrontation",
+      "startSec": 24,
+      "endSec": 68,
+      "label": "机器人战斗",
+      "description": "连续动作、快速切镜与冲突共同构成核心高潮，不适合强制插播。",
+      "narrativeIntensity": 0.96,
+      "motionIntensity": 0.94,
+      "audioIntensity": 0.89,
+      "dialogueActive": false,
+      "transitionConfidence": 0.08,
+      "sensitiveCategories": ["fictional-violence"],
+      "confidence": 0.93
+    },
+    {
+      "id": "charge-aftermath",
+      "startSec": 68,
+      "endSec": 89.5,
+      "label": "冲突结束与离场",
+      "description": "动作结束、镜头与声音缓和，出现可恢复上下文的自然边界。",
+      "narrativeIntensity": 0.18,
+      "motionIntensity": 0.17,
+      "audioIntensity": 0.21,
+      "dialogueActive": false,
+      "transitionConfidence": 0.91,
+      "sensitiveCategories": [],
+      "confidence": 0.9
+    }
+  ],
+  "candidateBreaks": [
+    {
+      "timeSec": 45,
+      "label": "固定广告点命中高潮",
+      "recommendation": "delay",
+      "reasons": ["叙事与运动强度均处于高位", "冲突尚未结束"],
+      "confidence": 0.94,
+      "sourceSegmentIds": ["charge-confrontation"]
+    },
+    {
+      "timeSec": 82,
+      "label": "动作结束后的自然转场",
+      "recommendation": "allow",
+      "reasons": ["动作与声音强度下降", "冲突已经结束", "镜头进入恢复段"],
+      "confidence": 0.91,
+      "sourceSegmentIds": ["charge-aftermath"]
+    }
+  ],
+  "limitations": [
+    "这是人工整理的演示基线，不是 Gemini 或 TwelveLabs 的真实输出。",
+    "运动、音频和转场数值用于验证下游协议与界面，后续将由实测结果替换。"
+  ]
+}

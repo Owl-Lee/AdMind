@@ -107,7 +107,7 @@ const pauseScenario = {
   deliveryMode: "consolidated" as const,
   scenario: {
     id: "S2",
-    title: "暂停查看画面细节 × 相关数码广告",
+    title: "暂停查看画面细节 × 保量游戏广告",
     episodeTitle: "《CHARGE》细节查看场景",
     durationSec: 89.5,
     nominalOpportunitySec: 27,
@@ -134,43 +134,43 @@ const pauseScenario = {
   },
   campaigns: [
     {
-      id: "cmp-novagear-audio",
-      name: "NovaGear 影音设备推广",
-      guaranteed: false,
+      id: "cmp-aurora-game-pause",
+      name: "保量游戏广告（真实截图案例）",
+      guaranteed: true,
       eligible: true,
       bidCpm: 72,
-      relevance: 0.86,
+      relevance: 0.31,
       remainingImpressions: 6240,
       maxDeferralSec: 12,
       creatives: [
         {
-          id: "nova-10s-fullscreen",
-          name: "10 秒全屏产品广告",
+          id: "game-10s-fullscreen",
+          name: "10 秒全屏游戏广告",
           durationSec: 10,
           format: "fullscreen" as const,
           approved: true,
           muted: false,
-          productCategory: "consumer-electronics",
+          productCategory: "game",
           interactionRisk: 0.82,
         },
         {
-          id: "nova-6s-pause-card",
+          id: "game-6s-pause-card",
           name: "6 秒可关闭静音卡片",
           durationSec: 6,
           format: "pause_card" as const,
           approved: true,
           muted: true,
-          productCategory: "consumer-electronics",
+          productCategory: "game",
           interactionRisk: 0.04,
         },
         {
-          id: "nova-6s-boundary-card",
+          id: "game-6s-boundary-card",
           name: "6 秒章节边界卡片",
           durationSec: 6,
           format: "muted_card" as const,
           approved: true,
           muted: true,
-          productCategory: "consumer-electronics",
+          productCategory: "game",
           interactionRisk: 0.08,
         },
       ],
@@ -202,6 +202,89 @@ export function createS2Request(
     scenario: {
       ...pauseScenario.scenario,
       sceneSignals: pauseScenario.scenario.sceneSignals.map((signal) => ({ ...signal })),
+    },
+  };
+}
+
+const protectedScenario = {
+  deliveryMode: "consolidated" as const,
+  scenario: {
+    id: "S3",
+    title: "角色受伤场景 × 高价保量广告",
+    episodeTitle: "《CHARGE》受保护内容场景",
+    durationSec: 89.5,
+    nominalOpportunitySec: 56,
+    safeOpportunitySec: 82,
+    viewerSegment: "长视频动作内容用户",
+    sceneSignals: [
+      {
+        timeSec: 56,
+        label: "角色受伤与冲突未结束",
+        tension: 0.91,
+        transition: false,
+        protectedContext: true,
+        opportunity: "protected" as const,
+      },
+      {
+        timeSec: 82,
+        label: "恢复段备选窗口",
+        tension: 0.12,
+        transition: true,
+        protectedContext: false,
+        opportunity: "boundary" as const,
+      },
+    ],
+  },
+  campaigns: [
+    {
+      id: "cmp-premium-guaranteed",
+      name: "高价保量游戏活动",
+      guaranteed: true,
+      eligible: true,
+      bidCpm: 180,
+      relevance: 0.33,
+      remainingImpressions: 25800,
+      maxDeferralSec: 18,
+      creatives: [
+        {
+          id: "premium-15s-fullscreen",
+          name: "15 秒全屏游戏广告",
+          durationSec: 15,
+          format: "fullscreen" as const,
+          approved: true,
+          muted: false,
+          productCategory: "game",
+          interactionRisk: 0.64,
+        },
+      ],
+    },
+  ],
+  policy: {
+    consentForPersonalization: false,
+    frequencyCount: 0,
+    frequencyCap: 3,
+    userIsNavigating: false,
+    allowedFormats: ["fullscreen"] as const,
+  },
+};
+
+export function createS3Request(
+  strategy: DecisionRequest["strategy"] = "admind",
+): DecisionRequest {
+  return {
+    ...protectedScenario,
+    strategy,
+    policy: {
+      ...protectedScenario.policy,
+      allowedFormats: [...protectedScenario.policy.allowedFormats],
+    },
+    campaigns: protectedScenario.campaigns.map((campaign) => ({
+      ...campaign,
+      creatives: campaign.creatives.map((creative) => ({ ...creative })),
+    })),
+    scenario: {
+      ...protectedScenario.scenario,
+      sceneSignals: protectedScenario.scenario.sceneSignals.map((signal) => ({ ...signal })),
     },
   };
 }

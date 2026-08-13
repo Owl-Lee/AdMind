@@ -4,14 +4,15 @@ AdMind is a commercially-aware, policy-first ad orchestration prototype for long
 
 > When an ad contract must be fulfilled, which complete execution plan creates the least user cost without violating policy?
 
-The current product includes two end-to-end scenarios:
+The current product includes three end-to-end scenarios:
 
 - **S1 — climax scheduling:** compare a fixed 15-second fullscreen break at 00:45 with an approved 6-second muted card at the 01:22 recovery boundary.
 - **S2 — pause protection:** compare a 10-second fullscreen pause takeover with a dismissible 6-second silent card that preserves the inspected frame and playback controls.
+- **S3 — protected context:** compare a high-value guaranteed campaign firing inside an injury scene with a deterministic hard-rule block that records a delivery shortfall.
 
 This is not an ad blocker. It is also not an LLM with permission to bypass policy. AI is bounded to content interpretation and normalized metadata; deterministic code executes hard constraints and ranking.
 
-## What is real in v0.1
+## What is real in v0.2
 
 - Interactive strategy comparison, player timeline, ad overlays and decision inspector.
 - Shared Zod request/response contracts.
@@ -19,8 +20,10 @@ This is not an ad blocker. It is also not an LLM with permission to bypass polic
 - Utility ranking across commercial value, predicted completion, relevance, context safety, interaction safety and disruption.
 - Full audit trail, including rejected candidates.
 - Both a co-located web API and a standalone Fastify adapter backed by the same engine.
+- A provider-neutral video-analysis contract plus working Gemini and TwelveLabs adapter entry points.
+- A cached, human-authored CHARGE analysis baseline clearly labeled as a fixture rather than live model inference.
 - Unit, API integration and server-rendered HTML tests.
-- A licensed excerpt from Blender Studio's `CHARGE`, a cleaned research-derived game creative, and a fictional NovaGear campaign for the interaction scenario.
+- A licensed excerpt from Blender Studio's `CHARGE` and a cleaned research-derived game creative.
 
 ## Quick start
 
@@ -41,6 +44,18 @@ pnpm dev:api
 
 The API listens on `http://127.0.0.1:4000` by default.
 
+### Run a real video analysis
+
+Create a local `.env` and add either `GEMINI_API_KEY` or `TWELVELABS_API_KEY`. Keys are read only by the local command and must never be committed or exposed to the browser.
+
+```bash
+pnpm analyze:video --provider gemini --file public/admind-charge-demo-720p.mp4 --duration 89.5 --output analysis/charge-gemini.json
+
+pnpm analyze:video --provider twelvelabs --file public/admind-charge-demo-720p.mp4 --duration 89.5 --output analysis/charge-twelvelabs.json
+```
+
+Both commands validate and save the same `VideoAnalysis` JSON contract. The public site reads cached analysis, so the deployed demo works without an API key or per-view inference cost.
+
 ## Verification
 
 ```bash
@@ -59,9 +74,9 @@ pnpm build
 
 ## Key routes
 
-- `GET /api/decisions` — complete S1 and S2 baseline/AdMind comparisons.
+- `GET /api/decisions` — complete S1, S2 and S3 baseline/AdMind comparisons.
 - `POST /api/decisions` — execute a validated decision request.
-- Fastify equivalents: `GET /v1/scenarios/S1`, `GET /v1/scenarios/S2`, `POST /v1/decisions`.
+- Fastify equivalents: `GET /v1/scenarios/S1`, `GET /v1/scenarios/S2`, `GET /v1/scenarios/S3`, `POST /v1/decisions`.
 
 ## Repository map
 
@@ -69,7 +84,9 @@ pnpm build
 app/                         Product console and web API
 packages/contracts/          Runtime contracts and shared types
 packages/decision-engine/    Policy filters, ranker, fixtures and tests
+packages/video-analyzer/     Provider adapters, shared prompt and normalization
 services/api/                Standalone Fastify adapter
+analysis/                    Validated cached model or fixture outputs
 docs/                        Architecture and evidence/claims notes
 tests/                       Rendered output verification
 ```
@@ -80,7 +97,7 @@ The repository also includes the full [PRD](docs/PRD.md), [decision engine speci
 
 ## Scope honesty
 
-S1 and S2 are implemented end to end. S3 (protected high-priority-task blocking), persistent decision history and live model inference are the next slices. The product does not label hypotheses as measured business impact.
+S1, S2 and S3 are implemented through the deterministic decision layer. The Gemini and TwelveLabs adapters are implemented but have not been executed in this repository because no provider credentials are stored here; the shipped CHARGE analysis is an explicitly labeled human-authored fixture. Persistent decision history and evaluated live inference remain future slices. The product does not label hypotheses as measured business impact.
 
 ## Demo media
 

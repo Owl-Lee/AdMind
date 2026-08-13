@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createS1Request, createS2Request, decide } from "./index";
+import { createS1Request, createS2Request, createS3Request, decide } from "./index";
 
 describe("AdMind decision engine", () => {
   it("keeps the baseline at the fixed 45 second break", () => {
@@ -112,5 +112,18 @@ describe("AdMind decision engine", () => {
       timeSec: 35,
       format: "muted_card",
     });
+  });
+
+  it("blocks a high-value campaign when every executable plan violates a hard boundary", () => {
+    const result = decide(createS3Request("admind"));
+
+    expect(result.outcome).toBe("blocked");
+    expect(result.selected).toBeNull();
+    expect(result.commercialShortfall).toBe(true);
+    expect(result.audit).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "PROTECTED_CONTEXT", status: "reject" }),
+      expect.objectContaining({ code: "OUTSIDE_DELIVERY_WINDOW", status: "reject" }),
+      expect.objectContaining({ code: "NO_ELIGIBLE_PLAN", status: "reject" }),
+    ]));
   });
 });

@@ -22,7 +22,8 @@
     "test:unit": "vitest run",
     "test:rendered": "pnpm build && node --test tests/rendered-html.test.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "analyze:video": "tsx packages/video-analyzer/src/cli.ts"
   },
   "dependencies": {
     "@fastify/cors": "11.3.0",

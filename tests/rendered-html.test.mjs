@@ -24,6 +24,10 @@ test("server-renders the AdMind decision console", async () => {
   assert.match(html, /高潮插播 · 内容理解/);
   assert.match(html, /暂停查看 · 交互保护/);
   assert.match(html, /保留用户的查看任务/);
+  assert.match(html, /敏感场景 · 硬规则保护/);
+  assert.match(html, /有些边界，价格不能越过/);
+  assert.match(html, /AI 负责看懂，规则负责守住边界/);
+  assert.match(html, /等待 Gemini \/ TwelveLabs 实测替换/);
   assert.match(html, /决策后台/);
   assert.doesNotMatch(html, /搜索决策/);
   assert.doesNotMatch(html, /雷霆大页游/);
@@ -37,6 +41,8 @@ test("server-renders the detailed decision console separately", async () => {
   assert.match(html, /<title>决策后台 — AdMind<\/title>/i);
   assert.match(html, /内容情境与投放窗口/);
   assert.match(html, /为什么这样投/);
+  assert.match(html, /模型可以替换，决策协议不变/);
+  assert.match(html, /敏感保护/);
   assert.doesNotMatch(html, /搜索决策/);
   assert.doesNotMatch(html, /Product demo/);
 });

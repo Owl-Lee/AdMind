@@ -124,3 +124,56 @@ export const DecisionResponseSchema = z.object({
   commercialShortfall: z.boolean(),
 });
 export type DecisionResponse = z.infer<typeof DecisionResponseSchema>;
+
+export const AnalysisProviderSchema = z.enum(["curated", "gemini", "twelvelabs"]);
+export type AnalysisProvider = z.infer<typeof AnalysisProviderSchema>;
+
+export const AnalysisModeSchema = z.enum(["fixture", "live"]);
+export type AnalysisMode = z.infer<typeof AnalysisModeSchema>;
+
+export const VideoAnalysisSegmentSchema = z.object({
+  id: z.string().min(1),
+  startSec: z.number().nonnegative(),
+  endSec: z.number().positive(),
+  label: z.string().min(1),
+  description: z.string().min(1),
+  narrativeIntensity: z.number().min(0).max(1),
+  motionIntensity: z.number().min(0).max(1).nullable(),
+  audioIntensity: z.number().min(0).max(1).nullable(),
+  dialogueActive: z.boolean().nullable(),
+  transitionConfidence: z.number().min(0).max(1),
+  sensitiveCategories: z.array(z.string()),
+  confidence: z.number().min(0).max(1),
+}).refine((segment) => segment.endSec > segment.startSec, {
+  message: "endSec must be greater than startSec",
+  path: ["endSec"],
+});
+export type VideoAnalysisSegment = z.infer<typeof VideoAnalysisSegmentSchema>;
+
+export const CandidateBreakSchema = z.object({
+  timeSec: z.number().nonnegative(),
+  label: z.string().min(1),
+  recommendation: z.enum(["allow", "delay", "block"]),
+  reasons: z.array(z.string().min(1)).min(1),
+  confidence: z.number().min(0).max(1),
+  sourceSegmentIds: z.array(z.string().min(1)),
+});
+export type CandidateBreak = z.infer<typeof CandidateBreakSchema>;
+
+export const VideoAnalysisSchema = z.object({
+  schemaVersion: z.literal("1.0"),
+  analysisId: z.string().min(1),
+  provider: AnalysisProviderSchema,
+  mode: AnalysisModeSchema,
+  model: z.string().min(1),
+  generatedAt: z.string().datetime(),
+  media: z.object({
+    fileName: z.string().min(1),
+    durationSec: z.number().positive(),
+    sha256: z.string().regex(/^[a-f0-9]{64}$/i).nullable(),
+  }),
+  segments: z.array(VideoAnalysisSegmentSchema).min(1),
+  candidateBreaks: z.array(CandidateBreakSchema),
+  limitations: z.array(z.string().min(1)),
+});
+export type VideoAnalysis = z.infer<typeof VideoAnalysisSchema>;

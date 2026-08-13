@@ -1,0 +1,14 @@
+{
+  "name": "@admind/video-analyzer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@admind/contracts": "workspace:*",
+    "@google/genai": "2.17.0",
+    "twelvelabs-js": "1.3.1"
+  }
+}
