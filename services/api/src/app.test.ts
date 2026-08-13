@@ -18,7 +18,7 @@ describe("decision API", () => {
     const body = response.json();
     expect(body.scenario.id).toBe("S1");
     expect(body.baseline.selected.timeSec).toBe(45);
-    expect(body.admind.selected.timeSec).toBe(55);
+    expect(body.admind.selected.timeSec).toBe(82);
   });
 
   it("validates posted decision contracts", async () => {

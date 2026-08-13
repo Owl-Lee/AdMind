@@ -17,10 +17,10 @@ test("server-renders the AdMind decision console", async () => {
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>Decision Console · AdMind<\/title>/i);
-  assert.match(html, /高潮场景/);
+  assert.match(html, /<title>AdMind — AI 广告决策引擎<\/title>/i);
+  assert.match(html, /机器人战斗高潮/);
   assert.match(html, /Baseline/);
   assert.match(html, /AdMind/);
-  assert.match(html, /00:55/);
+  assert.match(html, /01:22/);
   assert.doesNotMatch(html, /Your site is taking shape/);
 });

@@ -4,24 +4,24 @@ const shared = {
   deliveryMode: "consolidated" as const,
   scenario: {
     id: "S1",
-    title: "高潮场景 × 保量游戏广告",
-    episodeTitle: "《临界追踪》· 第 7 集（原创演示内容）",
-    durationSec: 90,
+    title: "机器人战斗高潮 × 保量页游广告",
+    episodeTitle: "《CHARGE》节选（Blender Studio，CC BY 4.0）",
+    durationSec: 89.5,
     nominalOpportunitySec: 45,
-    safeOpportunitySec: 55,
-    viewerSegment: "长视频悬疑内容用户",
+    safeOpportunitySec: 82,
+    viewerSegment: "长视频动作内容用户",
     sceneSignals: [
       {
         timeSec: 45,
-        label: "追逐高潮",
+        label: "机器人近身战斗",
         tension: 0.96,
         transition: false,
         protectedContext: false,
       },
       {
-        timeSec: 55,
-        label: "镜头转场",
-        tension: 0.24,
+        timeSec: 82,
+        label: "角色离场与燃烧空镜",
+        tension: 0.12,
         transition: true,
         protectedContext: false,
       },
@@ -30,16 +30,17 @@ const shared = {
   campaigns: [
     {
       id: "cmp-aurora-game",
-      name: "极昼边境（虚构品牌）",
+      name: "雷霆大页游（真实截图案例）",
       guaranteed: true,
       eligible: true,
       bidCpm: 96,
       relevance: 0.31,
       remainingImpressions: 18420,
+      maxDeferralSec: 40,
       creatives: [
         {
           id: "creative-15s-fullscreen",
-          name: "15 秒全屏主素材",
+          name: "15 秒全屏主素材（真实截图）",
           durationSec: 15,
           format: "fullscreen" as const,
           approved: true,
@@ -49,7 +50,7 @@ const shared = {
         },
         {
           id: "creative-6s-muted",
-          name: "6 秒静音转场版",
+          name: "6 秒静音转场卡片（同素材重排）",
           durationSec: 6,
           format: "muted_card" as const,
           approved: true,

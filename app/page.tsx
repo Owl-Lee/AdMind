@@ -3,8 +3,7 @@ import { createS1Request, decide } from "@admind/decision-engine";
 import { AdMindDemo } from "./components/AdMindDemo";
 
 export const metadata: Metadata = {
-  title: "Decision Console · AdMind",
-  other: { "codex-preview": "development" },
+  title: "AdMind — AI 广告决策引擎",
 };
 
 export default function Home() {

@@ -15,6 +15,7 @@ type RawCandidate = Omit<CandidatePlan, "score" | "scoreBreakdown"> & {
   scene: SceneSignal;
   approved: boolean;
   eligible: boolean;
+  maxDeferralSec: number;
 };
 
 const round = (value: number) => Math.round(value * 1000) / 1000;
@@ -43,6 +44,7 @@ function toCandidate(
     scene,
     approved: creative.approved,
     eligible: campaign.eligible,
+    maxDeferralSec: campaign.maxDeferralSec,
   };
 }
 
@@ -67,6 +69,9 @@ function hardFilter(
   if (!request.policy.allowedFormats.includes(candidate.format)) reject("FORMAT_FORBIDDEN", "当前版位不允许该广告形式。");
   if (request.policy.frequencyCount >= request.policy.frequencyCap) reject("FREQUENCY_CAP", "用户已达到硬频控上限。");
   if (request.policy.userIsNavigating && candidate.format === "fullscreen") reject("NAVIGATION_LOCK", "用户正在导航，禁止全屏打断。");
+  if (candidate.timeSec - request.scenario.nominalOpportunitySec > candidate.maxDeferralSec) {
+    reject("OUTSIDE_DELIVERY_WINDOW", "候选时间超过活动允许的最大延迟窗口。");
+  }
 
   if (audit.length === 0) {
     audit.push({
@@ -247,7 +252,9 @@ export function decide(input: DecisionRequest): DecisionResponse {
     audit,
     rejectedCount,
     commercialShortfall: false,
-    summary: "在不取消保量活动的前提下，将广告推迟 10 秒并切换为 6 秒静音转场版。",
+    summary: `在不取消保量活动的前提下，将广告推迟 ${Math.round(
+      selected.timeSec - request.scenario.nominalOpportunitySec,
+    )} 秒，并把同一素材重排为 6 秒静音转场卡片。`,
   };
 }
 

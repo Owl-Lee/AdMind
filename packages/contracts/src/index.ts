@@ -55,6 +55,7 @@ export const CampaignSchema = z.object({
   bidCpm: z.number().nonnegative(),
   relevance: z.number().min(0).max(1),
   remainingImpressions: z.number().int().nonnegative(),
+  maxDeferralSec: z.number().nonnegative(),
   creatives: z.array(CreativeSchema).min(1),
 });
 export type Campaign = z.infer<typeof CampaignSchema>;

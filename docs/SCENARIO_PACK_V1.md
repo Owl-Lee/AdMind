@@ -34,7 +34,7 @@
 | 允许版位 | 片头、中插；不进入暂停位 |
 | 允许形式 | 15 秒全屏、6 秒静音全屏、6 秒分屏、静态卡片 |
 | 硬频控 | 每会话最多 2 次品牌可视曝光 |
-| 允许延迟 | 名义机会后最多 20 秒 |
+| 允许延迟 | 名义机会后最多 40 秒 |
 | 说明 | 模拟“商业上很难不投”的活动，不影射真实品牌或腾讯合同 |
 
 ### C2：NovaGear 数码新品活动
@@ -82,18 +82,19 @@
 
 ### 3.2 视频设计
 
-建议使用 65 秒原创悬疑片段：
+使用 89.5 秒的 Blender Studio 开放电影 `CHARGE` 节选：
 
 | 时间 | 内容 | 强度 | 自然转场 | 对话连续性 | 广告适宜度 |
 |---|---|---:|---:|---:|---:|
-| 0–32s | 人物发现线索、逐步紧张 | 0.45 | 0.20 | 0.65 | 0.45 |
-| 32–48s | 追逐/关键揭示 | 0.94 | 0.05 | 0.90 | 0.04 |
-| 48–55s | 揭示后的完整反应镜头 | 0.72 | 0.35 | 0.50 | 0.30 |
-| 55–65s | 场景切换与建立镜头 | 0.24 | 0.93 | 0.10 | 0.92 |
+| 0–12s | 角色收集能量 | 0.28 | 0.20 | 0.00 | 0.62 |
+| 12–24s | 警报与机器人苏醒 | 0.68 | 0.12 | 0.00 | 0.24 |
+| 24–67s | 机器人近身战斗与连续反击 | 0.96 | 0.04 | 0.00 | 0.03 |
+| 67–82s | 战局反转、动作逐步平息 | 0.52 | 0.42 | 0.00 | 0.48 |
+| 82–89.5s | 角色离场与燃烧空镜 | 0.12 | 0.94 | 0.00 | 0.93 |
 
 名义中插机会：`45,000ms`  
-安全窗口：`55,000–57,000ms`  
-最大允许延迟：`20,000ms`
+安全窗口：`82,000–89,500ms`  
+最大允许延迟：`40,000ms`
 
 ### 3.3 会话与候选
 
@@ -115,7 +116,7 @@
 首选：
 
 ```text
-将 C1 延后到 55.0s，自然转场时播放已审批 6s 静音版本；
+将 C1 延后到 82.0s，自然转场时播放已审批 6s 静音卡片；
 理由：COMMERCIAL_DELIVERY_URGENT + HIGH_INTERRUPTION_NOW + SAFE_TRANSITION_PREFERRED；
 个性化说明：仅有宽泛上下文证据，不声称观众对游戏感兴趣。
 ```
@@ -137,12 +138,12 @@
 opportunity.created(45s)
 decision.requested
 plan.scored/fullscreen-15s-now(HIGH_INTERRUPTION_NOW, not_selected)
-decision.made/defer(C1, 6s-muted, 55s)
+decision.made/defer(C1, 6s-muted, 82s)
 delivery.deferred
-creative.rendered(55s)
+creative.rendered(82s)
 impression.viewable
 creative.completed | creative.dismissed
-content.resumed(61s, boundary=scene-establishing-shot)
+content.completed(89.5s, boundary=character-exit)
 ```
 
 ## 4. S2 — 查看型暂停与相关数码广告
@@ -343,7 +344,7 @@ ad.navigation_intent_recorded
 1. 展示保证量游戏活动和 18% 剩余目标；
 2. 展示整场计划条和当前集中/分散偏好；
 3. Baseline 在高潮处立即中插；
-4. AdMind 延后到 55 秒安全转场，改用 6 秒已审批版本；
+4. AdMind 延后到 82 秒安全转场，改用 6 秒已审批版本；
 5. 打开决策检查器，指出商业紧急度与低个性化置信度被分开解释。
 
 ### 1:25–2:05 S2 控制权

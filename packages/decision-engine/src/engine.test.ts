@@ -14,12 +14,12 @@ describe("AdMind decision engine", () => {
     });
   });
 
-  it("moves S1 to the safe transition and selects the approved short variant", () => {
+  it("moves S1 to the real video's safe transition and selects the approved short variant", () => {
     const result = decide(createS1Request("admind"));
 
     expect(result.outcome).toBe("scheduled");
     expect(result.selected).toMatchObject({
-      timeSec: 55,
+      timeSec: 82,
       durationSec: 6,
       format: "muted_card",
       muted: true,
@@ -41,6 +41,16 @@ describe("AdMind decision engine", () => {
     expect(result.selected).toBeNull();
     expect(result.commercialShortfall).toBe(true);
     expect(result.audit.some((item) => item.code === "FREQUENCY_CAP")).toBe(true);
+  });
+
+  it("never moves an ad beyond the campaign delivery window", () => {
+    const request = createS1Request("admind");
+    request.campaigns[0].maxDeferralSec = 20;
+    const result = decide(request);
+
+    expect(result.outcome).toBe("scheduled");
+    expect(result.selected?.timeSec).toBe(45);
+    expect(result.audit.some((item) => item.code === "OUTSIDE_DELIVERY_WINDOW")).toBe(true);
   });
 
   it("blocks every commercial plan in a protected context", () => {

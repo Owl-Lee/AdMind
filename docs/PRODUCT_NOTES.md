@@ -15,6 +15,6 @@ If a guaranteed campaign must be delivered, moving it from a high-tension fixed 
 
 This is a hypothesis until an A/B test measures outcomes such as completion, abandonment, accidental click, ad recall, revenue and contract delivery.
 
-## Public asset policy
+## Asset policy
 
-The public repository uses fictional brands and original CSS artwork. Real platform screenshots remain private research evidence and are not shipped as default public assets.
+The private demo ships one real platform/ad screenshot supplied from the research sample so the baseline feels credible. It is clearly disclosed as a non-commercial research example and does not imply cooperation with the platform or advertiser. Before a public GitHub release, replace that screenshot with cleared or synthetic artwork. The `CHARGE` excerpt is attributed to Blender Foundation / Blender Studio under CC BY 4.0.
