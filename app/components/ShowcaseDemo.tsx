@@ -23,95 +23,126 @@ function formatTime(value: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-function DecisionProof({
-  demo,
-  first,
-  analysisRuns,
-  consensus,
-}: {
-  demo: ScenarioDemo;
-  first: boolean;
-  analysisRuns: VideoAnalysis[];
-  consensus: AnalysisConsensus;
-}) {
-  const { scenario, admind } = demo;
-  const isPauseScenario = scenario.id === "S2";
-  const isEthicsScenario = scenario.id === "S3";
-  const selected = admind.selected;
-  const badge = isPauseScenario ? "本页播放器事件" : isEthicsScenario ? "伦理规则样例" : "真实 API 证据";
-  const observationTitle = isPauseScenario
-    ? "稳定暂停持续 2 秒"
-    : isEthicsScenario
-      ? "角色受伤，冲突仍在继续"
-      : "00:45 两次都判为 BLOCK";
-  const observationBody = isPauseScenario
-    ? "页面可见、没有拖动进度，也没有立即恢复播放。"
-    : isEthicsScenario
-      ? "当前示例命中受伤情境；后续会用纪录片与医疗场景补充真实素材。"
-      : `战斗高潮 · 置信度 ${consensus.nominal.confidenceMin.toFixed(2)} · 一致度 ${Math.round(consensus.nominal.agreement * 100)}%。`;
-  const ruleTitle = isPauseScenario
-    ? "只读取当前播放器状态"
-    : isEthicsScenario
-      ? "伦理保护先于商业竞价"
-      : "先避开高潮，再校验完整时长";
-  const ruleBody = isPauseScenario
-    ? "不读取其他应用；拖动、切到后台或恢复播放都会取消广告。"
-    : isEthicsScenario
-      ? "PROTECTED_CONTEXT 优先于 180 CPM，高价不能覆盖保护规则。"
-      : "合同最晚只能延至 01:25；6 秒素材会超过 89.5 秒片尾。";
-  const decisionTitle = isPauseScenario
-    ? "右上角静音卡片"
-    : isEthicsScenario
-      ? "BLOCK"
-      : `${formatTime(selected?.timeSec ?? scenario.safeOpportunitySec)} + ${selected?.durationSec ?? 0} 秒`;
-  const decisionBody = isPauseScenario
-    ? "保留画面和播放控件；用户继续播放时立即消失。"
-    : isEthicsScenario
-      ? "本次不投放，记录交付缺口，等待后续合规窗口补偿。"
-      : "保量活动继续执行，但只使用能够在片尾前完整播完的静音版本。";
+function DecisionMethod({ analysisRuns, consensus }: { analysisRuns: VideoAnalysis[]; consensus: AnalysisConsensus }) {
+  const latestRun = analysisRuns.at(-1) ?? analysisRuns[0];
+  const climax = latestRun.candidateBreaks.find((candidate) => Math.abs(candidate.timeSec - 45) <= 1);
+  const recovery = latestRun.candidateBreaks.find((candidate) => Math.abs(candidate.timeSec - 85) <= 2);
 
   return (
-    <section className="showcase-proof" id={first ? "decision" : undefined}>
-      <div className="showcase-proof-heading">
-        <div><span>ADMIND DECISION</span><h3>这次决定，三步看懂。</h3></div>
-        <b>{badge}</b>
-      </div>
-      <div className="showcase-proof-chain">
-        <article className="observe"><span>01 · 系统观察</span><strong>{observationTitle}</strong><p>{observationBody}</p></article>
+    <section className="method-page" id="decision">
+      <header className="method-hero">
+        <p>HOW ADMIND WORKS</p>
+        <h1>一段视频，如何变成<br />一次投放决定？</h1>
+        <span>现成的视频理解 API 负责看懂内容；AdMind 负责把内容信号、播放器事件与商业边界组合成可执行方案。</span>
+      </header>
+
+      <section className="method-flow" aria-label="AdMind 系统流程">
+        <article>
+          <b>01</b><small>输入</small>
+          <strong>长视频与广告任务</strong>
+          <p>视频文件、广告时长、最晚投放时间和展示形式。</p>
+        </article>
         <i>→</i>
-        <article className="rule"><span>02 · 边界判断</span><strong>{ruleTitle}</strong><p>{ruleBody}</p></article>
+        <article className="api">
+          <b>02</b><small>视频理解 API</small>
+          <strong>看懂场景与节奏</strong>
+          <p>识别动作、情绪、人物状态、镜头变化和自然转场。</p>
+        </article>
         <i>→</i>
-        <article className="decide"><span>03 · 最终决定</span><strong>{decisionTitle}</strong><p>{decisionBody}</p></article>
-      </div>
-      <details className="showcase-proof-details">
-        <summary>展开技术证据</summary>
-        {!isPauseScenario && !isEthicsScenario ? (
-          <div className="showcase-proof-runs">
-            {analysisRuns.map((run, index) => {
-              const nominal = run.candidateBreaks.find((candidate) => Math.abs(candidate.timeSec - scenario.nominalOpportunitySec) <= 1);
-              return <p key={`${run.generatedAt}-${index}`}><b>Run {index + 1}</b><span>{nominal?.label}</span><strong>{nominal?.recommendation.toUpperCase()} · {nominal?.confidence.toFixed(2)}</strong></p>;
-            })}
-            <p><b>硬规则</b><span>完整广告计划越过片尾</span><strong>CONTENT_OVERRUN</strong></p>
+        <article className="engine">
+          <b>03</b><small>AdMind 决策层</small>
+          <strong>组合信号，逐项筛选</strong>
+          <p>先守住体验与伦理边界，再在可用窗口中完成商业目标。</p>
+        </article>
+        <i>→</i>
+        <article className="output">
+          <b>04</b><small>输出</small>
+          <strong>一份可执行计划</strong>
+          <p>什么时候出现、用什么形式、持续多久，或者本次不投放。</p>
+        </article>
+      </section>
+
+      <section className="method-signals">
+        <div className="method-section-heading">
+          <p>THREE SIGNAL LAYERS</p>
+          <h2>系统同时看三类信息。</h2>
+          <span>不是让一个模型包办所有决定，而是把不同来源的信号放进同一套决策流程。</span>
+        </div>
+        <div className="method-signal-grid">
+          <article>
+            <span>内容信号</span><strong>视频里正在发生什么</strong>
+            <p>由 TwelveLabs 分析剧情张力、动作、情绪、人物状态和转场位置。</p>
+            <div><i />高潮识别<i />情绪变化<i />镜头边界</div>
+          </article>
+          <article>
+            <span>交互信号</span><strong>用户正在怎样观看</strong>
+            <p>只读取当前播放器中的暂停、拖动、恢复播放和页面可见性。</p>
+            <div><i />稳定暂停<i />进度拖动<i />页面状态</div>
+          </article>
+          <article>
+            <span>约束信号</span><strong>哪些边界不能越过</strong>
+            <p>伦理保护优先；随后再检查广告时长、最晚时间和商业任务。</p>
+            <div><i />伦理保护<i />完整播放<i />合同时间</div>
+          </article>
+        </div>
+      </section>
+
+      <section className="method-example">
+        <div className="method-example-copy">
+          <p>REAL API EXAMPLE</p>
+          <h2>同一段 CHARGE，<br />两次分析得到一致判断。</h2>
+          <span>系统没有因为“到了固定时间”就插广告，而是先确认当时处于战斗高潮，再寻找剧情恢复后的窗口。</span>
+          <div className="method-example-facts">
+            <div><b>{analysisRuns.length} 次</b><span>独立 API 分析</span></div>
+            <div><b>{Math.round(consensus.nominal.agreement * 100)}%</b><span>高潮判断一致</span></div>
+            <div><b>01:25</b><span>剧情恢复窗口</span></div>
           </div>
-        ) : isPauseScenario ? (
-          <div className="showcase-proof-runs">
-            <p><b>事件</b><span>pause duration ≥ 2s</span><strong>STABLE_PAUSE</strong></p>
-            <p><b>事件</b><span>页面可见且未拖动</span><strong>PLAYER_VISIBLE</strong></p>
-            <p><b>边界</b><span>仅使用当前播放器事件</span><strong>NO_CROSS_APP_DATA</strong></p>
+        </div>
+        <div className="method-timeline-card">
+          <div className="method-timeline-head"><span>内容张力时间线</span><b>真实 API 结果</b></div>
+          <div className="method-timeline">
+            <span className="calm">铺垫</span><span className="rise">张力上升</span><span className="climax">战斗高潮</span><span className="recover">恢复</span>
+            <i className="mark-climax"><b>00:45</b><small>不宜打断</small></i>
+            <i className="mark-recover"><b>01:25</b><small>可以考虑</small></i>
           </div>
-        ) : (
-          <div className="showcase-proof-runs">
-            <p><b>规则</b><span>受保护情境禁止商业打断</span><strong>PROTECTED_CONTEXT</strong></p>
-            <p><b>排序</b><span>硬规则在商业评分之前执行</span><strong>POLICY_FIRST</strong></p>
-            <p><b>结果</b><span>没有合规候选计划</span><strong>DELIVERY_SHORTFALL</strong></p>
+          <div className="method-api-reading">
+            <p><span>00:45</span><strong>{climax?.label ?? "战斗高潮"}</strong><b>继续等待</b></p>
+            <p><span>01:25</span><strong>{recovery?.label ?? "战斗结束，情绪恢复"}</strong><b>进入计划</b></p>
           </div>
-        )}
-      </details>
+        </div>
+      </section>
+
+      <section className="method-responsibility">
+        <div>
+          <p>AI 负责</p>
+          <h2>看懂视频，给出候选时间。</h2>
+          <span>它返回场景说明、时间段和判断置信度，但不直接决定广告一定要播。</span>
+        </div>
+        <i>＋</i>
+        <div>
+          <p>AdMind 负责</p>
+          <h2>守住边界，产出最终计划。</h2>
+          <span>它结合播放器事件、伦理规则、广告时长与商业约束，给出可解释的最终决定。</span>
+        </div>
+      </section>
+
+      <section className="method-stack">
+        <div className="method-section-heading">
+          <p>TECH STACK</p>
+          <h2>目前这套原型用了什么？</h2>
+        </div>
+        <div>
+          <article><span>前端体验</span><strong>React + TypeScript</strong><p>负责视频播放、方案切换和交互事件采集。</p></article>
+          <article><span>视频理解</span><strong>TwelveLabs API</strong><p>上传视频并返回按时间组织的内容理解结果。</p></article>
+          <article><span>决策引擎</span><strong>TypeScript 规则层</strong><p>把 AI 结果转换成候选窗口，再按边界逐项筛选。</p></article>
+          <article><span>验证方式</span><strong>重复分析 + 自动测试</strong><p>比较多次 API 结果，并检查最终计划是否完整可执行。</p></article>
+        </div>
+      </section>
     </section>
   );
 }
 
-function ScenarioExperience({ demo, first, analysisRuns, consensus }: { demo: ScenarioDemo; first: boolean; analysisRuns: VideoAnalysis[]; consensus: AnalysisConsensus }) {
+function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const triggeredRef = useRef<Record<Strategy, boolean>>({ baseline: false, admind: false });
   const resumeAfterAdRef = useRef(false);
@@ -345,44 +376,59 @@ function ScenarioExperience({ demo, first, analysisRuns, consensus }: { demo: Sc
         </div>
 
       </article>
-      <DecisionProof analysisRuns={analysisRuns} consensus={consensus} demo={demo} first={first} />
     </section>
   );
 }
 
 export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDemoProps) {
+  const [view, setView] = useState<"demo" | "decision">("demo");
+
+  useEffect(() => {
+    const syncView = () => setView(window.location.hash === "#decision" ? "decision" : "demo");
+    syncView();
+    window.addEventListener("hashchange", syncView);
+    return () => window.removeEventListener("hashchange", syncView);
+  }, []);
+
+  const switchView = (nextView: "demo" | "decision") => {
+    document.querySelectorAll("video").forEach((video) => video.pause());
+    setView(nextView);
+    window.history.replaceState(null, "", nextView === "demo" ? "#demo" : "#decision");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <div className="showcase-page">
       <header className="showcase-nav">
-        <a className="showcase-brand" href="#top" aria-label="AdMind 首页">
+        <button className="showcase-brand" onClick={() => switchView("demo")} aria-label="AdMind 首页">
           <span className="showcase-brand-mark"><SparkIcon /></span>
           <strong>AdMind</strong>
-        </a>
-        <nav aria-label="主页导航">
-          <a href="#demo">体验演示</a>
-          <a href="#decision">决策方式</a>
+        </button>
+        <nav aria-label="页面切换">
+          <button aria-current={view === "demo" ? "page" : undefined} className={view === "demo" ? "active" : ""} onClick={() => switchView("demo")}>体验演示</button>
+          <button aria-current={view === "decision" ? "page" : undefined} className={view === "decision" ? "active" : ""} onClick={() => switchView("decision")}>决策方式</button>
         </nav>
       </header>
 
       <main id="top">
-        <section className="showcase-hero">
-          <p className="showcase-kicker">AI AD DECISION ENGINE</p>
-          <h1>广告必须出现，<br />也不必毁掉剧情。</h1>
-          <p className="showcase-lead">AdMind 理解内容与用户动作，在商业约束下决定广告何时出现、以什么形式出现，以及何时不该出现。</p>
-          <div className="showcase-actions">
-            <a className="showcase-primary" href="#demo">开始体验</a>
-            <a className="showcase-secondary" href="#decision">查看决策方式 <ChevronIcon /></a>
-          </div>
-        </section>
+        <div hidden={view !== "demo"}>
+            <section className="showcase-hero">
+              <p className="showcase-kicker">AI AD DECISION ENGINE</p>
+              <h1>广告必须出现，<br />也不必毁掉剧情。</h1>
+              <p className="showcase-lead">AdMind 理解内容与用户动作，在商业约束下决定广告何时出现、以什么形式出现，以及何时不该出现。</p>
+              <div className="showcase-actions">
+                <a className="showcase-primary" href="#demo">开始体验</a>
+                <button className="showcase-secondary" onClick={() => switchView("decision")}>查看决策方式 <ChevronIcon /></button>
+              </div>
+            </section>
 
-        <div className="showcase-sequence" id="demo">
-          {scenarios.map((demo, index) => <ScenarioExperience analysisRuns={analysisRuns} consensus={consensus} demo={demo} first={index === 0} key={demo.scenario.id} />)}
+            <div className="showcase-sequence" id="demo">
+              {scenarios.map((demo, index) => <ScenarioExperience demo={demo} first={index === 0} key={demo.scenario.id} />)}
+            </div>
         </div>
-
-        <section className="showcase-engineering-note">
-          <p>页面只保留理解产品所需的证据。</p>
-          <h2>原始响应、完整审计代码与测试留在项目仓库。</h2>
-        </section>
+        <div hidden={view !== "decision"}>
+          <DecisionMethod analysisRuns={analysisRuns} consensus={consensus} />
+        </div>
       </main>
 
       <footer className="showcase-footer">
