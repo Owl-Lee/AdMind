@@ -1,7 +1,7 @@
 import cors from "@fastify/cors";
 import Fastify from "fastify";
 import { DecisionRequestSchema } from "@admind/contracts";
-import { createS1Request, decide } from "@admind/decision-engine";
+import { createS1Request, createS2Request, decide } from "@admind/decision-engine";
 
 export function buildApi() {
   const app = Fastify({ logger: true });
@@ -16,6 +16,12 @@ export function buildApi() {
     scenario: createS1Request("admind").scenario,
     baseline: decide(createS1Request("baseline")),
     admind: decide(createS1Request("admind")),
+  }));
+
+  app.get("/v1/scenarios/S2", async () => ({
+    scenario: createS2Request("admind").scenario,
+    baseline: decide(createS2Request("baseline")),
+    admind: decide(createS2Request("admind")),
   }));
 
   app.post("/v1/decisions", async (request, reply) => {

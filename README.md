@@ -4,10 +4,10 @@ AdMind is a commercially-aware, policy-first ad orchestration prototype for long
 
 > When an ad contract must be fulfilled, which complete execution plan creates the least user cost without violating policy?
 
-The current S1 vertical slice compares two strategies for the same guaranteed campaign:
+The current product includes two end-to-end scenarios:
 
-- **Baseline:** play a 15-second fullscreen creative at the fixed 00:45 break, even though the story is at its climax.
-- **AdMind:** defer by 37 seconds to the 01:22 safe transition and reflow the same campaign material into an approved 6-second muted card.
+- **S1 — climax scheduling:** compare a fixed 15-second fullscreen break at 00:45 with an approved 6-second muted card at the 01:22 recovery boundary.
+- **S2 — pause protection:** compare a 10-second fullscreen pause takeover with a dismissible 6-second silent card that preserves the inspected frame and playback controls.
 
 This is not an ad blocker. It is also not an LLM with permission to bypass policy. AI is bounded to content interpretation and normalized metadata; deterministic code executes hard constraints and ranking.
 
@@ -20,7 +20,7 @@ This is not an ad blocker. It is also not an LLM with permission to bypass polic
 - Full audit trail, including rejected candidates.
 - Both a co-located web API and a standalone Fastify adapter backed by the same engine.
 - Unit, API integration and server-rendered HTML tests.
-- A licensed excerpt from Blender Studio's `CHARGE`, plus a real ad screenshot used as private product-research evidence.
+- A licensed excerpt from Blender Studio's `CHARGE`, a cleaned research-derived game creative, and a fictional NovaGear campaign for the interaction scenario.
 
 ## Quick start
 
@@ -59,9 +59,9 @@ pnpm build
 
 ## Key routes
 
-- `GET /api/decisions` — complete S1 baseline and AdMind result.
+- `GET /api/decisions` — complete S1 and S2 baseline/AdMind comparisons.
 - `POST /api/decisions` — execute a validated decision request.
-- Fastify equivalents: `GET /v1/scenarios/S1`, `POST /v1/decisions`.
+- Fastify equivalents: `GET /v1/scenarios/S1`, `GET /v1/scenarios/S2`, `POST /v1/decisions`.
 
 ## Repository map
 
@@ -80,12 +80,12 @@ The repository also includes the full [PRD](docs/PRD.md), [decision engine speci
 
 ## Scope honesty
 
-S1 is implemented end to end. S2 (pause-card interaction protection), S3 (protected health-task blocking), persistent decision history and live model inference are the next slices. The product does not label hypotheses as measured business impact.
+S1 and S2 are implemented end to end. S3 (protected high-priority-task blocking), persistent decision history and live model inference are the next slices. The product does not label hypotheses as measured business impact.
 
 ## Demo media
 
 - `CHARGE` is credited to Blender Foundation / Blender Studio and used under CC BY 4.0.
-- The real platform/ad screenshot is included only for a private, non-commercial research demo. It does not imply cooperation with the platform or advertiser; replace it with cleared or synthetic artwork before making the repository public.
+- The cleaned game creative is included only for a private, non-commercial research demo and does not imply cooperation with the platform or advertiser. Replace it with fully cleared artwork before making the repository public.
 
 ## License
 

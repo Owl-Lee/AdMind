@@ -17,6 +17,7 @@ const shared = {
         tension: 0.96,
         transition: false,
         protectedContext: false,
+        opportunity: "midroll" as const,
       },
       {
         timeSec: 82,
@@ -24,6 +25,7 @@ const shared = {
         tension: 0.12,
         transition: true,
         protectedContext: false,
+        opportunity: "boundary" as const,
       },
     ],
   },
@@ -97,6 +99,109 @@ export function createS1Request(
     scenario: {
       ...shared.scenario,
       sceneSignals: shared.scenario.sceneSignals.map((signal) => ({ ...signal })),
+    },
+  };
+}
+
+const pauseScenario = {
+  deliveryMode: "consolidated" as const,
+  scenario: {
+    id: "S2",
+    title: "暂停查看画面细节 × 相关数码广告",
+    episodeTitle: "《CHARGE》细节查看场景",
+    durationSec: 89.5,
+    nominalOpportunitySec: 27,
+    safeOpportunitySec: 35,
+    viewerSegment: "长视频主动查看用户",
+    sceneSignals: [
+      {
+        timeSec: 27,
+        label: "用户暂停查看画面细节",
+        tension: 0.4,
+        transition: false,
+        protectedContext: false,
+        opportunity: "pause" as const,
+      },
+      {
+        timeSec: 35,
+        label: "下一章节自然边界",
+        tension: 0.2,
+        transition: true,
+        protectedContext: false,
+        opportunity: "boundary" as const,
+      },
+    ],
+  },
+  campaigns: [
+    {
+      id: "cmp-novagear-audio",
+      name: "NovaGear 影音设备推广",
+      guaranteed: false,
+      eligible: true,
+      bidCpm: 72,
+      relevance: 0.86,
+      remainingImpressions: 6240,
+      maxDeferralSec: 12,
+      creatives: [
+        {
+          id: "nova-10s-fullscreen",
+          name: "10 秒全屏产品广告",
+          durationSec: 10,
+          format: "fullscreen" as const,
+          approved: true,
+          muted: false,
+          productCategory: "consumer-electronics",
+          interactionRisk: 0.82,
+        },
+        {
+          id: "nova-6s-pause-card",
+          name: "6 秒可关闭静音卡片",
+          durationSec: 6,
+          format: "pause_card" as const,
+          approved: true,
+          muted: true,
+          productCategory: "consumer-electronics",
+          interactionRisk: 0.04,
+        },
+        {
+          id: "nova-6s-boundary-card",
+          name: "6 秒章节边界卡片",
+          durationSec: 6,
+          format: "muted_card" as const,
+          approved: true,
+          muted: true,
+          productCategory: "consumer-electronics",
+          interactionRisk: 0.08,
+        },
+      ],
+    },
+  ],
+  policy: {
+    consentForPersonalization: false,
+    frequencyCount: 0,
+    frequencyCap: 3,
+    userIsNavigating: false,
+    allowedFormats: ["fullscreen", "muted_card", "pause_card"] as const,
+  },
+};
+
+export function createS2Request(
+  strategy: DecisionRequest["strategy"] = "admind",
+): DecisionRequest {
+  return {
+    ...pauseScenario,
+    strategy,
+    policy: {
+      ...pauseScenario.policy,
+      allowedFormats: [...pauseScenario.policy.allowedFormats],
+    },
+    campaigns: pauseScenario.campaigns.map((campaign) => ({
+      ...campaign,
+      creatives: campaign.creatives.map((creative) => ({ ...creative })),
+    })),
+    scenario: {
+      ...pauseScenario.scenario,
+      sceneSignals: pauseScenario.scenario.sceneSignals.map((signal) => ({ ...signal })),
     },
   };
 }

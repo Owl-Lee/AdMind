@@ -23,7 +23,7 @@ flowchart LR
 - `packages/decision-engine/` — deterministic filters, ranking, fixtures and tests.
 - `services/api/` — standalone Fastify adapter for production-style integration.
 - `app/api/decisions/` — co-located HTTP adapter so the demo remains one-command runnable.
-- `db/` — Drizzle persistence adapter boundary; persistence is intentionally not required for S1.
+- `db/` — Drizzle persistence adapter boundary; persistence is intentionally not required for the current deterministic scenarios.
 
 The same engine powers the page, the co-located route, and the Fastify service. This prevents the portfolio UI from becoming a disconnected mockup.
 
@@ -37,4 +37,4 @@ Hard rules run before ranking. A rejected plan can never win because of a high b
 
 ## Current slice and next slices
 
-Version 0.1 implements the S1 vertical slice end to end. S2 pause-card interaction protection and S3 protected health-task blocking are deliberately visible as the next product slices, not presented as finished functionality.
+Version 0.2 implements S1 climax scheduling and S2 pause-card interaction protection end to end. S3 protected high-priority-task blocking remains the next product slice and is not presented as finished functionality.

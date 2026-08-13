@@ -1,11 +1,14 @@
 import { DecisionRequestSchema } from "@admind/contracts";
-import { createS1Request, decide } from "@admind/decision-engine";
+import { createS1Request, createS2Request, decide } from "@admind/decision-engine";
 
 export async function GET() {
+  const s1 = createS1Request("admind");
+  const s2 = createS2Request("admind");
   return Response.json({
-    scenario: createS1Request("admind").scenario,
-    baseline: decide(createS1Request("baseline")),
-    admind: decide(createS1Request("admind")),
+    scenarios: [
+      { scenario: s1.scenario, baseline: decide(createS1Request("baseline")), admind: decide(s1) },
+      { scenario: s2.scenario, baseline: decide(createS2Request("baseline")), admind: decide(s2) },
+    ],
   });
 }
 

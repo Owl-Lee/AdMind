@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import type { DecisionResponse, Scenario, Strategy } from "@admind/contracts";
+import type { Strategy } from "@admind/contracts";
 import {
   CheckIcon,
   ChevronIcon,
@@ -12,11 +11,11 @@ import {
   ShieldIcon,
   SparkIcon,
 } from "./icons";
+import { AdCreative } from "./AdCreative";
+import type { ScenarioDemo } from "./ShowcaseDemo";
 
 type DemoProps = {
-  scenario: Scenario;
-  baseline: DecisionResponse;
-  admind: DecisionResponse;
+  scenarios: ScenarioDemo[];
 };
 
 const scoreLabels = {
@@ -34,15 +33,19 @@ function formatTime(value: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
+export function AdMindDemo({ scenarios }: DemoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const triggeredRef = useRef<Record<Strategy, boolean>>({ baseline: false, admind: false });
   const resumeAfterAdRef = useRef(false);
   const [strategy, setStrategy] = useState<Strategy>("admind");
+  const [activeScenarioId, setActiveScenarioId] = useState(scenarios[0].scenario.id);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
   const [adRemaining, setAdRemaining] = useState<number | null>(null);
   const [inspectorTab, setInspectorTab] = useState<"explain" | "audit">("explain");
+  const activeDemo = scenarios.find((item) => item.scenario.id === activeScenarioId) ?? scenarios[0];
+  const { scenario, baseline, admind } = activeDemo;
+  const isPauseScenario = scenario.id === "S2";
   const decision = strategy === "admind" ? admind : baseline;
   const selected = decision.selected;
   const adActive = adRemaining !== null;
@@ -69,10 +72,18 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
 
   const jumpToDecision = () => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !selected) return;
     triggeredRef.current[strategy] = false;
     setAdRemaining(null);
-    video.currentTime = Math.max(0, (selected?.timeSec ?? 0) - 2.5);
+    if (isPauseScenario) {
+      video.currentTime = selected.timeSec;
+      video.pause();
+      setTime(selected.timeSec);
+      triggeredRef.current[strategy] = true;
+      setAdRemaining(selected.durationSec);
+      return;
+    }
+    video.currentTime = Math.max(0, selected.timeSec - 2.5);
     void video.play();
   };
 
@@ -86,9 +97,23 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
     setTime(0);
   };
 
+  const switchScenario = (nextScenarioId: string) => {
+    const video = videoRef.current;
+    video?.pause();
+    if (video) video.currentTime = 0;
+    triggeredRef.current = { baseline: false, admind: false };
+    resumeAfterAdRef.current = false;
+    setActiveScenarioId(nextScenarioId);
+    setStrategy("admind");
+    setAdRemaining(null);
+    setTime(0);
+    setInspectorTab("explain");
+  };
+
   const togglePlayback = () => {
     const video = videoRef.current;
     if (!video || (adActive && selected?.format === "fullscreen")) return;
+    if (adActive) setAdRemaining(null);
     if (video.paused) void video.play();
     else video.pause();
   };
@@ -107,7 +132,7 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
     if (!video) return;
     const current = video.currentTime;
     setTime(current);
-    if (!selected || triggeredRef.current[strategy] || current < selected.timeSec) return;
+    if (isPauseScenario || !selected || triggeredRef.current[strategy] || current < selected.timeSec) return;
 
     triggeredRef.current[strategy] = true;
     setAdRemaining(selected.durationSec);
@@ -115,6 +140,14 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
       resumeAfterAdRef.current = !video.paused;
       video.pause();
     }
+  };
+
+  const handlePause = () => {
+    setPlaying(false);
+    const video = videoRef.current;
+    if (!isPauseScenario || !video || video.currentTime < 1 || triggeredRef.current[strategy] || !selected) return;
+    triggeredRef.current[strategy] = true;
+    setAdRemaining(selected.durationSec);
   };
 
   const nominalLeft = `${(scenario.nominalOpportunitySec / scenario.durationSec) * 100}%`;
@@ -139,19 +172,26 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
           <div className="intro-row">
             <div>
               <div className="title-line">
-                <span className="scenario-id">S1</span>
+                <span className="scenario-id">{scenario.id}</span>
                 <h2>{scenario.title}</h2>
                 <span className="live-badge"><span />实时模拟</span>
               </div>
-              <p>真实开放电影 × 真实广告截图：比较固定插播与情境感知编排，商业约束保持不变。</p>
+              <p>{isPauseScenario ? "查看型暂停 × 相关广告：比较覆盖式广告与交互保护策略。" : "真实开放电影 × 真实广告画面：比较固定插播与情境感知编排，商业约束保持不变。"}</p>
+            </div>
+            <div className="scenario-switcher" role="tablist" aria-label="选择决策场景">
+              {scenarios.map((item) => (
+                <button className={item.scenario.id === activeScenarioId ? "selected" : ""} key={item.scenario.id} onClick={() => switchScenario(item.scenario.id)} role="tab">
+                  {item.scenario.id === "S1" ? "高潮插播" : "暂停查看"}
+                </button>
+              ))}
             </div>
           </div>
 
           <section className="metric-strip" aria-label="本次会话指标">
-            <article><span>商业约束</span><strong>保量活动</strong><small><CheckIcon />资格已校验</small></article>
-            <article><span>原定广告点</span><strong>{formatTime(scenario.nominalOpportunitySec)}</strong><small>处于内容高潮</small></article>
-            <article><span>安全转场</span><strong>{formatTime(scenario.safeOpportunitySec)}</strong><small className="positive">+{safeDelta} 秒可恢复</small></article>
-            <article><span>用户研究倾向</span><strong>8 / 9</strong><small>更偏好集中看完 <i>小样本</i></small></article>
+            <article><span>商业约束</span><strong>{isPauseScenario ? "相关活动" : "保量活动"}</strong><small><CheckIcon />资格已校验</small></article>
+            <article><span>{isPauseScenario ? "暂停机会" : "原定广告点"}</span><strong>{formatTime(scenario.nominalOpportunitySec)}</strong><small>{isPauseScenario ? "用户主动停止播放" : "处于内容高潮"}</small></article>
+            <article><span>{isPauseScenario ? "查看意图" : "安全转场"}</span><strong>{isPauseScenario ? "0.91" : formatTime(scenario.safeOpportunitySec)}</strong><small className="positive">{isPauseScenario ? "INSPECTION" : `+${safeDelta} 秒可恢复`}</small></article>
+            <article><span>{isPauseScenario ? "安全区域" : "用户研究倾向"}</span><strong>{isPauseScenario ? "右上" : "8 / 9"}</strong><small>{isPauseScenario ? "避开主体与播放控件" : <>更偏好集中看完 <i>小样本</i></>}</small></article>
           </section>
 
           <div className="strategy-bar">
@@ -161,7 +201,7 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
               </span>
               <div>
                 <strong>{strategy === "admind" ? "AdMind 情境策略" : "Baseline 固定策略"}</strong>
-                <small>{strategy === "admind" ? "硬约束优先 · 完整计划排序 · 可审计" : "固定时点 · 主素材优先 · 不理解剧情"}</small>
+                <small>{strategy === "admind" ? "硬约束优先 · 完整计划排序 · 可审计" : isPauseScenario ? "暂停即展示 · 主素材优先 · 不识别用户任务" : "固定时点 · 主素材优先 · 不理解剧情"}</small>
               </div>
             </div>
             <div className="segmented" role="group" aria-label="决策策略">
@@ -176,7 +216,7 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
                 <video
                   className="content-video"
                   onEnded={() => setPlaying(false)}
-                  onPause={() => setPlaying(false)}
+                  onPause={handlePause}
                   onPlay={() => setPlaying(true)}
                   onTimeUpdate={syncPlayback}
                   playsInline
@@ -187,29 +227,18 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
                   <track default kind="captions" label="中文" src="/charge-demo-zh.vtt" srcLang="zh" />
                 </video>
                 <div className="video-topline">
-                  <span>CHARGE · Blender Studio · CC BY 4.0</span>
-                  <span>机器人战斗 · 真实片段</span>
+                  <span>{isPauseScenario ? "用户正在查看画面细节" : "CHARGE · Blender Studio · CC BY 4.0"}</span>
+                  <span>{isPauseScenario ? "00:27 查看型暂停" : "机器人战斗 · 真实片段"}</span>
                 </div>
 
                 {adActive && selected ? (
                   <div className={selected.format === "fullscreen" ? "ad-overlay fullscreen real-ad" : "ad-overlay card real-ad-card"}>
-                    <Image
-                      alt="视频平台中出现的游戏广告实测截图"
-                      fill
-                      priority
-                      sizes={selected.format === "fullscreen" ? "(max-width: 900px) 100vw, 65vw" : "270px"}
-                      src="/game-ad-clean.png"
+                    <AdCreative
+                      fullscreen={selected.format === "fullscreen"}
+                      onDismiss={() => setAdRemaining(null)}
+                      remaining={adRemaining}
+                      scenarioId={scenario.id}
                     />
-                    {selected.format === "fullscreen" ? (
-                      <>
-                        <div className="ad-badge real-countdown">广告 · {adRemaining}s</div>
-                      </>
-                    ) : (
-                      <>
-                        <span className="native-ad-label">广告 · {adRemaining}s</span>
-                        <span className="native-muted">静音</span>
-                      </>
-                    )}
                   </div>
                 ) : null}
 
@@ -239,21 +268,21 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
                 </div>
                 <div className="timeline" aria-label="视频时间轴">
                   <div className="timeline-rail">
-                    <span className="segment calm" style={{ width: "13.4%" }} />
-                    <span className="segment rising" style={{ left: "13.4%", width: "13.4%" }} />
-                    <span className="segment climax" style={{ left: "26.8%", width: "48.1%" }} />
-                    <span className="segment recovery" style={{ left: "74.9%", width: "25.1%" }} />
+                    <span className="segment calm" style={{ width: isPauseScenario ? "22%" : "13.4%" }} />
+                    <span className="segment rising" style={{ left: isPauseScenario ? "22%" : "13.4%", width: isPauseScenario ? "18%" : "13.4%" }} />
+                    <span className="segment climax" style={{ left: isPauseScenario ? "40%" : "26.8%", width: isPauseScenario ? "24%" : "48.1%" }} />
+                    <span className="segment recovery" style={{ left: isPauseScenario ? "64%" : "74.9%", width: isPauseScenario ? "36%" : "25.1%" }} />
                     <span className="marker nominal" style={{ left: nominalLeft }}><i />{formatTime(scenario.nominalOpportunitySec)}</span>
                     <span className="marker safe" style={{ left: safeLeft }}><i />{formatTime(scenario.safeOpportunitySec)}</span>
                     <span className="playhead" style={{ left: `${(time / scenario.durationSec) * 100}%` }} />
                   </div>
-                  <div className="timeline-labels">
-                    <span>盗取能源</span><span>警报升高</span><span className="danger-label">机器人战斗</span><span className="safe-label">反击与离场</span>
+                  <div className={isPauseScenario ? "timeline-labels pause-labels" : "timeline-labels"}>
+                    <span>{isPauseScenario ? "浏览内容" : "盗取能源"}</span><span>{isPauseScenario ? "关键细节" : "警报升高"}</span><span className="danger-label">{isPauseScenario ? "查看型暂停" : "机器人战斗"}</span><span className="safe-label">{isPauseScenario ? "章节边界" : "反击与离场"}</span>
                   </div>
                 </div>
                 <div className="timeline-legend">
-                  <span><i className="legend-dot danger" />固定广告点</span>
-                  <span><i className="legend-dot safe" />AdMind 推荐点</span>
+                  <span><i className="legend-dot danger" />{isPauseScenario ? "暂停机会" : "固定广告点"}</span>
+                  <span><i className="legend-dot safe" />{isPauseScenario ? "延后备选" : "AdMind 推荐点"}</span>
                   <span><i className="legend-line" />当前播放位置</span>
                 </div>
               </div>
@@ -296,9 +325,9 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
                     })}
                   </div>
                   {strategy === "admind" ? (
-                    <div className="constraint-note"><ShieldIcon /><p><strong>硬约束未被效用分覆盖</strong><span>未审核素材已拒绝；保量合同得到履行。</span></p></div>
+                    <div className="constraint-note"><ShieldIcon /><p><strong>硬约束未被效用分覆盖</strong><span>{isPauseScenario ? "全屏素材因交互冲突被拒绝；相关性不能覆盖用户控制权。" : "未审核素材已拒绝；保量合同得到履行。"}</span></p></div>
                   ) : (
-                    <div className="constraint-note baseline-note"><ClockIcon /><p><strong>未读取场景张力</strong><span>命中固定广告点后立即投放。</span></p></div>
+                    <div className="constraint-note baseline-note"><ClockIcon /><p><strong>{isPauseScenario ? "未识别暂停意图" : "未读取场景张力"}</strong><span>{isPauseScenario ? "用户暂停后立即展示全屏主素材。" : "命中固定广告点后立即投放。"}</span></p></div>
                   )}
                 </div>
               ) : (
@@ -321,24 +350,24 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
             </div>
             <div className="comparison-grid">
               <article className="comparison-card baseline-card">
-                <header><span><ClockIcon /></span><div><small>BASELINE</small><strong>固定点即时插播</strong></div></header>
-                <div className="comparison-plan"><b>{formatTime(scenario.nominalOpportunitySec)}</b><span>15 秒真实页游截图 · 全屏</span></div>
-                <ul><li>履行保量合同</li><li className="negative">中断机器人战斗</li><li className="negative">遮挡内容并迫使等待</li></ul>
+                <header><span><ClockIcon /></span><div><small>BASELINE</small><strong>{isPauseScenario ? "暂停即全屏覆盖" : "固定点即时插播"}</strong></div></header>
+                <div className="comparison-plan"><b>{formatTime(scenario.nominalOpportunitySec)}</b><span>{isPauseScenario ? "10 秒 NovaGear 主素材 · 全屏" : "15 秒真实游戏广告 · 全屏"}</span></div>
+                <ul>{isPauseScenario ? <><li>广告获得完整曝光</li><li className="negative">遮挡用户正在查看的画面</li><li className="negative">阻断播放与进度控制</li></> : <><li>履行保量合同</li><li className="negative">中断机器人战斗</li><li className="negative">遮挡内容并迫使等待</li></>}</ul>
               </article>
               <div className="versus"><span>VS</span><i /></div>
               <article className="comparison-card smart-card">
-                <header><span><SparkIcon /></span><div><small>ADMIND</small><strong>安全转场编排</strong></div></header>
-                <div className="comparison-plan"><b>{formatTime(scenario.safeOpportunitySec)}</b><span>同素材 · 6 秒静音卡片</span></div>
-                <ul><li>同样履行保量合同</li><li>避开内容高潮</li><li>保留播放控件与上下文</li></ul>
+                <header><span><SparkIcon /></span><div><small>ADMIND</small><strong>{isPauseScenario ? "查看意图保护" : "安全转场编排"}</strong></div></header>
+                <div className="comparison-plan"><b>{formatTime(isPauseScenario ? scenario.nominalOpportunitySec : scenario.safeOpportunitySec)}</b><span>同活动 · 6 秒可关闭静音卡片</span></div>
+                <ul>{isPauseScenario ? <><li>仅使用明确相关的活动</li><li>保留暂停画面</li><li>关闭与播放控制保持独立</li></> : <><li>同样履行保量合同</li><li>避开内容高潮</li><li>保留播放控件与上下文</li></>}</ul>
               </article>
               <article className="impact-card">
                 <span>预期影响（待 A/B 验证）</span>
-                <div><strong>-60%</strong><small>单次广告时长</small></div>
-                <div><strong>+{Math.round(safeDelta)}s</strong><small>推迟至恢复窗口</small></div>
+                <div><strong>{isPauseScenario ? "保留" : "-60%"}</strong><small>{isPauseScenario ? "原暂停画面" : "单次广告时长"}</small></div>
+                <div><strong>{isPauseScenario ? "0" : `+${Math.round(safeDelta)}s`}</strong><small>{isPauseScenario ? "自动跳转" : "推迟至恢复窗口"}</small></div>
                 <p>这些是产品假设，不伪装成线上实验结论。</p>
               </article>
             </div>
-            <p className="asset-disclosure">内容素材：《CHARGE》© Blender Foundation / Blender Studio，CC BY 4.0。广告画面来自用户实测截图，仅用于非商业产品研究演示，不代表平台或广告主合作。</p>
+            <p className="asset-disclosure">内容素材：《CHARGE》© Blender Foundation / Blender Studio，CC BY 4.0。游戏广告画面仅用于非商业产品研究演示；NovaGear 为虚构演示品牌，不代表平台或广告主合作。</p>
           </section>
         </section>
       </main>

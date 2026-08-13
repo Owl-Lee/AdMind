@@ -160,6 +160,29 @@ button { color: inherit; }
 .native-ad-label, .native-muted { position: absolute; z-index: 2; padding: 4px 7px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; background: rgba(5,8,16,.72); backdrop-filter: blur(6px); color: rgba(255,255,255,.94); font-size: 7px; font-weight: 800; line-height: 1; }
 .native-ad-label { top: 8px; right: 8px; }
 .native-muted { right: 8px; bottom: 8px; color: rgba(255,255,255,.76); }
+.native-ad-close { position: absolute; top: 8px; right: 8px; z-index: 4; display: grid; width: 30px; height: 30px; place-items: center; padding: 0; border: 1px solid rgba(255,255,255,.42); border-radius: 50%; color: white; background: rgba(5,8,16,.78); box-shadow: 0 4px 14px rgba(0,0,0,.28); cursor: pointer; font-size: 18px; line-height: 1; }
+.native-ad-close:hover, .native-ad-close:focus-visible { background: #fff; color: #10131d; outline: 2px solid #9b89ff; outline-offset: 2px; }
+.nova-creative { position: absolute; inset: 0; overflow: hidden; color: white; background: radial-gradient(circle at 22% 28%, #866eff 0, #4c35bd 18%, transparent 43%), linear-gradient(135deg, #101426, #171b2c 60%, #090c15); }
+.nova-creative::before { content: ""; position: absolute; width: 48%; aspect-ratio: 1; border: 1px solid rgba(255,255,255,.13); border-radius: 50%; box-shadow: 0 0 0 42px rgba(255,255,255,.025), 0 0 0 94px rgba(255,255,255,.018); }
+.nova-product { position: absolute; z-index: 1; width: 28%; aspect-ratio: 1; }
+.nova-headband { position: absolute; inset: 7% 12% 18%; border: clamp(6px, 1vw, 17px) solid #d7d9e7; border-bottom-color: transparent; border-radius: 50% 50% 42% 42%; filter: drop-shadow(0 14px 18px rgba(0,0,0,.32)); }
+.nova-earcup { position: absolute; bottom: 12%; width: 27%; height: 46%; border: 4px solid #a8aebe; border-radius: 45% 45% 38% 38%; background: linear-gradient(145deg, #202638, #080b12); box-shadow: inset 0 0 0 5px #383f53, 0 8px 22px rgba(0,0,0,.42); }
+.nova-earcup.left { left: 2%; transform: rotate(-7deg); }.nova-earcup.right { right: 2%; transform: rotate(7deg); }
+.nova-copy { position: absolute; z-index: 2; }
+.nova-copy span, .nova-copy strong, .nova-copy small, .nova-copy b { display: block; }
+.nova-copy span { color: #b8acff; font-weight: 900; letter-spacing: .15em; }
+.nova-copy strong { letter-spacing: -.045em; }
+.nova-copy small { position: static; color: rgba(255,255,255,.66); }
+.nova-copy b { width: max-content; border-radius: 999px; color: #171724; background: white; }
+.nova-fullscreen .nova-product { top: 15%; left: 14%; width: 34%; }
+.nova-fullscreen::before { top: -20%; left: 5%; }
+.nova-fullscreen .nova-copy { top: 31%; right: 10%; width: 39%; }
+.nova-fullscreen .nova-copy span { font-size: 11px; }.nova-fullscreen .nova-copy strong { margin-top: 13px; font-size: clamp(25px, 4vw, 44px); }.nova-fullscreen .nova-copy small { margin-top: 13px; font-size: 13px; }.nova-fullscreen .nova-copy b { margin-top: 24px; padding: 10px 18px; font-size: 11px; }
+.nova-card::before { top: -34%; left: -9%; }
+.nova-card .nova-product { top: 11%; left: 8%; width: 40%; }
+.nova-card .nova-copy { top: 22%; right: 8%; width: 47%; }
+.nova-card .nova-copy span { font-size: 6px; }.nova-card .nova-copy strong { margin-top: 7px; font-size: 14px; line-height: 1.15; }.nova-card .nova-copy small { margin-top: 6px; font-size: 7px; }.nova-card .nova-copy b { margin-top: 9px; padding: 5px 8px; font-size: 6px; }
+.nova-creative ~ .native-ad-label { right: auto; left: 8px; }
 
 .timeline-card { padding: 18px 20px 15px; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; }
@@ -180,6 +203,7 @@ button { color: inherit; }
 .marker.safe { color: var(--mint); }
 .playhead { position: absolute; top: -3px; width: 2px; height: 17px; background: #fff; box-shadow: 0 0 0 1px #34394b, 0 2px 5px rgba(0,0,0,.25); transform: translateX(-50%); transition: left .08s linear; }
 .timeline-labels { display: grid; grid-template-columns: 13.4% 13.4% 48.1% 25.1%; margin-top: 9px; color: #9a9faf; font-size: 7px; text-align: center; }
+.timeline-labels.pause-labels { grid-template-columns: 22% 18% 24% 36%; }
 .danger-label { color: var(--danger); }.safe-label { color: var(--mint); }
 .timeline-legend { display: flex; gap: 16px; margin-top: 15px; color: #9197a7; font-size: 7px; }
 .timeline-legend span { display: flex; align-items: center; gap: 5px; }
@@ -282,6 +306,12 @@ button { color: inherit; }
 .showcase-secondary:hover svg { transform: translateX(3px); }
 
 .showcase-demo { max-width: 1120px; margin: 0 auto; padding: 52px 28px 28px; }
+.showcase-scenario-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 64px; padding: 7px; border: 1px solid #e6e6eb; border-radius: 22px; background: #f2f2f5; }
+.showcase-scenario-tabs button { display: grid; min-height: 90px; grid-template-columns: auto 1fr; grid-template-rows: 1fr 1fr; column-gap: 13px; align-items: end; padding: 17px 20px; border: 0; border-radius: 16px; color: #73737c; background: transparent; cursor: pointer; text-align: left; }
+.showcase-scenario-tabs button > span { grid-row: 1 / 3; align-self: center; color: #aaaab2; font-size: 12px; font-weight: 800; }
+.showcase-scenario-tabs button strong { align-self: end; font-size: 16px; }.showcase-scenario-tabs button small { align-self: start; margin-top: 4px; font-size: 11px; }
+.showcase-scenario-tabs button.active { color: #111114; background: white; box-shadow: 0 6px 20px rgba(30,28,45,.08); }
+.showcase-scenario-tabs button.active > span { color: #6d4ef6; }
 .showcase-section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; margin-bottom: 28px; }
 .showcase-section-heading p { margin: 0 0 8px; color: #777781; font-size: 15px; }
 .showcase-section-heading h2 { margin: 0; font-size: clamp(34px, 4vw, 52px); line-height: 1.08; letter-spacing: -.055em; }
@@ -349,6 +379,9 @@ button { color: inherit; }
   .showcase-actions { gap: 8px; flex-direction: column; }
   .showcase-actions a { width: 100%; max-width: 260px; }
   .showcase-demo { padding: 36px 14px 18px; }
+  .showcase-scenario-tabs { gap: 5px; margin-bottom: 42px; padding: 5px; border-radius: 16px; }
+  .showcase-scenario-tabs button { min-height: 76px; column-gap: 7px; padding: 12px 10px; border-radius: 12px; }
+  .showcase-scenario-tabs button > span { font-size: 9px; }.showcase-scenario-tabs button strong { font-size: 13px; }.showcase-scenario-tabs button small { font-size: 9px; }
   .showcase-section-heading { align-items: flex-start; flex-direction: column; }
   .showcase-section-heading h2 { font-size: 36px; }
   .showcase-toggle { width: 100%; }

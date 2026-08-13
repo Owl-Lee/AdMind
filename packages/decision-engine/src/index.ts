@@ -69,6 +69,12 @@ function hardFilter(
   if (!request.policy.allowedFormats.includes(candidate.format)) reject("FORMAT_FORBIDDEN", "当前版位不允许该广告形式。");
   if (request.policy.frequencyCount >= request.policy.frequencyCap) reject("FREQUENCY_CAP", "用户已达到硬频控上限。");
   if (request.policy.userIsNavigating && candidate.format === "fullscreen") reject("NAVIGATION_LOCK", "用户正在导航，禁止全屏打断。");
+  if (candidate.scene.opportunity === "pause" && candidate.format === "fullscreen") {
+    reject("ACTIVE_TASK_CONFLICT", "用户正在暂停查看内容，禁止全屏覆盖当前画面。");
+  }
+  if (candidate.format === "pause_card" && candidate.scene.opportunity !== "pause") {
+    reject("PLACEMENT_MISMATCH", "暂停卡片只能用于真实的暂停机会。");
+  }
   if (candidate.timeSec - request.scenario.nominalOpportunitySec > candidate.maxDeferralSec) {
     reject("OUTSIDE_DELIVERY_WINDOW", "候选时间超过活动允许的最大延迟窗口。");
   }
@@ -86,21 +92,25 @@ function hardFilter(
 }
 
 function rank(candidate: RawCandidate): CandidatePlan {
+  const pauseFit = candidate.scene.opportunity === "pause" && candidate.format === "pause_card";
   const commercialValue = Math.min(candidate.bidCpm / 120, 1);
   const completionLikelihood = Math.max(
     0,
     1 - candidate.durationSec / 30 - candidate.interactionRisk * 0.35,
   );
   const relevance = candidate.relevance;
-  const contextSafety = Math.max(
-    0,
-    (1 - candidate.scene.tension) * 0.75 + (candidate.scene.transition ? 0.25 : 0),
-  );
+  const contextSafety = pauseFit
+    ? 0.95
+    : Math.max(
+        0,
+        (1 - candidate.scene.tension) * 0.75 + (candidate.scene.transition ? 0.25 : 0),
+      );
   const interactionSafety = 1 - candidate.interactionRisk;
-  const disruptionPenalty =
-    candidate.scene.tension * 0.58 +
-    (candidate.format === "fullscreen" ? 0.22 : 0) +
-    (candidate.durationSec / 30) * 0.2;
+  const disruptionPenalty = pauseFit
+    ? candidate.interactionRisk * 0.25 + (candidate.durationSec / 30) * 0.08
+    : candidate.scene.tension * 0.58 +
+      (candidate.format === "fullscreen" ? 0.22 : 0) +
+      (candidate.durationSec / 30) * 0.2;
   const score =
     commercialValue * 0.27 +
     completionLikelihood * 0.18 +
@@ -144,20 +154,22 @@ function baseline(request: DecisionRequest): DecisionResponse {
   const selected = rank(toCandidate(request, creative, scene));
 
   return {
-    decisionId: "decision-s1-baseline",
+    decisionId: `decision-${request.scenario.id.toLowerCase()}-baseline`,
     strategy: "baseline",
     outcome: "scheduled",
     selected,
     alternatives: [],
     rejectedCount: 0,
     commercialShortfall: false,
-    summary: "传统规则按预设广告点立即播放 15 秒全屏素材，未理解内容高潮。",
+    summary: request.scenario.id === "S2"
+      ? "传统暂停广告在用户查看画面时立即覆盖全屏，阻断了原本的查看任务。"
+      : "传统规则按预设广告点立即播放 15 秒全屏素材，未理解内容高潮。",
     audit: [
       {
         stage: "input",
         status: "info",
         code: "FIXED_BREAK_RECEIVED",
-        message: "收到固定广告点 00:45。",
+        message: request.scenario.id === "S2" ? "收到用户暂停事件 00:27。" : "收到固定广告点 00:45。",
       },
       {
         stage: "decision",
@@ -214,7 +226,7 @@ export function decide(input: DecisionRequest): DecisionResponse {
       message: "没有可合法执行的广告计划，记录商业缺口但不越过硬约束。",
     });
     return {
-      decisionId: "decision-s1-admind-blocked",
+      decisionId: `decision-${request.scenario.id.toLowerCase()}-admind-blocked`,
       strategy: "admind",
       outcome: "blocked",
       selected: null,
@@ -237,14 +249,16 @@ export function decide(input: DecisionRequest): DecisionResponse {
     {
       stage: "decision",
       status: "pass",
-      code: "SAFE_TRANSITION_SELECTED",
-      message: `延迟至 ${selected.timeSec} 秒的安全转场，使用 ${selected.durationSec} 秒已审核素材。`,
+      code: request.scenario.id === "S2" ? "LOW_OCCLUSION_FORMAT_SELECTED" : "SAFE_TRANSITION_SELECTED",
+      message: request.scenario.id === "S2"
+        ? `识别为查看型暂停，在安全区域使用 ${selected.durationSec} 秒可关闭静音卡片。`
+        : `延迟至 ${selected.timeSec} 秒的安全转场，使用 ${selected.durationSec} 秒已审核素材。`,
       candidateId: selected.id,
     },
   );
 
   return {
-    decisionId: "decision-s1-admind",
+    decisionId: `decision-${request.scenario.id.toLowerCase()}-admind`,
     strategy: "admind",
     outcome: "scheduled",
     selected,
@@ -252,10 +266,12 @@ export function decide(input: DecisionRequest): DecisionResponse {
     audit,
     rejectedCount,
     commercialShortfall: false,
-    summary: `在不取消保量活动的前提下，将广告推迟 ${Math.round(
-      selected.timeSec - request.scenario.nominalOpportunitySec,
-    )} 秒，并把同一素材重排为 6 秒静音转场卡片。`,
+    summary: request.scenario.id === "S2"
+      ? "识别用户正在暂停查看画面，保留原内容和播放控制，仅在安全区域展示可关闭的静音相关广告。"
+      : `在不取消保量活动的前提下，将广告推迟 ${Math.round(
+        selected.timeSec - request.scenario.nominalOpportunitySec,
+      )} 秒，并把同一素材重排为 6 秒静音转场卡片。`,
   };
 }
 
-export { createS1Request } from "./fixtures";
+export { createS1Request, createS2Request } from "./fixtures";

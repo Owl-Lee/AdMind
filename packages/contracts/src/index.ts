@@ -20,6 +20,7 @@ export const SceneSignalSchema = z.object({
   tension: z.number().min(0).max(1),
   transition: z.boolean(),
   protectedContext: z.boolean(),
+  opportunity: z.enum(["midroll", "pause", "boundary", "protected"]).optional(),
 });
 export type SceneSignal = z.infer<typeof SceneSignalSchema>;
 

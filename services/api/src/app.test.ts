@@ -34,6 +34,18 @@ describe("decision API", () => {
     expect(response.json().code).toBe("INVALID_DECISION_REQUEST");
   });
 
+  it("returns the S2 interaction-protection comparison", async () => {
+    const app = buildApi();
+    apps.push(app);
+    const response = await app.inject({ method: "GET", url: "/v1/scenarios/S2" });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.scenario.id).toBe("S2");
+    expect(body.baseline.selected.format).toBe("fullscreen");
+    expect(body.admind.selected.format).toBe("pause_card");
+  });
+
   it("executes a valid decision request", async () => {
     const app = buildApi();
     apps.push(app);
