@@ -198,21 +198,17 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
                       fill
                       priority
                       sizes={selected.format === "fullscreen" ? "(max-width: 900px) 100vw, 65vw" : "270px"}
-                      src="/real-game-ad.png"
+                      src="/game-ad-clean.png"
                     />
                     {selected.format === "fullscreen" ? (
                       <>
-                        <div className="ad-scrim" />
-                        <div className="ad-badge real-countdown">真实广告截图 · {adRemaining}s</div>
-                        <div className="ad-research-note">Baseline：高潮处全屏打断 · 内容已暂停</div>
+                        <div className="ad-badge real-countdown">广告 · {adRemaining}s</div>
                       </>
                     ) : (
-                      <div className="card-ad-copy">
-                        <span>同一保量广告 · 已重排</span>
-                        <strong>游戏广告</strong>
-                        <p>6 秒静音卡片，不遮挡核心剧情</p>
-                        <small>研究演示 · {adRemaining}s</small>
-                      </div>
+                      <>
+                        <span className="native-ad-label">广告 · {adRemaining}s</span>
+                        <span className="native-muted">静音</span>
+                      </>
                     )}
                   </div>
                 ) : null}

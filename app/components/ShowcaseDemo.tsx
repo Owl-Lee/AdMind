@@ -169,21 +169,17 @@ export function ShowcaseDemo({ scenario, baseline, admind }: ShowcaseDemoProps) 
                     fill
                     priority
                     sizes={selected.format === "fullscreen" ? "(max-width: 900px) 100vw, 1000px" : "270px"}
-                    src="/real-game-ad.png"
+                    src="/game-ad-clean.png"
                   />
                   {selected.format === "fullscreen" ? (
                     <>
-                      <div className="ad-scrim" />
                       <div className="ad-badge real-countdown">广告 · {adRemaining}s</div>
-                      <div className="ad-research-note">高潮处全屏打断 · 视频已暂停</div>
                     </>
                   ) : (
-                    <div className="card-ad-copy">
-                      <span>同一则广告 · 已重排</span>
-                      <strong>游戏广告</strong>
-                      <p>6 秒静音卡片，不遮挡核心剧情</p>
-                      <small>研究演示 · {adRemaining}s</small>
-                    </div>
+                    <>
+                      <span className="native-ad-label">广告 · {adRemaining}s</span>
+                      <span className="native-muted">静音</span>
+                    </>
                   )}
                 </div>
               ) : null}
