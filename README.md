@@ -15,6 +15,7 @@ This is not an ad blocker. It is also not an LLM with permission to bypass polic
 ## What is real in v0.2
 
 - Interactive strategy comparison, player timeline, ad overlays and decision inspector.
+- An evidence-first decision console that separates model observations, system calculations, hard rules, and business assumptions; it also exposes dual-run agreement, key candidate rejections, and a reproducible evidence payload.
 - Shared Zod request/response contracts.
 - Deterministic hard filters for campaign eligibility, creative approval, protected context, format, frequency cap and navigation safety.
 - Utility ranking across commercial value, predicted completion, relevance, context safety, interaction safety and disruption.
