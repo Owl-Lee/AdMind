@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "1.0",
+  "analysisId": "twelvelabs-060b30c3b09c",
+  "provider": "twelvelabs",
+  "mode": "live",
+  "model": "pegasus1.5",
+  "generatedAt": "2026-08-13T21:13:34.597Z",
+  "media": {
+    "fileName": "admind-charge-demo-720p.mp4",
+    "durationSec": 89.5,
+    "sha256": "060b30c3b09c9734ac7806d940dcde7cc853e4bc73fd63a0eb9f6acb3300debe"
+  },
+  "segments": [
+    {
+      "id": "segment-1",
+      "startSec": 0,
+      "endSec": 12,
+      "label": "准备与发现",
+      "description": "一位装有假肢的老年男子从基座上取出一台发光的绿色设备，随后被一台白色机器人打断。",
+      "narrativeIntensity": 0.4,
+      "motionIntensity": 0.3,
+      "audioIntensity": 0.2,
+      "dialogueActive": false,
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [],
+      "confidence": 0.95
+    },
+    {
+      "id": "segment-2",
+      "startSec": 12,
+      "endSec": 89,
+      "label": "暴力对抗",
+      "description": "机器人攻击该男子，男子使用扳手和粉色喷漆自卫，最终在激烈的战斗中摧毁了机器人。",
+      "narrativeIntensity": 0.95,
+      "motionIntensity": 0.9,
+      "audioIntensity": 0.8,
+      "dialogueActive": false,
+      "transitionConfidence": 0.95,
+      "sensitiveCategories": [
+        "violence"
+      ],
+      "confidence": 0.95
+    }
+  ],
+  "candidateBreaks": [
+    {
+      "timeSec": 45,
+      "label": "名义机会",
+      "recommendation": "block",
+      "reasons": [
+        "活跃战斗期间叙事强度极高",
+        "存在暴力和肢体冲突",
+        "快速运动和视觉混乱导致中断极具破坏性"
+      ],
+      "confidence": 0.9,
+      "sourceSegmentIds": [
+        "segment-2"
+      ]
+    },
+    {
+      "timeSec": 85,
+      "label": "高潮后恢复",
+      "recommendation": "delay",
+      "reasons": [
+        "战斗刚刚结束，但场景中仍有火焰和碎片，处于混乱状态",
+        "主角正在从挣扎中恢复",
+        "在允许的延期窗口内未出现清晰的叙事解决或平静状态"
+      ],
+      "confidence": 0.8,
+      "sourceSegmentIds": [
+        "segment-2"
+      ]
+    }
+  ],
+  "limitations": [
+    "45秒至85秒之间不存在清晰的低强度边界；整个窗口被战斗高潮主导",
+    "视频在战斗高潮后不久结束，无法在允许的延期时间内实现自然的战后恢复"
+  ]
+}

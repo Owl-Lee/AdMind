@@ -41,6 +41,9 @@ test("server-renders the detailed decision console separately", async () => {
   assert.match(html, /内容情境与投放窗口/);
   assert.match(html, /为什么这样投/);
   assert.match(html, /模型可以替换，决策协议不变/);
+  assert.match(html, /TwelveLabs/);
+  assert.match(html, /真实推理/);
+  assert.match(html, /01:25/);
   assert.match(html, /敏感保护/);
   assert.doesNotMatch(html, /搜索决策/);
   assert.doesNotMatch(html, /Product demo/);

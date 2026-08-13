@@ -10,6 +10,7 @@ export async function analyzeWithTwelveLabs(input: {
   apiKey: string;
   filePath: string;
   model?: "pegasus1.2" | "pegasus1.5";
+  prompt?: string;
 }) {
   const model = input.model ?? "pegasus1.5";
   const client = new TwelveLabs({ apiKey: input.apiKey });
@@ -32,10 +33,10 @@ export async function analyzeWithTwelveLabs(input: {
   const response = await client.analyze({
     modelName: model,
     video: { type: "asset_id", assetId: asset.id },
-    prompt: ANALYSIS_PROMPT,
+    prompt: input.prompt ?? ANALYSIS_PROMPT,
     temperature: 0.1,
     maxTokens: 4_096,
   });
   if (!response.data) throw new Error("TwelveLabs returned an empty analysis.");
-  return { model, payload: parseJsonPayload(response.data) };
+  return { model, payload: parseJsonPayload(response.data), rawText: response.data };
 }

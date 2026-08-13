@@ -172,7 +172,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
 
           <div className="video-topline showcase-video-topline">
             <span>{isPauseScenario ? "用户正在查看画面细节" : isProtectedScenario ? "受保护内容仍在进行" : "CHARGE · Blender Studio"}</span>
-            <span>{isPauseScenario ? "00:27 查看型暂停" : isProtectedScenario ? "00:56 角色受伤" : strategy === "baseline" ? "00:45 固定投放" : "01:22 安全转场"}</span>
+            <span>{isPauseScenario ? "00:27 稳定暂停" : isProtectedScenario ? "00:56 角色受伤" : strategy === "baseline" ? "00:45 固定投放" : `${formatTime(scenario.safeOpportunitySec)} AI 延后建议`}</span>
           </div>
 
           {adActive && selected ? (
@@ -210,14 +210,14 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
         </div>
 
         <div className="showcase-decision-line">
-          <span>{isPauseScenario ? "交互状态" : isProtectedScenario ? "硬规则" : strategy === "baseline" ? "固定点" : "安全转场"}</span>
+          <span>{isPauseScenario ? "交互状态" : isProtectedScenario ? "硬规则" : strategy === "baseline" ? "固定点" : "低打断候选"}</span>
           <strong>{isProtectedScenario && strategy === "admind" ? "BLOCK" : formatTime(decisionTime)}</strong>
           <i />
           <p>{isPauseScenario
             ? strategy === "baseline" ? "覆盖暂停画面，用户无法继续查看细节。" : "页面内信号仅表明稳定暂停；不读取其他应用，卡片可关闭且控件保持可用。"
             : isProtectedScenario
               ? strategy === "baseline" ? "商业活动按价位触发，受伤场景被强制打断。" : "保护规则先于竞价；没有合法候选计划，因此不投放。"
-            : strategy === "baseline" ? "剧情仍在高潮，但规则按时触发广告。" : "动作结束后再展示，保量目标保持不变。"}</p>
+            : strategy === "baseline" ? "剧情仍在高潮，但规则按时触发广告。" : "延至合同窗口末端并缩成静音卡片；减少打断，但不把模型建议包装成绝对安全。"}</p>
         </div>
       </article>
     </section>

@@ -51,6 +51,7 @@ export function AdMindDemo({ scenarios, analysis }: DemoProps) {
   const decision = strategy === "admind" ? admind : baseline;
   const selected = decision.selected;
   const adActive = adRemaining !== null;
+  const providerLabel = analysis.provider === "twelvelabs" ? "TwelveLabs" : analysis.provider === "gemini" ? "Gemini" : "人工基线";
 
   useEffect(() => {
     if (adRemaining === null) return;
@@ -192,8 +193,8 @@ export function AdMindDemo({ scenarios, analysis }: DemoProps) {
           <section className="metric-strip" aria-label="本次会话指标">
             <article><span>商业约束</span><strong>{isProtectedScenario ? "高价保量" : "保量活动"}</strong><small><CheckIcon />资格已校验</small></article>
             <article><span>{isPauseScenario ? "暂停机会" : "原定广告点"}</span><strong>{formatTime(scenario.nominalOpportunitySec)}</strong><small>{isPauseScenario ? "用户主动停止播放" : isProtectedScenario ? "命中受保护内容" : "处于内容高潮"}</small></article>
-            <article><span>{isPauseScenario ? "交互状态" : isProtectedScenario ? "硬规则结果" : "安全转场"}</span><strong>{isPauseScenario ? "PAUSED" : isProtectedScenario ? "BLOCK" : formatTime(scenario.safeOpportunitySec)}</strong><small className={isProtectedScenario ? "" : "positive"}>{isPauseScenario ? "页面可见 · 未拖动" : isProtectedScenario ? "竞价不可覆盖" : `+${safeDelta} 秒可恢复`}</small></article>
-            <article><span>{isPauseScenario ? "安全区域" : isProtectedScenario ? "交付状态" : "分析来源"}</span><strong>{isPauseScenario ? "右上" : isProtectedScenario ? "缺口记录" : "基线"}</strong><small>{isPauseScenario ? "避开主体与播放控件" : isProtectedScenario ? "等待后续补偿" : "待真实模型替换"}</small></article>
+            <article><span>{isPauseScenario ? "交互状态" : isProtectedScenario ? "硬规则结果" : "延后候选"}</span><strong>{isPauseScenario ? "PAUSED" : isProtectedScenario ? "BLOCK" : formatTime(scenario.safeOpportunitySec)}</strong><small className={isProtectedScenario ? "" : "positive"}>{isPauseScenario ? "页面可见 · 未拖动" : isProtectedScenario ? "竞价不可覆盖" : `+${safeDelta} 秒至合同上限`}</small></article>
+            <article><span>{isPauseScenario ? "安全区域" : isProtectedScenario ? "交付状态" : "分析来源"}</span><strong>{isPauseScenario ? "右上" : isProtectedScenario ? "缺口记录" : providerLabel}</strong><small>{isPauseScenario ? "避开主体与播放控件" : isProtectedScenario ? "等待后续补偿" : analysis.mode === "live" ? `${analysis.model} 实测` : "待真实模型替换"}</small></article>
           </section>
 
           <div className="strategy-bar">
@@ -359,7 +360,7 @@ export function AdMindDemo({ scenarios, analysis }: DemoProps) {
               </article>
               <div className="versus"><span>VS</span><i /></div>
               <article className="comparison-card smart-card">
-                <header><span>{isProtectedScenario ? <ShieldIcon /> : <SparkIcon />}</span><div><small>ADMIND</small><strong>{isPauseScenario ? "暂停状态保护" : isProtectedScenario ? "硬规则阻止投放" : "安全转场编排"}</strong></div></header>
+                <header><span>{isProtectedScenario ? <ShieldIcon /> : <SparkIcon />}</span><div><small>ADMIND</small><strong>{isPauseScenario ? "暂停状态保护" : isProtectedScenario ? "硬规则阻止投放" : "低打断窗口编排"}</strong></div></header>
                 <div className="comparison-plan"><b>{isProtectedScenario ? "BLOCK" : formatTime(isPauseScenario ? scenario.nominalOpportunitySec : scenario.safeOpportunitySec)}</b><span>{isProtectedScenario ? "无合法执行计划 · 记录交付缺口" : "同活动 · 6 秒可关闭静音卡片"}</span></div>
                 <ul>{isPauseScenario ? <><li>保留用户查看任务</li><li>避开人物和播放控件</li><li>关闭与播放控制保持独立</li></> : isProtectedScenario ? <><li>受保护场景不得投放</li><li>高出价不能覆盖硬规则</li><li>缺口进入后续补偿流程</li></> : <><li>同样履行保量合同</li><li>避开内容高潮</li><li>保留播放控件与上下文</li></>}</ul>
               </article>
@@ -394,7 +395,9 @@ export function AdMindDemo({ scenarios, analysis }: DemoProps) {
                 </article>
               ))}
             </div>
-            <p className="analysis-disclosure"><ShieldIcon />当前结果用于验证协议与下游决策，尚未伪装成模型实测。配置 API Key 后可由本地分析命令生成同结构 JSON 并替换。</p>
+            <p className="analysis-disclosure"><ShieldIcon />{analysis.mode === "live"
+              ? `${providerLabel} ${analysis.model} 已对这段 89.5 秒素材完成真实推理；密钥不进入网站，页面只读取经过协议校验的缓存结果。`
+              : "当前结果用于验证协议与下游决策，尚未伪装成模型实测。配置 API Key 后可由本地分析命令生成同结构 JSON 并替换。"}</p>
           </section>
         </section>
       </main>

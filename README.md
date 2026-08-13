@@ -6,7 +6,7 @@ AdMind is a commercially-aware, policy-first ad orchestration prototype for long
 
 The current product includes three end-to-end scenarios:
 
-- **S1 — climax scheduling:** compare a fixed 15-second fullscreen break at 00:45 with an approved 6-second muted card at the 01:22 recovery boundary.
+- **S1 — climax scheduling:** compare a fixed 15-second fullscreen break at 00:45 with an approved 6-second muted card at the provider-recommended 01:25 contract boundary.
 - **S2 — pause protection:** compare a 10-second fullscreen pause takeover with a dismissible 6-second silent card that preserves the inspected frame and playback controls.
 - **S3 — protected context:** compare a high-value guaranteed campaign firing inside an injury scene with a deterministic hard-rule block that records a delivery shortfall.
 
@@ -21,7 +21,7 @@ This is not an ad blocker. It is also not an LLM with permission to bypass polic
 - Full audit trail, including rejected candidates.
 - Both a co-located web API and a standalone Fastify adapter backed by the same engine.
 - A provider-neutral video-analysis contract plus working Gemini and TwelveLabs adapter entry points.
-- A cached, human-authored CHARGE analysis baseline clearly labeled as a fixture rather than live model inference.
+- A cached, schema-validated TwelveLabs Pegasus 1.5 analysis of the shipped CHARGE excerpt, with a human-authored fallback retained for regression testing.
 - Unit, API integration and server-rendered HTML tests.
 - A licensed excerpt from Blender Studio's `CHARGE` and a cleaned research-derived game creative.
 
@@ -46,12 +46,12 @@ The API listens on `http://127.0.0.1:4000` by default.
 
 ### Run a real video analysis
 
-Create a local `.env` and add either `GEMINI_API_KEY` or `TWELVELABS_API_KEY`. Keys are read only by the local command and must never be committed or exposed to the browser.
+Create a local `.env.local` and add either `GEMINI_API_KEY` or `TWELVELABS_API_KEY`. The CLI loads this file automatically. Keys are read only by the local command and must never be committed or exposed to the browser.
 
 ```bash
-pnpm analyze:video --provider gemini --file public/admind-charge-demo-720p.mp4 --duration 89.5 --output analysis/charge-gemini.json
+pnpm analyze:video --provider gemini --file public/admind-charge-demo-720p.mp4 --duration 89.5 --output analysis/charge-gemini.json --raw-output analysis/raw/charge-gemini.json
 
-pnpm analyze:video --provider twelvelabs --file public/admind-charge-demo-720p.mp4 --duration 89.5 --output analysis/charge-twelvelabs.json
+pnpm analyze:video --provider twelvelabs --file public/admind-charge-demo-720p.mp4 --duration 89.5 --output analysis/charge-twelvelabs.json --raw-output analysis/raw/charge-twelvelabs.json
 ```
 
 Both commands validate and save the same `VideoAnalysis` JSON contract. The public site reads cached analysis, so the deployed demo works without an API key or per-view inference cost.
@@ -97,7 +97,7 @@ The repository also includes the full [PRD](docs/PRD.md), [decision engine speci
 
 ## Scope honesty
 
-S1, S2 and S3 are implemented through the deterministic decision layer. The Gemini and TwelveLabs adapters are implemented but have not been executed in this repository because no provider credentials are stored here; the shipped CHARGE analysis is an explicitly labeled human-authored fixture. Persistent decision history and evaluated live inference remain future slices. The product does not label hypotheses as measured business impact.
+S1, S2 and S3 are implemented through the deterministic decision layer. TwelveLabs Pegasus 1.5 has been executed against the shipped CHARGE excerpt and its validated cached output currently supplies the S1 evidence. The Gemini adapter targets the current Gemini model but a provider-side project access restriction prevented the first comparison run; this is recorded in the provider evaluation instead of being presented as a model result. Persistent decision history and evaluated business impact remain future slices.
 
 ## Demo media
 

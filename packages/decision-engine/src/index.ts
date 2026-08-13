@@ -251,10 +251,10 @@ export function decide(input: DecisionRequest): DecisionResponse {
     {
       stage: "decision",
       status: "pass",
-      code: request.scenario.id === "S2" ? "LOW_OCCLUSION_FORMAT_SELECTED" : "SAFE_TRANSITION_SELECTED",
+      code: request.scenario.id === "S2" ? "LOW_OCCLUSION_FORMAT_SELECTED" : "LOW_DISRUPTION_WINDOW_SELECTED",
       message: request.scenario.id === "S2"
         ? `页面保持可见且未发生拖动，在安全区域使用 ${selected.durationSec} 秒可关闭静音卡片。`
-        : `延迟至 ${selected.timeSec} 秒的安全转场，使用 ${selected.durationSec} 秒已审核素材。`,
+        : `延迟至 ${selected.timeSec} 秒的低打断候选窗口，使用 ${selected.durationSec} 秒已审核素材。`,
       candidateId: selected.id,
     },
   );
@@ -277,3 +277,4 @@ export function decide(input: DecisionRequest): DecisionResponse {
 }
 
 export { createS1Request, createS2Request, createS3Request } from "./fixtures";
+export { createS1RequestFromAnalysis } from "./from-analysis";

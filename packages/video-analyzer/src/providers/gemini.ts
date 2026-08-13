@@ -8,8 +8,9 @@ export async function analyzeWithGemini(input: {
   apiKey: string;
   filePath: string;
   model?: string;
+  prompt?: string;
 }) {
-  const model = input.model ?? "gemini-2.5-flash-lite";
+  const model = input.model ?? "gemini-3.6-flash";
   const client = new GoogleGenAI({ apiKey: input.apiKey });
   let uploaded = await client.files.upload({
     file: input.filePath,
@@ -32,7 +33,7 @@ export async function analyzeWithGemini(input: {
       model,
       contents: createUserContent([
         createPartFromUri(uploaded.uri, uploaded.mimeType),
-        ANALYSIS_PROMPT,
+        input.prompt ?? ANALYSIS_PROMPT,
       ]),
       config: {
         responseMimeType: "application/json",
@@ -40,7 +41,7 @@ export async function analyzeWithGemini(input: {
       },
     });
     if (!response.text) throw new Error("Gemini returned an empty analysis.");
-    return { model, payload: parseJsonPayload(response.text) };
+    return { model, payload: parseJsonPayload(response.text), rawText: response.text };
   } finally {
     await client.files.delete({ name: uploadedName }).catch(() => undefined);
   }

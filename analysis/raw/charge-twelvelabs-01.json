@@ -1,0 +1,69 @@
+{
+  "segments": [
+    {
+      "id": "segment-1",
+      "startSec": 0,
+      "endSec": 12,
+      "label": "Setup and Discovery",
+      "description": "一位装有假肢的老年男子从基座上取下一个发光的绿色装置，随后被一个白色机器人打断。",
+      "narrativeIntensity": 0.4,
+      "motionIntensity": 0.3,
+      "audioIntensity": 0.2,
+      "dialogueActive": false,
+      "transitionConfidence": 0.8,
+      "sensitiveCategories": [],
+      "confidence": 0.9
+    },
+    {
+      "id": "segment-2",
+      "startSec": 12,
+      "endSec": 89.5,
+      "label": "Violent Confrontation",
+      "description": "机器人攻击该男子，引发混乱的打斗，涉及激光束、爆炸和男子使用粉色喷雾罐破坏机器人。最终男子摧毁了机器人的头部。",
+      "narrativeIntensity": 0.95,
+      "motionIntensity": 0.9,
+      "audioIntensity": 0.9,
+      "dialogueActive": false,
+      "transitionConfidence": 0.1,
+      "sensitiveCategories": [
+        "violence",
+        "destruction"
+      ],
+      "confidence": 0.95
+    }
+  ],
+  "candidateBreaks": [
+    {
+      "timeSec": 45,
+      "label": "Nominal Opportunity",
+      "recommendation": "block",
+      "reasons": [
+        "活跃战斗期间叙事强度极高。",
+        "持续的运动和视觉混乱。",
+        "存在暴力和破坏内容。"
+      ],
+      "confidence": 0.95,
+      "sourceSegmentIds": [
+        "segment-2"
+      ]
+    },
+    {
+      "timeSec": 85,
+      "label": "Post-Climax Recovery",
+      "recommendation": "delay",
+      "reasons": [
+        "战斗刚刚结束，但场景中仍有火焰和碎片，视觉混乱持续。",
+        "主角正在从直接威胁中恢复。",
+        "在延期窗口内不存在清晰的叙事暂停或低强度时刻。"
+      ],
+      "confidence": 0.85,
+      "sourceSegmentIds": [
+        "segment-2"
+      ]
+    }
+  ],
+  "limitations": [
+    "由于持续的高强度动作，45秒至85秒之间不存在安全的打断点。",
+    "视频在达到高潮后不久结束，没有时间为高潮后的恢复片段留出空间。"
+  ]
+}

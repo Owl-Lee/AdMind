@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { createS1Request, createS2Request, createS3Request, decide } from "./index";
+import { VideoAnalysisSchema } from "@admind/contracts";
+import chargeTwelveLabsAnalysis from "../../../analysis/charge-twelvelabs-live.json";
+import { createS1Request, createS1RequestFromAnalysis, createS2Request, createS3Request, decide } from "./index";
 
 describe("AdMind decision engine", () => {
   it("keeps the baseline at the fixed 45 second break", () => {
@@ -27,9 +29,22 @@ describe("AdMind decision engine", () => {
     expect(result.audit).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: "CREATIVE_UNAPPROVED", status: "reject" }),
-        expect.objectContaining({ code: "SAFE_TRANSITION_SELECTED", status: "pass" }),
+        expect.objectContaining({ code: "LOW_DISRUPTION_WINDOW_SELECTED", status: "pass" }),
       ]),
     );
+  });
+
+  it("derives the S1 safe transition from validated live provider evidence", () => {
+    const analysis = VideoAnalysisSchema.parse(chargeTwelveLabsAnalysis);
+    const request = createS1RequestFromAnalysis(analysis, "admind");
+    const result = decide(request);
+
+    expect(request.scenario.safeOpportunitySec).toBe(85);
+    expect(result.selected).toMatchObject({
+      timeSec: 85,
+      durationSec: 6,
+      format: "muted_card",
+    });
   });
 
   it("never lets a high score override a frequency cap", () => {
