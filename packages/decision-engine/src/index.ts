@@ -70,7 +70,7 @@ function hardFilter(
   if (request.policy.frequencyCount >= request.policy.frequencyCap) reject("FREQUENCY_CAP", "用户已达到硬频控上限。");
   if (request.policy.userIsNavigating && candidate.format === "fullscreen") reject("NAVIGATION_LOCK", "用户正在导航，禁止全屏打断。");
   if (candidate.scene.opportunity === "pause" && candidate.format === "fullscreen") {
-    reject("ACTIVE_TASK_CONFLICT", "用户正在暂停查看内容，禁止全屏覆盖当前画面。");
+    reject("ACTIVE_TASK_CONFLICT", "播放器处于稳定暂停状态，禁止全屏覆盖当前画面。");
   }
   if (candidate.format === "pause_card" && candidate.scene.opportunity !== "pause") {
     reject("PLACEMENT_MISMATCH", "暂停卡片只能用于真实的暂停机会。");
@@ -253,7 +253,7 @@ export function decide(input: DecisionRequest): DecisionResponse {
       status: "pass",
       code: request.scenario.id === "S2" ? "LOW_OCCLUSION_FORMAT_SELECTED" : "SAFE_TRANSITION_SELECTED",
       message: request.scenario.id === "S2"
-        ? `识别为查看型暂停，在安全区域使用 ${selected.durationSec} 秒可关闭静音卡片。`
+        ? `页面保持可见且未发生拖动，在安全区域使用 ${selected.durationSec} 秒可关闭静音卡片。`
         : `延迟至 ${selected.timeSec} 秒的安全转场，使用 ${selected.durationSec} 秒已审核素材。`,
       candidateId: selected.id,
     },
@@ -269,7 +269,7 @@ export function decide(input: DecisionRequest): DecisionResponse {
     rejectedCount,
     commercialShortfall: false,
     summary: request.scenario.id === "S2"
-      ? "识别用户正在暂停查看画面，保留原内容和播放控制，仅在安全区域展示可关闭的静音相关广告。"
+      ? "根据当前播放器的暂停、拖动与页面可见性判断为稳定暂停；保留原内容和播放控制，仅在安全区域展示可关闭的静音相关广告。"
       : `在不取消保量活动的前提下，将广告推迟 ${Math.round(
         selected.timeSec - request.scenario.nominalOpportunitySec,
       )} 秒，并把同一素材重排为 6 秒静音转场卡片。`,

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import type { DecisionResponse, Scenario, Strategy, VideoAnalysis } from "@admind/contracts";
+import type { DecisionResponse, Scenario, Strategy } from "@admind/contracts";
 import { ChevronIcon, PlayIcon, ShieldIcon, SparkIcon } from "./icons";
 import { AdCreative } from "./AdCreative";
 
@@ -14,7 +14,6 @@ export type ScenarioDemo = {
 
 type ShowcaseDemoProps = {
   scenarios: ScenarioDemo[];
-  analysis: VideoAnalysis;
 };
 
 function formatTime(value: number) {
@@ -128,15 +127,15 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     <section className={first ? "showcase-demo" : "showcase-demo showcase-demo-following"} id={`scenario-${scenario.id.toLowerCase()}`}>
       <div className="showcase-section-heading">
         <div>
-          <p className="showcase-scene-label">{isPauseScenario ? "暂停查看 · 交互保护" : isProtectedScenario ? "敏感场景 · 硬规则保护" : "高潮插播 · 内容理解"}</p>
+          <p className="showcase-scene-label">{isPauseScenario ? "暂停状态 · 交互保护" : isProtectedScenario ? "敏感场景 · 硬规则保护" : "高潮插播 · 内容理解"}</p>
           <h2>{isPauseScenario ? "保留用户的查看任务。" : isProtectedScenario ? "有些边界，价格不能越过。" : "只改变投放决策。"}</h2>
           <p className="showcase-scene-summary">{isPauseScenario
-            ? "同一次暂停，同一则保量游戏广告。系统判断用户是在查看、拖动还是离开，再决定能否展示以及放在哪里。"
+            ? "同一次暂停，同一则保量游戏广告。系统只根据当前播放器中的暂停、拖动和页面可见性判断交互状态，再决定能否展示以及放在哪里。"
             : isProtectedScenario
               ? "同一条高价保量活动命中角色受伤场景。硬规则先于排序执行；无法合法延期时，系统宁可记录交付缺口，也不强行插播。"
               : "同一条视频，同一则保量广告。系统理解内容张力，寻找符合合同约束的低打断窗口。"}</p>
         </div>
-        <div className="showcase-toggle" role="group" aria-label={`${isPauseScenario ? "暂停查看" : isProtectedScenario ? "敏感场景" : "高潮插播"}投放策略`}>
+        <div className="showcase-toggle" role="group" aria-label={`${isPauseScenario ? "暂停状态" : isProtectedScenario ? "敏感场景" : "高潮插播"}投放策略`}>
           <button aria-pressed={strategy === "baseline"} className={strategy === "baseline" ? "active" : ""} onClick={() => switchStrategy("baseline")}>传统投放</button>
           <button aria-pressed={strategy === "admind"} className={strategy === "admind" ? "active" : ""} onClick={() => switchStrategy("admind")}><SparkIcon />AdMind</button>
         </div>
@@ -147,7 +146,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
           <div>
             <span className={strategy === "baseline" ? "showcase-state baseline" : "showcase-state smart"} />
             <strong>{isPauseScenario
-              ? strategy === "baseline" ? "传统暂停广告：立即全屏覆盖" : "AdMind：识别查看意图，保留画面"
+              ? strategy === "baseline" ? "传统暂停广告：立即全屏覆盖" : "AdMind：判断交互状态，保留画面"
               : isProtectedScenario
                 ? strategy === "baseline" ? "传统投放：高价活动立即触发" : "AdMind：硬规则阻止投放"
               : strategy === "baseline" ? "传统投放：固定时间触发" : "AdMind：等待自然转场"}</strong>
@@ -159,6 +158,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
           <video
             className="content-video"
             onEnded={() => setPlaying(false)}
+            onClick={togglePlayback}
             onPause={handlePause}
             onPlay={() => setPlaying(true)}
             onTimeUpdate={syncPlayback}
@@ -210,11 +210,11 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
         </div>
 
         <div className="showcase-decision-line">
-          <span>{isPauseScenario ? "暂停意图" : isProtectedScenario ? "硬规则" : strategy === "baseline" ? "固定点" : "安全转场"}</span>
+          <span>{isPauseScenario ? "交互状态" : isProtectedScenario ? "硬规则" : strategy === "baseline" ? "固定点" : "安全转场"}</span>
           <strong>{isProtectedScenario && strategy === "admind" ? "BLOCK" : formatTime(decisionTime)}</strong>
           <i />
           <p>{isPauseScenario
-            ? strategy === "baseline" ? "覆盖暂停画面，用户无法继续查看细节。" : "相关性不能越过控制权；卡片可关闭，播放控件保持可用。"
+            ? strategy === "baseline" ? "覆盖暂停画面，用户无法继续查看细节。" : "页面内信号仅表明稳定暂停；不读取其他应用，卡片可关闭且控件保持可用。"
             : isProtectedScenario
               ? strategy === "baseline" ? "商业活动按价位触发，受伤场景被强制打断。" : "保护规则先于竞价；没有合法候选计划，因此不投放。"
             : strategy === "baseline" ? "剧情仍在高潮，但规则按时触发广告。" : "动作结束后再展示，保量目标保持不变。"}</p>
@@ -224,7 +224,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   );
 }
 
-export function ShowcaseDemo({ scenarios, analysis }: ShowcaseDemoProps) {
+export function ShowcaseDemo({ scenarios }: ShowcaseDemoProps) {
   return (
     <div className="showcase-page">
       <header className="showcase-nav">
@@ -252,22 +252,6 @@ export function ShowcaseDemo({ scenarios, analysis }: ShowcaseDemoProps) {
         <div className="showcase-sequence" id="demo">
           {scenarios.map((demo, index) => <ScenarioExperience demo={demo} first={index === 0} key={demo.scenario.id} />)}
         </div>
-
-        <section className="showcase-mechanism" aria-labelledby="mechanism-title">
-          <div className="showcase-mechanism-heading">
-            <p>ONE SYSTEM, THREE DECISIONS</p>
-            <h2 id="mechanism-title">AI 负责看懂，规则负责守住边界。</h2>
-            <span>公开页面只展示结论；后台保留完整证据链和拒绝原因。</span>
-          </div>
-          <div className="showcase-mechanism-flow">
-            <article><b>01</b><strong>视频感知</strong><p>供应商适配器把画面、声音与对白归一为同一种时间轴协议。</p></article>
-            <i>→</i>
-            <article><b>02</b><strong>硬规则过滤</strong><p>审核、频控、交互保护和敏感场景先于商业评分执行。</p></article>
-            <i>→</i>
-            <article><b>03</b><strong>完整计划排序</strong><p>只在合法候选中决定时间、形式、素材与活动。</p></article>
-          </div>
-          <p className="showcase-analysis-status"><span />分析协议 v{analysis.schemaVersion} 已接入 · 当前 CHARGE 数据为人工基线，等待 Gemini / TwelveLabs 实测替换</p>
-        </section>
 
         <section className="showcase-console-cta">
           <div>

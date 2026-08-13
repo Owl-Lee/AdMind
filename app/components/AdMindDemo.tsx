@@ -183,7 +183,7 @@ export function AdMindDemo({ scenarios, analysis }: DemoProps) {
             <div className="scenario-switcher" role="tablist" aria-label="选择决策场景">
               {scenarios.map((item) => (
                 <button className={item.scenario.id === activeScenarioId ? "selected" : ""} key={item.scenario.id} onClick={() => switchScenario(item.scenario.id)} role="tab">
-                  {item.scenario.id === "S1" ? "高潮插播" : item.scenario.id === "S2" ? "暂停查看" : "敏感保护"}
+                  {item.scenario.id === "S1" ? "高潮插播" : item.scenario.id === "S2" ? "暂停状态" : "敏感保护"}
                 </button>
               ))}
             </div>
@@ -192,7 +192,7 @@ export function AdMindDemo({ scenarios, analysis }: DemoProps) {
           <section className="metric-strip" aria-label="本次会话指标">
             <article><span>商业约束</span><strong>{isProtectedScenario ? "高价保量" : "保量活动"}</strong><small><CheckIcon />资格已校验</small></article>
             <article><span>{isPauseScenario ? "暂停机会" : "原定广告点"}</span><strong>{formatTime(scenario.nominalOpportunitySec)}</strong><small>{isPauseScenario ? "用户主动停止播放" : isProtectedScenario ? "命中受保护内容" : "处于内容高潮"}</small></article>
-            <article><span>{isPauseScenario ? "查看意图" : isProtectedScenario ? "硬规则结果" : "安全转场"}</span><strong>{isPauseScenario ? "INSPECT" : isProtectedScenario ? "BLOCK" : formatTime(scenario.safeOpportunitySec)}</strong><small className={isProtectedScenario ? "" : "positive"}>{isPauseScenario ? "查看而非离开" : isProtectedScenario ? "竞价不可覆盖" : `+${safeDelta} 秒可恢复`}</small></article>
+            <article><span>{isPauseScenario ? "交互状态" : isProtectedScenario ? "硬规则结果" : "安全转场"}</span><strong>{isPauseScenario ? "PAUSED" : isProtectedScenario ? "BLOCK" : formatTime(scenario.safeOpportunitySec)}</strong><small className={isProtectedScenario ? "" : "positive"}>{isPauseScenario ? "页面可见 · 未拖动" : isProtectedScenario ? "竞价不可覆盖" : `+${safeDelta} 秒可恢复`}</small></article>
             <article><span>{isPauseScenario ? "安全区域" : isProtectedScenario ? "交付状态" : "分析来源"}</span><strong>{isPauseScenario ? "右上" : isProtectedScenario ? "缺口记录" : "基线"}</strong><small>{isPauseScenario ? "避开主体与播放控件" : isProtectedScenario ? "等待后续补偿" : "待真实模型替换"}</small></article>
           </section>
 
@@ -218,6 +218,7 @@ export function AdMindDemo({ scenarios, analysis }: DemoProps) {
                 <video
                   className="content-video"
                   onEnded={() => setPlaying(false)}
+                  onClick={togglePlayback}
                   onPause={handlePause}
                   onPlay={() => setPlaying(true)}
                   onTimeUpdate={syncPlayback}
@@ -329,7 +330,7 @@ export function AdMindDemo({ scenarios, analysis }: DemoProps) {
                   {strategy === "admind" ? (
                     <div className="constraint-note"><ShieldIcon /><p><strong>硬约束未被效用分覆盖</strong><span>{isPauseScenario ? "全屏素材因交互冲突被拒绝；相关性不能覆盖用户控制权。" : isProtectedScenario ? "受保护场景和交付窗口共同拒绝了全部候选计划。" : "未审核素材已拒绝；保量合同得到履行。"}</span></p></div>
                   ) : (
-                    <div className="constraint-note baseline-note"><ClockIcon /><p><strong>{isPauseScenario ? "未识别暂停意图" : isProtectedScenario ? "未检查保护规则" : "未读取场景张力"}</strong><span>{isPauseScenario ? "用户暂停后立即展示全屏主素材。" : "命中固定广告点后立即投放。"}</span></p></div>
+                    <div className="constraint-note baseline-note"><ClockIcon /><p><strong>{isPauseScenario ? "未判断交互状态" : isProtectedScenario ? "未检查保护规则" : "未读取场景张力"}</strong><span>{isPauseScenario ? "用户暂停后立即展示全屏主素材。" : "命中固定广告点后立即投放。"}</span></p></div>
                   )}
                 </div>
               ) : (
@@ -358,7 +359,7 @@ export function AdMindDemo({ scenarios, analysis }: DemoProps) {
               </article>
               <div className="versus"><span>VS</span><i /></div>
               <article className="comparison-card smart-card">
-                <header><span>{isProtectedScenario ? <ShieldIcon /> : <SparkIcon />}</span><div><small>ADMIND</small><strong>{isPauseScenario ? "查看意图保护" : isProtectedScenario ? "硬规则阻止投放" : "安全转场编排"}</strong></div></header>
+                <header><span>{isProtectedScenario ? <ShieldIcon /> : <SparkIcon />}</span><div><small>ADMIND</small><strong>{isPauseScenario ? "暂停状态保护" : isProtectedScenario ? "硬规则阻止投放" : "安全转场编排"}</strong></div></header>
                 <div className="comparison-plan"><b>{isProtectedScenario ? "BLOCK" : formatTime(isPauseScenario ? scenario.nominalOpportunitySec : scenario.safeOpportunitySec)}</b><span>{isProtectedScenario ? "无合法执行计划 · 记录交付缺口" : "同活动 · 6 秒可关闭静音卡片"}</span></div>
                 <ul>{isPauseScenario ? <><li>保留用户查看任务</li><li>避开人物和播放控件</li><li>关闭与播放控制保持独立</li></> : isProtectedScenario ? <><li>受保护场景不得投放</li><li>高出价不能覆盖硬规则</li><li>缺口进入后续补偿流程</li></> : <><li>同样履行保量合同</li><li>避开内容高潮</li><li>保留播放控件与上下文</li></>}</ul>
               </article>

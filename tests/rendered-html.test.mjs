@@ -22,12 +22,11 @@ test("server-renders the AdMind decision console", async () => {
   assert.match(html, /传统投放/);
   assert.match(html, /AdMind/);
   assert.match(html, /高潮插播 · 内容理解/);
-  assert.match(html, /暂停查看 · 交互保护/);
+  assert.match(html, /暂停状态 · 交互保护/);
   assert.match(html, /保留用户的查看任务/);
   assert.match(html, /敏感场景 · 硬规则保护/);
   assert.match(html, /有些边界，价格不能越过/);
-  assert.match(html, /AI 负责看懂，规则负责守住边界/);
-  assert.match(html, /等待 Gemini \/ TwelveLabs 实测替换/);
+  assert.doesNotMatch(html, /AI 负责看懂/);
   assert.match(html, /决策后台/);
   assert.doesNotMatch(html, /搜索决策/);
   assert.doesNotMatch(html, /雷霆大页游/);

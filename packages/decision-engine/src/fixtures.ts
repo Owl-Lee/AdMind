@@ -107,16 +107,16 @@ const pauseScenario = {
   deliveryMode: "consolidated" as const,
   scenario: {
     id: "S2",
-    title: "暂停查看画面细节 × 保量游戏广告",
+    title: "稳定暂停状态 × 保量游戏广告",
     episodeTitle: "《CHARGE》细节查看场景",
     durationSec: 89.5,
     nominalOpportunitySec: 27,
     safeOpportunitySec: 35,
-    viewerSegment: "长视频主动查看用户",
+    viewerSegment: "长视频主动暂停用户",
     sceneSignals: [
       {
         timeSec: 27,
-        label: "用户暂停查看画面细节",
+        label: "页面可见、未拖动的稳定暂停",
         tension: 0.4,
         transition: false,
         protectedContext: false,
