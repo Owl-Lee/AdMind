@@ -2,20 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import type { DecisionResponse, Scenario, Strategy } from "@admind/contracts";
 import {
-  BellIcon,
-  ChartIcon,
   CheckIcon,
   ChevronIcon,
   ClockIcon,
-  GridIcon,
-  LibraryIcon,
   PlayIcon,
-  RouteIcon,
-  SearchIcon,
   ShieldIcon,
-  SlidersIcon,
   SparkIcon,
 } from "./icons";
 
@@ -24,15 +18,6 @@ type DemoProps = {
   baseline: DecisionResponse;
   admind: DecisionResponse;
 };
-
-const navItems = [
-  { label: "决策工作台", icon: GridIcon, active: true },
-  { label: "会话规划", icon: RouteIcon },
-  { label: "政策中心", icon: ShieldIcon },
-  { label: "效果分析", icon: ChartIcon },
-  { label: "素材库", icon: LibraryIcon },
-  { label: "系统设置", icon: SlidersIcon },
-];
 
 const scoreLabels = {
   commercialValue: "商业价值",
@@ -136,57 +121,18 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
   const safeLeft = `${(scenario.safeOpportunitySec / scenario.durationSec) * 100}%`;
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <a className="brand" href="#top" aria-label="AdMind 首页">
-          <span className="brand-mark"><SparkIcon /></span>
-          <span><strong>AdMind</strong><small>广告决策智能体</small></span>
-        </a>
-
-        <nav className="side-nav" aria-label="主导航">
-          <p className="nav-label">工作空间</p>
-          {navItems.slice(0, 4).map(({ label, icon: NavIcon, active }) => (
-            <a className={active ? "nav-item active" : "nav-item"} href={active ? "#top" : "#roadmap"} key={label}>
-              <NavIcon />
-              <span>{label}</span>
-              {!active && label !== "效果分析" ? <small>待开放</small> : null}
-            </a>
-          ))}
-          <p className="nav-label nav-label-spaced">管理</p>
-          {navItems.slice(4).map(({ label, icon: NavIcon }) => (
-            <a className="nav-item" href="#roadmap" key={label}>
-              <NavIcon /><span>{label}</span><small>待开放</small>
-            </a>
-          ))}
-        </nav>
-
-        <div className="sidebar-status">
-          <span className="status-light" />
-          <div><strong>决策服务正常</strong><small>规则版本 policy-1.0</small></div>
-        </div>
-        <div className="profile">
-          <span className="avatar">PM</span>
-          <div><strong>Product demo</strong><small>本地演示环境</small></div>
-          <ChevronIcon />
-        </div>
-      </aside>
-
+    <div className="app-shell console-shell">
       <main className="main" id="top">
-        <header className="topbar">
+        <header className="topbar console-topbar">
+          <Link className="console-brand" href="/" aria-label="返回 AdMind 体验首页">
+            <span className="brand-mark"><SparkIcon /></span>
+            <strong>AdMind</strong>
+          </Link>
           <div>
-            <p className="eyebrow">Decision workspace / S1</p>
-            <h1>广告决策工作台</h1>
+            <p className="eyebrow">DECISION CONSOLE</p>
+            <h1>决策后台</h1>
           </div>
-          <div className="top-actions">
-            <label className="search-box">
-              <SearchIcon />
-              <span className="sr-only">搜索</span>
-              <input aria-label="搜索决策或场景" placeholder="搜索决策、活动或场景" />
-              <kbd>⌘ K</kbd>
-            </label>
-            <button className="icon-button" aria-label="通知"><BellIcon /><span className="notification-dot" /></button>
-            <button className="outline-button" onClick={() => setInspectorTab("audit")}>查看审计日志</button>
-          </div>
+          <Link className="console-back" href="/">返回体验演示</Link>
         </header>
 
         <section className="content">
@@ -198,11 +144,6 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
                 <span className="live-badge"><span />实时模拟</span>
               </div>
               <p>真实开放电影 × 真实广告截图：比较固定插播与情境感知编排，商业约束保持不变。</p>
-            </div>
-            <div className="scenario-switcher" aria-label="场景切换">
-              <button className="selected">S1 高潮打断</button>
-              <button disabled title="下一迭代实现">S2 暂停卡片</button>
-              <button disabled title="下一迭代实现">S3 保护场景</button>
             </div>
           </div>
 
@@ -253,11 +194,11 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
                 {adActive && selected ? (
                   <div className={selected.format === "fullscreen" ? "ad-overlay fullscreen real-ad" : "ad-overlay card real-ad-card"}>
                     <Image
-                      alt="腾讯视频中出现的雷霆页游广告实测截图"
+                      alt="视频平台中出现的游戏广告实测截图"
                       fill
                       priority
                       sizes={selected.format === "fullscreen" ? "(max-width: 900px) 100vw, 65vw" : "270px"}
-                      src="/real-thunder-game-ad.png"
+                      src="/real-game-ad.png"
                     />
                     {selected.format === "fullscreen" ? (
                       <>
@@ -268,7 +209,7 @@ export function AdMindDemo({ scenario, baseline, admind }: DemoProps) {
                     ) : (
                       <div className="card-ad-copy">
                         <span>同一保量广告 · 已重排</span>
-                        <strong>雷霆大页游</strong>
+                        <strong>游戏广告</strong>
                         <p>6 秒静音卡片，不遮挡核心剧情</p>
                         <small>研究演示 · {adRemaining}s</small>
                       </div>

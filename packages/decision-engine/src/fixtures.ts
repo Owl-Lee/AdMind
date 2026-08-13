@@ -4,7 +4,7 @@ const shared = {
   deliveryMode: "consolidated" as const,
   scenario: {
     id: "S1",
-    title: "机器人战斗高潮 × 保量页游广告",
+    title: "机器人战斗高潮 × 保量游戏广告",
     episodeTitle: "《CHARGE》节选（Blender Studio，CC BY 4.0）",
     durationSec: 89.5,
     nominalOpportunitySec: 45,
@@ -30,7 +30,7 @@ const shared = {
   campaigns: [
     {
       id: "cmp-aurora-game",
-      name: "雷霆大页游（真实截图案例）",
+      name: "保量游戏广告（真实截图案例）",
       guaranteed: true,
       eligible: true,
       bidCpm: 96,

@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { createS1Request, decide } from "@admind/decision-engine";
-import { ShowcaseDemo } from "./components/ShowcaseDemo";
+import { AdMindDemo } from "../components/AdMindDemo";
 
 export const metadata: Metadata = {
-  title: "AdMind — 广告必须出现，也不必毁掉剧情",
+  title: "决策后台 — AdMind",
 };
 
-export default function Home() {
+export default function DecisionConsole() {
   const request = createS1Request("admind");
   return (
-    <ShowcaseDemo
+    <AdMindDemo
       scenario={request.scenario}
       baseline={decide(createS1Request("baseline"))}
       admind={decide(request)}
