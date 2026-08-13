@@ -5,10 +5,25 @@ import type { AnalysisConsensus, DecisionResponse, Scenario, Strategy, VideoAnal
 import { ChevronIcon, PlayIcon, ShieldIcon, SparkIcon } from "./icons";
 import { AdCreative } from "./AdCreative";
 
-export type ScenarioDemo = {
+export type DemoMedia = {
+  id: string;
+  label: string;
+  category: string;
+  src: string;
+  sourceLabel: string;
+  modelFinding: string;
+  captionsSrc?: string;
+};
+
+export type ScenarioDemoVariant = {
   scenario: Scenario;
   baseline: DecisionResponse;
   admind: DecisionResponse;
+  media: DemoMedia;
+};
+
+export type ScenarioDemo = ScenarioDemoVariant & {
+  alternatives?: ScenarioDemoVariant[];
 };
 
 type ShowcaseDemoProps = {
@@ -138,8 +153,11 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const [time, setTime] = useState(0);
   const [adRemaining, setAdRemaining] = useState<number | null>(null);
   const [pausePending, setPausePending] = useState(false);
+  const [variantIndex, setVariantIndex] = useState(0);
 
-  const { scenario, baseline, admind } = demo;
+  const variants: ScenarioDemoVariant[] = [demo, ...(demo.alternatives ?? [])];
+  const activeDemo = variants[variantIndex] ?? variants[0];
+  const { scenario, baseline, admind, media } = activeDemo;
   const isPauseScenario = scenario.id === "S2";
   const isProtectedScenario = scenario.id === "S3";
   const decision = strategy === "baseline" ? baseline : admind;
@@ -147,6 +165,23 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const adActive = adRemaining !== null;
   const decisionTime = selected?.timeSec ?? scenario.nominalOpportunitySec;
   const protectionActive = isProtectedScenario && strategy === "admind" && time >= scenario.nominalOpportunitySec - 2;
+
+  const resetPlayback = () => {
+    const video = videoRef.current;
+    video?.pause();
+    if (video) video.currentTime = 0;
+    triggeredRef.current = { baseline: false, admind: false };
+    resumeAfterAdRef.current = false;
+    setAdRemaining(null);
+    setPausePending(false);
+    setPlaying(false);
+    setTime(0);
+  };
+
+  const switchVariant = (nextIndex: number) => {
+    resetPlayback();
+    setVariantIndex(nextIndex);
+  };
 
   useEffect(() => {
     if (adRemaining === null) return;
@@ -189,15 +224,8 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   }, [isPauseScenario]);
 
   const switchStrategy = (nextStrategy: Strategy) => {
-    const video = videoRef.current;
-    video?.pause();
-    if (video) video.currentTime = 0;
-    triggeredRef.current[nextStrategy] = false;
-    resumeAfterAdRef.current = false;
+    resetPlayback();
     setStrategy(nextStrategy);
-    setAdRemaining(null);
-    setPausePending(false);
-    setTime(0);
   };
 
   const jumpToDecision = () => {
@@ -286,18 +314,38 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
         </div>
       </div>
 
+      {variants.length > 1 ? (
+        <div className="showcase-material-switcher" role="group" aria-label="切换分析素材">
+          {variants.map((variant, index) => (
+            <button
+              aria-pressed={variantIndex === index}
+              className={variantIndex === index ? "active" : ""}
+              key={variant.media.id}
+              onClick={() => switchVariant(index)}
+            >
+              <span>{variant.media.category}</span>
+              <strong>{variant.media.label}</strong>
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       <article className="showcase-player-card">
         <div className="showcase-player-meta">
-          <div>
+          <div className="showcase-status-copy">
             <span className={strategy === "baseline" ? "showcase-state baseline" : "showcase-state smart"} />
-            <strong>{isPauseScenario
-              ? strategy === "baseline" ? "传统暂停广告：立即全屏覆盖" : "AdMind：判断交互状态，保留画面"
-              : isProtectedScenario
-                ? strategy === "baseline" ? "传统投放：高价活动立即触发" : "AdMind：硬规则阻止投放"
-              : strategy === "baseline" ? "传统投放：固定时间触发" : "AdMind：等待自然转场"}</strong>
-            {isPauseScenario && strategy === "admind" && pausePending ? <small>正在确认稳定暂停…</small> : null}
+            <div>
+              <strong>{isPauseScenario
+                ? strategy === "baseline" ? "传统暂停广告：立即全屏覆盖" : "AdMind：判断交互状态，保留画面"
+                : strategy === "baseline"
+                  ? "传统投放：固定时间触发"
+                  : decision.outcome === "blocked"
+                    ? isProtectedScenario ? "AdMind：伦理规则阻止投放" : "AdMind：窗口内不投放"
+                    : selected?.format === "muted_card" ? "AdMind：延后并降低遮挡" : "AdMind：等待自然转场"}</strong>
+              <small>{isPauseScenario && strategy === "admind" && pausePending ? "正在确认稳定暂停…" : media.modelFinding}</small>
+            </div>
           </div>
-          <button onClick={jumpToDecision}>{isPauseScenario ? "模拟暂停" : "跳到"} {formatTime(decisionTime)}</button>
+          <button onClick={jumpToDecision}>{isPauseScenario ? "模拟暂停" : "查看"} {formatTime(decisionTime)}</button>
         </div>
 
         <div className="video-stage showcase-video-stage">
@@ -317,14 +365,20 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             playsInline
             preload="metadata"
             ref={videoRef}
-            src="/admind-charge-demo-720p.mp4"
+            src={media.src}
           >
-            <track default kind="captions" label="中文" src="/charge-demo-zh.vtt" srcLang="zh" />
+            {media.captionsSrc ? <track default kind="captions" label="中文" src={media.captionsSrc} srcLang="zh" /> : null}
           </video>
 
           <div className="video-topline showcase-video-topline">
-            <span>{isPauseScenario ? "只使用当前播放器事件" : isProtectedScenario ? "伦理保护场景仍在进行" : "CHARGE · Blender Studio"}</span>
-            <span>{isPauseScenario ? "暂停 · 拖动 · 页面可见性" : isProtectedScenario ? "00:56 角色受伤" : strategy === "baseline" ? "00:45 固定投放" : `${formatTime(scenario.safeOpportunitySec)} AI 延后建议`}</span>
+            <span>{isPauseScenario ? "只使用当前播放器事件" : media.sourceLabel}</span>
+            <span>{isPauseScenario
+              ? "暂停 · 拖动 · 页面可见性"
+              : strategy === "baseline"
+                ? `${formatTime(scenario.nominalOpportunitySec)} 固定投放`
+                : decision.outcome === "blocked"
+                  ? isProtectedScenario ? "救援结束前禁止投放" : "未找到安全窗口"
+                  : `${formatTime(selected?.timeSec ?? scenario.safeOpportunitySec)} AI 计划`}</span>
           </div>
 
           {adActive && selected ? (
@@ -419,7 +473,7 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
 
       <footer className="showcase-footer">
         <strong>AdMind</strong>
-        <p>《CHARGE》© Blender Foundation / Blender Studio，CC BY 4.0。游戏广告画面仅用于非商业产品研究演示，不代表任何平台或广告主合作。</p>
+        <p>视频素材：《CHARGE》《Coffee Run》© Blender Foundation / Blender Studio（CC BY 4.0）；《Caminandes: Llamigos》© Blender（CC BY 3.0）；美国海岸警卫队救援视频为 Public Domain。游戏广告画面仅用于非商业产品研究演示。</p>
       </footer>
     </div>
   );

@@ -315,6 +315,13 @@ button { color: inherit; }
 .showcase-section-heading h2 { margin: 0; font-size: clamp(34px, 4vw, 52px); line-height: 1.08; letter-spacing: -.055em; }
 .showcase-section-heading .showcase-scene-label { margin-bottom: 12px; color: #6d4ef6; font-size: 12px; font-weight: 800; letter-spacing: .08em; }
 .showcase-section-heading .showcase-scene-summary { max-width: 650px; margin: 17px 0 0; color: #74747d; font-size: 14px; line-height: 1.7; }
+.showcase-material-switcher { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 0 0 18px; padding: 6px; border: 1px solid #e5e5ea; border-radius: 20px; background: #f3f3f6; }
+.showcase-material-switcher button { display: grid; gap: 5px; min-width: 0; padding: 14px 16px; border: 0; border-radius: 15px; color: #777781; background: transparent; cursor: pointer; text-align: left; }
+.showcase-material-switcher button span { font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.showcase-material-switcher button strong { overflow: hidden; color: #65656e; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.showcase-material-switcher button.active { background: white; box-shadow: 0 4px 14px rgba(20,20,25,.08); }
+.showcase-material-switcher button.active span { color: #6d4ef6; }
+.showcase-material-switcher button.active strong { color: #111114; }
 .showcase-toggle { display: flex; flex: 0 0 auto; padding: 4px; border: 1px solid #e5e5ea; border-radius: 999px; background: #f1f1f4; }
 .showcase-toggle button { display: flex; height: 38px; align-items: center; gap: 6px; padding: 0 17px; border: 0; border-radius: 999px; color: #707079; background: transparent; cursor: pointer; font-size: 13px; font-weight: 700; }
 .showcase-toggle button svg { width: 14px; }
@@ -323,6 +330,8 @@ button { color: inherit; }
 .showcase-player-card { overflow: hidden; border: 1px solid #e5e5ea; border-radius: 24px; background: white; box-shadow: 0 24px 70px rgba(30,28,45,.08); }
 .showcase-player-meta { display: flex; min-height: 68px; align-items: center; justify-content: space-between; gap: 20px; padding: 0 22px; }
 .showcase-player-meta > div { display: flex; align-items: center; gap: 10px; }
+.showcase-player-meta .showcase-status-copy > div { display: grid; gap: 3px; }
+.showcase-player-meta .showcase-status-copy small { display: block; max-width: 660px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .showcase-player-meta strong { font-size: 14px; }
 .showcase-player-meta small { color: #7d7c86; font-size: 11px; }
 .showcase-state { width: 9px; height: 9px; border-radius: 50%; }
@@ -478,11 +487,14 @@ button { color: inherit; }
   .showcase-section-heading { align-items: flex-start; flex-direction: column; }
   .showcase-section-heading h2 { font-size: 36px; }
   .showcase-section-heading .showcase-scene-summary { font-size: 12px; }
+  .showcase-material-switcher { grid-template-columns: 1fr; border-radius: 16px; }
+  .showcase-material-switcher button { padding: 11px 13px; }
   .showcase-toggle { width: 100%; }
   .showcase-toggle button { flex: 1; justify-content: center; }
   .showcase-player-card { border-radius: 18px; }
   .showcase-player-meta { min-height: 62px; padding: 0 14px; }
   .showcase-player-meta strong { font-size: 11px; }
+  .showcase-player-meta .showcase-status-copy small { display: none; }
   .showcase-player-meta button { padding: 7px 10px; font-size: 10px; }
   .showcase-video-topline { top: 10px; right: 12px; left: 12px; font-size: 7px; }
   .showcase-controls { right: 9px; bottom: 7px; left: 9px; gap: 5px; font-size: 8px; }

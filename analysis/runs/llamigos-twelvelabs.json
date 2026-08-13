@@ -1,0 +1,127 @@
+{
+  "schemaVersion": "1.0",
+  "analysisId": "twelvelabs-4feb570456e8",
+  "provider": "twelvelabs",
+  "mode": "live",
+  "model": "pegasus1.5",
+  "generatedAt": "2026-08-13T23:39:21.792Z",
+  "media": {
+    "fileName": "llamigos-chase-720p.mp4",
+    "durationSec": 75,
+    "sha256": "4feb570456e8afc77af20a73f65b07733d32cdc1a8e3e2f366289c9154452831"
+  },
+  "segments": [
+    {
+      "id": "segment-1",
+      "startSec": 0,
+      "endSec": 12,
+      "label": "Introduction and Setup",
+      "description": "羊驼和企鹅在雪地互动，企鹅递浆果，随后进入矿车。",
+      "narrativeIntensity": 0.4,
+      "emotionalIntensity": 0.3,
+      "narrativeCriticality": 0.3,
+      "interruptionRisk": 0.2,
+      "interruptionRiskCategories": [],
+      "motionIntensity": 0.3,
+      "audioIntensity": 0.2,
+      "dialogueActive": false,
+      "transitionConfidence": 0.8,
+      "sensitiveCategories": [],
+      "confidence": 0.9
+    },
+    {
+      "id": "segment-2",
+      "startSec": 12,
+      "endSec": 30,
+      "label": "Mine Cart Climax",
+      "description": "角色乘坐矿车穿越黑暗隧道，躲避障碍并从悬崖坠落。高速运动与物理危险。",
+      "narrativeIntensity": 0.9,
+      "emotionalIntensity": 0.8,
+      "narrativeCriticality": 0.9,
+      "interruptionRisk": 0.9,
+      "interruptionRiskCategories": [
+        "physical_conflict",
+        "disaster_or_trauma"
+      ],
+      "motionIntensity": 0.9,
+      "audioIntensity": 0.8,
+      "dialogueActive": false,
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [],
+      "confidence": 0.95
+    },
+    {
+      "id": "segment-3",
+      "startSec": 30,
+      "endSec": 51,
+      "label": "Freefall and Impact",
+      "description": "羊驼和企鹅空中坠落，落入雪地，企鹅滚开，羊驼晕眩。",
+      "narrativeIntensity": 0.7,
+      "emotionalIntensity": 0.6,
+      "narrativeCriticality": 0.7,
+      "interruptionRisk": 0.7,
+      "interruptionRiskCategories": [
+        "physical_conflict"
+      ],
+      "motionIntensity": 0.8,
+      "audioIntensity": 0.6,
+      "dialogueActive": false,
+      "transitionConfidence": 0.8,
+      "sensitiveCategories": [],
+      "confidence": 0.9
+    },
+    {
+      "id": "segment-4",
+      "startSec": 51,
+      "endSec": 75,
+      "label": "Resolution and Reveal",
+      "description": "羊驼恢复并眺望海洋，一群企鹅带着浆果出现，提供喜剧式结局。",
+      "narrativeIntensity": 0.5,
+      "emotionalIntensity": 0.5,
+      "narrativeCriticality": 0.6,
+      "interruptionRisk": 0.4,
+      "interruptionRiskCategories": [
+        "comedy_setup_or_punchline"
+      ],
+      "motionIntensity": 0.3,
+      "audioIntensity": 0.4,
+      "dialogueActive": true,
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [],
+      "confidence": 0.9
+    }
+  ],
+  "candidateBreaks": [
+    {
+      "timeSec": 20,
+      "label": "Nominal Opportunity",
+      "recommendation": "block",
+      "reasons": [
+        "高速矿车序列包含物理危险和高叙事强度。",
+        "中断会破坏关键动作序列的流畅性。"
+      ],
+      "confidence": 0.95,
+      "sourceSegmentIds": [
+        "segment-2"
+      ]
+    },
+    {
+      "timeSec": 51,
+      "label": "Post-Climax Recovery",
+      "recommendation": "delay",
+      "reasons": [
+        "直接危险已过，但羊驼仍在从撞击中恢复。",
+        "叙事动量正从动作转向解决；中断仍可能破坏情感节奏。"
+      ],
+      "confidence": 0.8,
+      "sourceSegmentIds": [
+        "segment-3",
+        "segment-4"
+      ]
+    }
+  ],
+  "limitations": [
+    "20秒至65秒之间不存在清晰、低强度的安全中断边界。",
+    "12秒至51秒的整个序列是连续的高风险叙事弧线。"
+  ]
+}

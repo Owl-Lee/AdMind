@@ -176,14 +176,16 @@ function baseline(request: DecisionRequest): DecisionResponse {
     summary: request.scenario.id === "S2"
       ? "传统暂停广告在用户查看画面时立即覆盖全屏，阻断了原本的查看任务。"
       : request.scenario.id === "S3"
-        ? "传统规则命中高价保量活动后立即插播，没有识别受保护的受伤场景。"
+        ? "传统规则命中高价保量活动后立即插播，没有识别正在进行的真实救援。"
       : "传统规则按预设广告点立即播放 15 秒全屏素材，未理解内容高潮。",
     audit: [
       {
         stage: "input",
         status: "info",
         code: "FIXED_BREAK_RECEIVED",
-        message: request.scenario.id === "S2" ? "收到用户暂停事件 00:27。" : "收到固定广告点 00:45。",
+        message: request.scenario.id === "S2"
+          ? "收到用户暂停事件 00:27。"
+          : `收到固定广告点 ${Math.floor(request.scenario.nominalOpportunitySec / 60).toString().padStart(2, "0")}:${Math.floor(request.scenario.nominalOpportunitySec % 60).toString().padStart(2, "0")}。`,
       },
       {
         stage: "decision",

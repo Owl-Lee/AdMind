@@ -19,8 +19,13 @@ export function createS1RequestFromAnalysis(
   consensus?: AnalysisConsensus,
 ): DecisionRequest {
   const request = createS1Request(strategy);
-  const nominalTime = request.scenario.nominalOpportunitySec;
+  const nominalTime = analysis.candidateBreaks
+    .slice()
+    .sort((left, right) => left.timeSec - right.timeSec)[0]?.timeSec
+    ?? request.scenario.nominalOpportunitySec;
   const maxDeferral = Math.max(...request.campaigns.map((campaign) => campaign.maxDeferralSec));
+  request.scenario.durationSec = analysis.media.durationSec;
+  request.scenario.nominalOpportunitySec = nominalTime;
   const executableBreaks = analysis.candidateBreaks
     .filter((candidate) =>
       candidate.recommendation !== "block"
@@ -40,17 +45,52 @@ export function createS1RequestFromAnalysis(
     recommendation: fallback.recommendation,
     confidence: fallback.confidenceMin,
   } : evidenceBreak;
-  if (!safeBreak) return request;
 
   const nominalSegment = segmentAt(analysis, nominalTime);
-  const safeSegment = segmentAt(analysis, safeBreak.timeSec);
-  request.scenario.safeOpportunitySec = safeBreak.timeSec;
+  const nominalCandidate = analysis.candidateBreaks.find((candidate) => Math.abs(candidate.timeSec - nominalTime) <= 1);
   const nominalRecommendation = consensus?.nominal.recommendation
-    ?? analysis.candidateBreaks.find((candidate) => Math.abs(candidate.timeSec - nominalTime) <= 1)?.recommendation
+    ?? nominalCandidate?.recommendation
     ?? "uncertain";
   const nominalConfidence = consensus?.nominal.confidenceMin
-    ?? analysis.candidateBreaks.find((candidate) => Math.abs(candidate.timeSec - nominalTime) <= 1)?.confidence
+    ?? nominalCandidate?.confidence
     ?? 0;
+
+  if (!safeBreak) {
+    request.scenario.safeOpportunitySec = analysis.media.durationSec;
+    const blockedSignals = analysis.candidateBreaks
+      .filter((candidate) =>
+        candidate.timeSec >= nominalTime
+        && candidate.timeSec - nominalTime <= maxDeferral)
+      .map((candidate) => {
+        const segment = segmentAt(analysis, candidate.timeSec);
+        return {
+          timeSec: candidate.timeSec,
+          label: candidate.label,
+          tension: segment?.narrativeIntensity ?? 0.9,
+          transition: false,
+          protectedContext: false,
+          opportunity: candidate.timeSec === nominalTime ? "midroll" as const : "boundary" as const,
+          modelRecommendation: candidate.recommendation,
+          modelConfidence: candidate.confidence,
+          modelAgreement: 1,
+        };
+      });
+    request.scenario.sceneSignals = blockedSignals.length > 0 ? blockedSignals : [{
+      timeSec: nominalTime,
+      label: nominalSegment?.label ?? "未找到安全中断窗口",
+      tension: nominalSegment?.narrativeIntensity ?? 0.9,
+      transition: false,
+      protectedContext: false,
+      opportunity: "midroll",
+      modelRecommendation: nominalRecommendation,
+      modelConfidence: nominalConfidence,
+      modelAgreement: consensus?.nominal.agreement ?? 1,
+    }];
+    return DecisionRequestSchema.parse(request);
+  }
+
+  const safeSegment = segmentAt(analysis, safeBreak.timeSec);
+  request.scenario.safeOpportunitySec = safeBreak.timeSec;
   request.scenario.sceneSignals = [
     {
       timeSec: nominalTime,

@@ -145,7 +145,8 @@ describe("AdMind decision engine", () => {
     expect(result.commercialShortfall).toBe(true);
     expect(result.audit).toEqual(expect.arrayContaining([
       expect.objectContaining({ code: "PROTECTED_CONTEXT", status: "reject" }),
-      expect.objectContaining({ code: "OUTSIDE_DELIVERY_WINDOW", status: "reject" }),
+      expect.objectContaining({ code: "MODEL_CONSENSUS_BLOCK", status: "reject" }),
+      expect.objectContaining({ code: "CONTENT_OVERRUN", status: "reject" }),
       expect.objectContaining({ code: "NO_ELIGIBLE_PLAN", status: "reject" }),
     ]));
   });

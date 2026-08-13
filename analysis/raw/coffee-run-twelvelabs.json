@@ -1,0 +1,177 @@
+{
+  "segments": [
+    {
+      "id": "segment-1",
+      "startSec": 0,
+      "endSec": 19,
+      "label": "时间循环蒙太奇",
+      "description": "蓝发女子手持绿色罐子，在婚礼、葬礼、公园等人生阶段间循环奔跑，最终从公园栏杆跌落。",
+      "narrativeIntensity": 0.9,
+      "emotionalIntensity": 0.8,
+      "narrativeCriticality": 0.9,
+      "interruptionRisk": 0.9,
+      "interruptionRiskCategories": [
+        "death_or_grief",
+        "suspense_or_reveal",
+        "performance_continuity"
+      ],
+      "motionIntensity": 0.8,
+      "audioIntensity": 0.5,
+      "dialogueActive": false,
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [
+        "death_or_grief"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "id": "segment-2",
+      "startSec": 19,
+      "endSec": 31,
+      "label": "求婚被拒",
+      "description": "女子进入咖啡馆，男子求婚被拒，随后场景切换至她从屋顶跌落。",
+      "narrativeIntensity": 0.9,
+      "emotionalIntensity": 0.9,
+      "narrativeCriticality": 0.9,
+      "interruptionRisk": 0.9,
+      "interruptionRiskCategories": [
+        "romantic_intimacy",
+        "confession_or_reunion",
+        "argument_or_breakdown"
+      ],
+      "motionIntensity": 0.6,
+      "audioIntensity": 0.5,
+      "dialogueActive": false,
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [],
+      "confidence": 0.95
+    },
+    {
+      "id": "segment-3",
+      "startSec": 31,
+      "endSec": 48,
+      "label": "医院场景",
+      "description": "女子在医院奔跑，经过产房和危重病人，最终从窗户跌落。",
+      "narrativeIntensity": 0.9,
+      "emotionalIntensity": 0.8,
+      "narrativeCriticality": 0.9,
+      "interruptionRisk": 0.9,
+      "interruptionRiskCategories": [
+        "injury_or_medical_urgency",
+        "suspense_or_reveal"
+      ],
+      "motionIntensity": 0.8,
+      "audioIntensity": 0.5,
+      "dialogueActive": false,
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [
+        "injury_or_medical_urgency"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "id": "segment-4",
+      "startSec": 48,
+      "endSec": 69,
+      "label": "循环重复",
+      "description": "人生阶段蒙太奇再次重复，顺序略有不同，最终以女子再次跌落结束。",
+      "narrativeIntensity": 0.8,
+      "emotionalIntensity": 0.7,
+      "narrativeCriticality": 0.8,
+      "interruptionRisk": 0.8,
+      "interruptionRiskCategories": [
+        "death_or_grief",
+        "performance_continuity"
+      ],
+      "motionIntensity": 0.8,
+      "audioIntensity": 0.5,
+      "dialogueActive": false,
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [
+        "death_or_grief"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "id": "segment-5",
+      "startSec": 69,
+      "endSec": 85,
+      "label": "最终拒绝与绝望",
+      "description": "咖啡馆求婚场景再次重复，随后女子独自坐在黑暗房间中，周围是空罐子，表现出绝望状态。",
+      "narrativeIntensity": 0.9,
+      "emotionalIntensity": 0.9,
+      "narrativeCriticality": 0.9,
+      "interruptionRisk": 0.9,
+      "interruptionRiskCategories": [
+        "romantic_intimacy",
+        "argument_or_breakdown",
+        "suspense_or_reveal"
+      ],
+      "motionIntensity": 0.5,
+      "audioIntensity": 0.5,
+      "dialogueActive": false,
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [],
+      "confidence": 0.95
+    }
+  ],
+  "candidateBreaks": [
+    {
+      "timeSec": 15,
+      "label": "名义机会点",
+      "recommendation": "block",
+      "reasons": [
+        "人生阶段连续蒙太奇期间叙事强度高。",
+        "葬礼场景导致情感强度高。",
+        "中断会破坏时间循环叙事的流畅性。"
+      ],
+      "confidence": 0.9,
+      "sourceSegmentIds": [
+        "segment-1"
+      ]
+    },
+    {
+      "timeSec": 31,
+      "label": "屋顶跌落",
+      "recommendation": "block",
+      "reasons": [
+        "场景从求婚过渡到跌落，叙事关键性高。",
+        "拒绝与跌落导致情感强度高。"
+      ],
+      "confidence": 0.9,
+      "sourceSegmentIds": [
+        "segment-2"
+      ]
+    },
+    {
+      "timeSec": 48,
+      "label": "循环重启",
+      "recommendation": "block",
+      "reasons": [
+        "循环重启时叙事强度高，维持悬念。",
+        "中断会破坏时间循环叙事的连续性。"
+      ],
+      "confidence": 0.9,
+      "sourceSegmentIds": [
+        "segment-3"
+      ]
+    },
+    {
+      "timeSec": 69,
+      "label": "最终拒绝",
+      "recommendation": "block",
+      "reasons": [
+        "最终拒绝发生时叙事关键性高。",
+        "重复拒绝与随后的绝望导致情感强度高。"
+      ],
+      "confidence": 0.9,
+      "sourceSegmentIds": [
+        "segment-5"
+      ]
+    }
+  ],
+  "limitations": [
+    "视频缺乏对话，难以推断视觉线索之外的具体情感细微差别。",
+    "连续循环结构使得识别清晰的中断边界具有挑战性。"
+  ]
+}
