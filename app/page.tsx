@@ -19,6 +19,8 @@ export default function Home() {
   const s3 = createS3Request("admind");
   return (
     <ShowcaseDemo
+      analysisRuns={analyses}
+      consensus={consensus}
       scenarios={[
         { scenario: s1.scenario, baseline: decide(createS1RequestFromAnalysis(analysis, "baseline", consensus)), admind: decide(s1) },
         { scenario: s2.scenario, baseline: decide(createS2Request("baseline")), admind: decide(s2) },

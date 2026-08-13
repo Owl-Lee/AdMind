@@ -12,7 +12,7 @@ async function render(path = "/") {
   );
 }
 
-test("server-renders the AdMind decision console", async () => {
+test("server-renders the integrated AdMind showcase and decision evidence", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
@@ -20,35 +20,25 @@ test("server-renders the AdMind decision console", async () => {
   assert.match(html, /<title>AdMind — 广告必须出现，也不必毁掉剧情<\/title>/i);
   assert.match(html, /广告必须出现/);
   assert.match(html, /传统投放/);
-  assert.match(html, /AdMind/);
-  assert.match(html, /高潮插播 · 内容理解/);
-  assert.match(html, /暂停状态 · 交互保护/);
-  assert.match(html, /保留用户的查看任务/);
-  assert.match(html, /敏感场景 · 硬规则保护/);
-  assert.match(html, /有些边界，价格不能越过/);
+  assert.match(html, /高潮插播 · 内容连续性/);
+  assert.match(html, /暂停状态 · 任务保护/);
+  assert.match(html, /伦理场景 · 硬规则保护/);
+  assert.match(html, /这次决定，三步看懂/);
+  assert.match(html, /真实 API 证据/);
+  assert.match(html, /本页播放器事件/);
+  assert.match(html, /伦理规则样例/);
+  assert.match(html, /只读取当前播放器状态/);
+  assert.match(html, /伦理保护先于商业竞价/);
+  assert.match(html, /展开技术证据/);
   assert.doesNotMatch(html, /AI 负责看懂/);
-  assert.match(html, /决策后台/);
+  assert.doesNotMatch(html, /决策后台/);
   assert.doesNotMatch(html, /搜索决策/);
   assert.doesNotMatch(html, /雷霆大页游/);
   assert.doesNotMatch(html, /Your site is taking shape/);
 });
 
-test("server-renders the detailed decision console separately", async () => {
+test("legacy decision-console route redirects into the integrated proof section", async () => {
   const response = await render("/console");
-  assert.equal(response.status, 200);
-  const html = await response.text();
-  assert.match(html, /<title>决策后台 — AdMind<\/title>/i);
-  assert.match(html, /一条广告决策/);
-  assert.match(html, /从视频到可执行计划/);
-  assert.match(html, /AI 看到了什么/);
-  assert.match(html, /我们如何得到最终结果/);
-  assert.match(html, /TwelveLabs/);
-  assert.match(html, /两次运行，共识稳定/);
-  assert.match(html, /完整计划校验/);
-  assert.match(html, /确定性排序/);
-  assert.match(html, /MODEL_CONSENSUS_BLOCK/);
-  assert.match(html, /01:25/);
-  assert.match(html, /三类场景，逐步扩充真实片段/);
-  assert.doesNotMatch(html, /搜索决策/);
-  assert.doesNotMatch(html, /Product demo/);
+  assert.equal(response.status, 307);
+  assert.equal(response.headers.get("location"), "/#decision");
 });
