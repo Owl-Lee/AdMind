@@ -66,6 +66,15 @@ function hardFilter(
   if (!candidate.eligible) reject("CAMPAIGN_INELIGIBLE", "广告活动不满足合约或受众资格。");
   if (!candidate.approved) reject("CREATIVE_UNAPPROVED", "素材尚未通过人工审核，AI 无权放行。");
   if (candidate.scene.protectedContext) reject("PROTECTED_CONTEXT", "受保护任务场景禁止商业打断。");
+  if (candidate.scene.modelRecommendation === "block" && (candidate.scene.modelAgreement ?? 0) >= 0.8) {
+    reject("MODEL_CONSENSUS_BLOCK", "多次视频分析一致认为当前时刻具有高打断风险。");
+  }
+  if (candidate.scene.modelRecommendation === "uncertain" && candidate.format === "fullscreen") {
+    reject("UNCERTAIN_CONTEXT", "模型证据不一致时禁止全屏插播。");
+  }
+  if (candidate.scene.modelRecommendation === "delay" && candidate.format === "fullscreen") {
+    reject("DEGRADED_FORMAT_REQUIRED", "延后候选仍有打断风险，只允许低遮挡静音形式。");
+  }
   if (!request.policy.allowedFormats.includes(candidate.format)) reject("FORMAT_FORBIDDEN", "当前版位不允许该广告形式。");
   if (request.policy.frequencyCount >= request.policy.frequencyCap) reject("FREQUENCY_CAP", "用户已达到硬频控上限。");
   if (request.policy.userIsNavigating && candidate.format === "fullscreen") reject("NAVIGATION_LOCK", "用户正在导航，禁止全屏打断。");
@@ -77,6 +86,9 @@ function hardFilter(
   }
   if (candidate.timeSec - request.scenario.nominalOpportunitySec > candidate.maxDeferralSec) {
     reject("OUTSIDE_DELIVERY_WINDOW", "候选时间超过活动允许的最大延迟窗口。");
+  }
+  if (candidate.timeSec + candidate.durationSec > request.scenario.durationSec) {
+    reject("CONTENT_OVERRUN", "完整广告计划无法在视频结束前执行完毕。");
   }
 
   if (audit.length === 0) {
@@ -272,7 +284,7 @@ export function decide(input: DecisionRequest): DecisionResponse {
       ? "根据当前播放器的暂停、拖动与页面可见性判断为稳定暂停；保留原内容和播放控制，仅在安全区域展示可关闭的静音相关广告。"
       : `在不取消保量活动的前提下，将广告推迟 ${Math.round(
         selected.timeSec - request.scenario.nominalOpportunitySec,
-      )} 秒，并把同一素材重排为 6 秒静音转场卡片。`,
+      )} 秒，并把同一素材重排为 ${selected.durationSec} 秒低遮挡静音卡片。`,
   };
 }
 

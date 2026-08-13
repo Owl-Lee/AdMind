@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { VideoAnalysisSchema } from "@admind/contracts";
-import chargeTwelveLabsAnalysis from "../../../analysis/charge-twelvelabs-live.json";
+import { aggregateAnalyses } from "../../video-analyzer/src/consensus";
+import chargeRun1 from "../../../analysis/runs/charge-twelvelabs-01.json";
+import chargeRun2 from "../../../analysis/runs/charge-twelvelabs-02.json";
 import { createS1Request, createS1RequestFromAnalysis, createS2Request, createS3Request, decide } from "./index";
 
 describe("AdMind decision engine", () => {
@@ -35,16 +37,22 @@ describe("AdMind decision engine", () => {
   });
 
   it("derives the S1 safe transition from validated live provider evidence", () => {
-    const analysis = VideoAnalysisSchema.parse(chargeTwelveLabsAnalysis);
-    const request = createS1RequestFromAnalysis(analysis, "admind");
+    const analyses = [VideoAnalysisSchema.parse(chargeRun1), VideoAnalysisSchema.parse(chargeRun2)];
+    const consensus = aggregateAnalyses({ analyses, nominalOpportunitySec: 45, maxDeferralSec: 40 });
+    const request = createS1RequestFromAnalysis(analyses[1], "admind", consensus);
     const result = decide(request);
 
     expect(request.scenario.safeOpportunitySec).toBe(85);
     expect(result.selected).toMatchObject({
       timeSec: 85,
-      durationSec: 6,
+      durationSec: 4,
       format: "muted_card",
     });
+    expect(result.audit).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "MODEL_CONSENSUS_BLOCK", status: "reject" }),
+      expect.objectContaining({ code: "DEGRADED_FORMAT_REQUIRED", status: "reject" }),
+      expect.objectContaining({ code: "CONTENT_OVERRUN", status: "reject" }),
+    ]));
   });
 
   it("never lets a high score override a frequency cap", () => {

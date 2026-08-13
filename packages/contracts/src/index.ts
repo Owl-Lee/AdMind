@@ -21,6 +21,9 @@ export const SceneSignalSchema = z.object({
   transition: z.boolean(),
   protectedContext: z.boolean(),
   opportunity: z.enum(["midroll", "pause", "boundary", "protected"]).optional(),
+  modelRecommendation: z.enum(["allow", "delay", "block", "uncertain"]).optional(),
+  modelConfidence: z.number().min(0).max(1).optional(),
+  modelAgreement: z.number().min(0).max(1).optional(),
 });
 export type SceneSignal = z.infer<typeof SceneSignalSchema>;
 
@@ -138,6 +141,10 @@ export const VideoAnalysisSegmentSchema = z.object({
   label: z.string().min(1),
   description: z.string().min(1),
   narrativeIntensity: z.number().min(0).max(1),
+  emotionalIntensity: z.number().min(0).max(1).nullable().default(null),
+  narrativeCriticality: z.number().min(0).max(1).nullable().default(null),
+  interruptionRisk: z.number().min(0).max(1).nullable().default(null),
+  interruptionRiskCategories: z.array(z.string()).default([]),
   motionIntensity: z.number().min(0).max(1).nullable(),
   audioIntensity: z.number().min(0).max(1).nullable(),
   dialogueActive: z.boolean().nullable(),
@@ -150,10 +157,13 @@ export const VideoAnalysisSegmentSchema = z.object({
 });
 export type VideoAnalysisSegment = z.infer<typeof VideoAnalysisSegmentSchema>;
 
+export const BreakRecommendationSchema = z.enum(["allow", "delay", "block", "uncertain"]);
+export type BreakRecommendation = z.infer<typeof BreakRecommendationSchema>;
+
 export const CandidateBreakSchema = z.object({
   timeSec: z.number().nonnegative(),
   label: z.string().min(1),
-  recommendation: z.enum(["allow", "delay", "block"]),
+  recommendation: BreakRecommendationSchema,
   reasons: z.array(z.string().min(1)).min(1),
   confidence: z.number().min(0).max(1),
   sourceSegmentIds: z.array(z.string().min(1)),
@@ -177,3 +187,27 @@ export const VideoAnalysisSchema = z.object({
   limitations: z.array(z.string().min(1)),
 });
 export type VideoAnalysis = z.infer<typeof VideoAnalysisSchema>;
+
+const ConsensusDecisionSchema = z.object({
+  recommendation: BreakRecommendationSchema,
+  timeSec: z.number().nonnegative(),
+  agreement: z.number().min(0).max(1),
+  confidenceMin: z.number().min(0).max(1),
+  confidenceMax: z.number().min(0).max(1),
+  evidenceLabels: z.array(z.string()),
+});
+
+export const AnalysisConsensusSchema = z.object({
+  schemaVersion: z.literal("1.0"),
+  provider: AnalysisProviderSchema,
+  model: z.string().min(1),
+  runCount: z.number().int().min(2),
+  mediaSha256: z.string().regex(/^[a-f0-9]{64}$/i).nullable(),
+  nominalOpportunitySec: z.number().nonnegative(),
+  deadlineSec: z.number().nonnegative(),
+  nominal: ConsensusDecisionSchema,
+  fallback: ConsensusDecisionSchema.nullable(),
+  status: z.enum(["stable", "uncertain"]),
+  limitations: z.array(z.string()),
+});
+export type AnalysisConsensus = z.infer<typeof AnalysisConsensusSchema>;

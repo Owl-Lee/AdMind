@@ -4,48 +4,79 @@
       "id": "segment-1",
       "startSec": 0,
       "endSec": 12,
-      "label": "准备与发现",
-      "description": "一位装有假肢的老年男子从基座上取出一台发光的绿色设备，随后被一台白色机器人打断。",
-      "narrativeIntensity": 0.4,
+      "label": "Stealing the Core",
+      "description": "An elderly man stealthily removes a glowing green core from a device and hands it to a robot. The scene is tense but relatively calm.",
+      "narrativeIntensity": 0.6,
+      "emotionalIntensity": 0.4,
+      "narrativeCriticality": 0.8,
+      "interruptionRisk": 0.3,
+      "interruptionRiskCategories": [
+        "suspense_or_reveal"
+      ],
       "motionIntensity": 0.3,
       "audioIntensity": 0.2,
       "dialogueActive": false,
       "transitionConfidence": 0.9,
       "sensitiveCategories": [],
-      "confidence": 0.95
+      "confidence": 0.9
     },
     {
       "id": "segment-2",
       "startSec": 12,
-      "endSec": 89,
-      "label": "暴力对抗",
-      "description": "机器人攻击该男子，男子使用扳手和粉色喷漆自卫，最终在激烈的战斗中摧毁了机器人。",
-      "narrativeIntensity": 0.95,
+      "endSec": 89.5,
+      "label": "Violent Confrontation",
+      "description": "A robot attacks the man. The man fights back using a wrench and spray paint, eventually destroying the robot in a violent struggle. The scene is chaotic, loud, and action-packed.",
+      "narrativeIntensity": 0.9,
+      "emotionalIntensity": 0.9,
+      "narrativeCriticality": 1.0,
+      "interruptionRisk": 0.95,
+      "interruptionRiskCategories": [
+        "physical_conflict",
+        "injury_or_medical_urgency",
+        "horror_or_shock"
+      ],
       "motionIntensity": 0.9,
-      "audioIntensity": 0.8,
+      "audioIntensity": 0.9,
       "dialogueActive": false,
-      "transitionConfidence": 0.95,
-      "sensitiveCategories": ["violence"],
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [
+        "violence"
+      ],
       "confidence": 0.95
     }
   ],
   "candidateBreaks": [
     {
       "timeSec": 45,
-      "label": "名义机会",
+      "label": "Mid-Fight",
       "recommendation": "block",
-      "reasons": ["活跃战斗期间叙事强度极高", "存在暴力和肢体冲突", "快速运动和视觉混乱导致中断极具破坏性"],
-      "confidence": 0.9,
-      "sourceSegmentIds": ["segment-2"]
+      "reasons": [
+        "High-intensity physical conflict is occurring.",
+        "Narrative continuity is critical during the fight.",
+        "Interruption would severely damage viewer experience."
+      ],
+      "confidence": 0.95,
+      "sourceSegmentIds": [
+        "segment-2"
+      ]
     },
     {
       "timeSec": 85,
-      "label": "高潮后恢复",
+      "label": "Post-Fight Recovery",
       "recommendation": "delay",
-      "reasons": ["战斗刚刚结束，但场景中仍有火焰和碎片，处于混乱状态", "主角正在从挣扎中恢复", "在允许的延期窗口内未出现清晰的叙事解决或平静状态"],
+      "reasons": [
+        "The fight has just ended, but the scene is still chaotic with fire and debris.",
+        "The protagonist is recovering from the struggle.",
+        "Narrative closure is not yet complete."
+      ],
       "confidence": 0.8,
-      "sourceSegmentIds": ["segment-2"]
+      "sourceSegmentIds": [
+        "segment-2"
+      ]
     }
   ],
-  "limitations": ["45秒至85秒之间不存在清晰的低强度边界；整个窗口被战斗高潮主导", "视频在战斗高潮后不久结束，无法在允许的延期时间内实现自然的战后恢复"]
+  "limitations": [
+    "No clear low-intensity boundary exists within the 45-85s window; the entire segment is high-intensity action.",
+    "The nominal opportunity at 45s falls directly into the peak of the physical conflict."
+  ]
 }

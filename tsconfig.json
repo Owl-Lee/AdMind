@@ -17,6 +17,7 @@
     "paths": {
       "@/*": ["./*"],
       "@admind/contracts": ["./packages/contracts/src/index.ts"],
+      "@admind/video-analyzer": ["./packages/video-analyzer/src/index.ts"],
       "@admind/decision-engine": ["./packages/decision-engine/src/index.ts"],
       "@admind/decision-engine/*": ["./packages/decision-engine/src/*"]
     }

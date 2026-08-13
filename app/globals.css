@@ -377,6 +377,7 @@ button { color: inherit; }
 .analysis-segments b { color: var(--purple-dark); font-size: 8px; }
 .analysis-segments strong { font-size: 9px; }
 .analysis-segments span { color: #777f92; font-size: 7px; }
+.analysis-segments small { grid-column: 2 / -1; color: #8a6a49; font-size: 7px; line-height: 1.45; }
 .analysis-disclosure { display: flex; align-items: center; gap: 8px; margin: 16px 0 0; color: #8b8f9e; font-size: 8px; line-height: 1.6; }
 .analysis-disclosure svg { flex: 0 0 auto; width: 15px; color: #a17e2f; }
 

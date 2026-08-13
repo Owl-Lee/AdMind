@@ -18,21 +18,17 @@ An initial unconstrained prompt was not stable enough for production use: separa
 
 Two repeated runs with that identical contract-aware prompt agreed on the decision-relevant output:
 
-- 00:45 is inside the active high-intensity fight and should be blocked as an interruption candidate (`confidence: 0.90–0.95`).
+- 00:45 is inside the active high-intensity fight and should be blocked as an interruption candidate (`confidence: 0.95` in both runs).
 - No clearly safe `allow` point exists before the delivery deadline.
 - 01:25 is only a `delay` candidate: the fight has just ended, but fire, debris, and recovery remain visually intense (`confidence: 0.80–0.85`).
 - AdMind therefore treats 01:25 as a least-disruptive contractual fallback, not as an objectively “safe” moment. It pairs the delay with the shorter muted card.
 - Violence is detected across the fight, but the output does not establish that a character is dying. This is evidence for a policy layer, not an authoritative sensitive-scene verdict.
 - The provider reported that audio/dialogue evidence was unavailable, so its audio intensity values should not be treated as measured audio features in this run.
 
-## Provisional decision
+## Supplier decision
 
-TwelveLabs is the currently working provider and is integrated as the cached S1 perception source. The canonical cache uses the second contract-aware run; both normalized runs and raw responses are retained for reproducibility. TwelveLabs is not yet declared the permanent winner because Gemini has not produced a comparable result. Once the Google project restriction is removed, rerun the identical media and prompt, then compare:
+TwelveLabs is the selected active supplier and is integrated as the cached S1 perception source. Both normalized runs and raw responses are retained for reproducibility. Gemini is deferred and is not required by the current architecture because the normalized contract keeps the perception layer replaceable.
 
-1. whether 00:45 is classified as a high-interruption point;
-2. the first safe post-climax timestamp;
-3. segment boundary stability across repeated runs;
-4. sensitivity labels and uncertainty;
-5. latency, free-tier constraints, and implementation complexity.
+The current contract-aware runs agree that 00:45 is `BLOCK` and 01:25 is only `DELAY`. The full-plan validator rejects the 6-second card at 01:25 because it would outlast the 89.5-second video, then selects a 4-second approved muted end-card variant that completes before the credits boundary.
 
 API keys remain local. The deployed site reads only validated cached JSON and performs no paid inference per visitor.

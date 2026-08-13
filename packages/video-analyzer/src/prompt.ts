@@ -12,6 +12,10 @@ Return valid JSON with this exact top-level shape:
       "label": "short label",
       "description": "what happens and why it matters for interruption",
       "narrativeIntensity": 0.0,
+      "emotionalIntensity": 0.0,
+      "narrativeCriticality": 0.0,
+      "interruptionRisk": 0.0,
+      "interruptionRiskCategories": [],
       "motionIntensity": 0.0,
       "audioIntensity": 0.0,
       "dialogueActive": false,
@@ -24,7 +28,7 @@ Return valid JSON with this exact top-level shape:
     {
       "timeSec": 0,
       "label": "short label",
-      "recommendation": "allow | delay | block",
+      "recommendation": "allow | delay | block | uncertain",
       "reasons": ["reason grounded in the video"],
       "confidence": 0.0,
       "sourceSegmentIds": ["segment-1"]
@@ -33,7 +37,16 @@ Return valid JSON with this exact top-level shape:
   "limitations": ["uncertainty or information the model could not infer"]
 }
 
-Use seconds from the beginning of the video. Use values from 0 to 1 for intensities and confidence. Prefer natural shot, chapter, dialogue, or emotional recovery boundaries. Mark violence, medical urgency, grief, children, disasters, or other sensitive contexts when present. A candidate break is evidence for the deterministic AdMind policy engine, not a final advertising decision.
+Use seconds from the beginning of the video. Use values from 0 to 1 for intensities and confidence. Prefer natural shot, chapter, dialogue, or emotional recovery boundaries. A candidate break is evidence for the deterministic AdMind policy engine, not a final advertising decision.
+
+Do not equate visual calm with interruption safety. A quiet kiss, confession, diagnosis, death reveal, farewell, suspenseful pause, punchline setup, decisive sports moment, or silent grief can have low motion but very high interruption risk. Evaluate three independent axes:
+- emotionalIntensity: emotional arousal or affective weight;
+- narrativeCriticality: how necessary this moment is for understanding or payoff;
+- interruptionRisk: expected damage if an advertisement interrupts this exact interval.
+
+Use interruptionRiskCategories when relevant. Prefer these stable names: physical_conflict, injury_or_medical_urgency, death_or_grief, romantic_intimacy, confession_or_reunion, farewell_or_sacrifice, suspense_or_reveal, horror_or_shock, argument_or_breakdown, critical_dialogue, comedy_setup_or_punchline, performance_continuity, decisive_competition, child_vulnerability, disaster_or_trauma. Multiple categories are allowed. SensitiveCategories should remain reserved for policy-sensitive content such as violence, graphic injury, sexual content, children, self-harm, or disaster.
+
+An ALLOW point requires low interruption risk, low narrative criticality, and a clear boundary. DELAY means the point is less harmful than the nominal opportunity but still imperfect. BLOCK means it should not execute at that time. UNCERTAIN means the evidence is insufficient or conflicting.
 
 Write label, description, reasons, and limitations in concise Simplified Chinese. Keep ids and enum values in English exactly as specified.`;
 

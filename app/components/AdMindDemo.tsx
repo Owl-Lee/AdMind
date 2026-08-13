@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import type { Strategy, VideoAnalysis } from "@admind/contracts";
+import type { AnalysisConsensus, Strategy, VideoAnalysis } from "@admind/contracts";
 import {
   CheckIcon,
   ChevronIcon,
@@ -17,6 +17,7 @@ import type { ScenarioDemo } from "./ShowcaseDemo";
 type DemoProps = {
   scenarios: ScenarioDemo[];
   analysis: VideoAnalysis;
+  consensus: AnalysisConsensus;
 };
 
 const scoreLabels = {
@@ -28,13 +29,31 @@ const scoreLabels = {
   disruptionPenalty: "打断惩罚",
 };
 
+const riskCategoryLabels: Record<string, string> = {
+  physical_conflict: "肢体冲突",
+  injury_or_medical_urgency: "受伤 / 医疗紧急",
+  death_or_grief: "死亡 / 哀伤",
+  romantic_intimacy: "亲密 / 爱情",
+  confession_or_reunion: "告白 / 重逢",
+  farewell_or_sacrifice: "离别 / 牺牲",
+  suspense_or_reveal: "悬念 / 揭晓",
+  horror_or_shock: "恐怖 / 惊吓",
+  argument_or_breakdown: "争吵 / 崩溃",
+  critical_dialogue: "关键对白",
+  comedy_setup_or_punchline: "笑点连续性",
+  performance_continuity: "表演连续性",
+  decisive_competition: "决胜时刻",
+  child_vulnerability: "儿童脆弱",
+  disaster_or_trauma: "灾难 / 创伤",
+};
+
 function formatTime(value: number) {
   const minutes = Math.floor(value / 60);
   const seconds = Math.floor(value % 60);
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-export function AdMindDemo({ scenarios, analysis }: DemoProps) {
+export function AdMindDemo({ scenarios, analysis, consensus }: DemoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const triggeredRef = useRef<Record<Strategy, boolean>>({ baseline: false, admind: false });
   const resumeAfterAdRef = useRef(false);
@@ -361,8 +380,8 @@ export function AdMindDemo({ scenarios, analysis }: DemoProps) {
               <div className="versus"><span>VS</span><i /></div>
               <article className="comparison-card smart-card">
                 <header><span>{isProtectedScenario ? <ShieldIcon /> : <SparkIcon />}</span><div><small>ADMIND</small><strong>{isPauseScenario ? "暂停状态保护" : isProtectedScenario ? "硬规则阻止投放" : "低打断窗口编排"}</strong></div></header>
-                <div className="comparison-plan"><b>{isProtectedScenario ? "BLOCK" : formatTime(isPauseScenario ? scenario.nominalOpportunitySec : scenario.safeOpportunitySec)}</b><span>{isProtectedScenario ? "无合法执行计划 · 记录交付缺口" : "同活动 · 6 秒可关闭静音卡片"}</span></div>
-                <ul>{isPauseScenario ? <><li>保留用户查看任务</li><li>避开人物和播放控件</li><li>关闭与播放控制保持独立</li></> : isProtectedScenario ? <><li>受保护场景不得投放</li><li>高出价不能覆盖硬规则</li><li>缺口进入后续补偿流程</li></> : <><li>同样履行保量合同</li><li>避开内容高潮</li><li>保留播放控件与上下文</li></>}</ul>
+                <div className="comparison-plan"><b>{isProtectedScenario ? "BLOCK" : formatTime(isPauseScenario ? scenario.nominalOpportunitySec : scenario.safeOpportunitySec)}</b><span>{isProtectedScenario ? "无合法执行计划 · 记录交付缺口" : `同活动 · ${admind.selected?.durationSec ?? 6} 秒可关闭静音卡片`}</span></div>
+                <ul>{isPauseScenario ? <><li>保留用户查看任务</li><li>避开人物和播放控件</li><li>关闭与播放控制保持独立</li></> : isProtectedScenario ? <><li>受保护场景不得投放</li><li>高出价不能覆盖硬规则</li><li>缺口进入后续补偿流程</li></> : <><li>同样履行保量合同</li><li>避开战斗正中</li><li>完整计划不越过片尾</li></>}</ul>
               </article>
               <article className="impact-card">
                 <span>预期影响（待 A/B 验证）</span>
@@ -380,23 +399,24 @@ export function AdMindDemo({ scenarios, analysis }: DemoProps) {
               <span className="research-chip">Schema v{analysis.schemaVersion} · {analysis.mode === "fixture" ? "人工基线" : "真实推理"}</span>
             </div>
             <div className="analysis-pipeline">
-              <article><span>输入</span><strong>MP4 + 音频</strong><p>Gemini / TwelveLabs 适配器</p></article>
+              <article><span>真实输入</span><strong>TwelveLabs · {analysis.model}</strong><p>同一 MP4 独立运行 {consensus.runCount} 次</p></article>
               <i>→</i>
-              <article><span>归一化</span><strong>{analysis.segments.length} 个内容区间</strong><p>张力、运动、声音、转场、敏感标签</p></article>
+              <article><span>共识层</span><strong>{formatTime(consensus.nominal.timeSec)} {consensus.nominal.recommendation.toUpperCase()}</strong><p>一致度 {Math.round(consensus.nominal.agreement * 100)}% · 置信度 {Math.round(consensus.nominal.confidenceMin * 100)}–{Math.round(consensus.nominal.confidenceMax * 100)}%</p></article>
               <i>→</i>
-              <article><span>确定性执行</span><strong>{analysis.candidateBreaks.length} 个候选窗口</strong><p>硬过滤 → 完整计划排序 → 审计</p></article>
+              <article><span>降级执行</span><strong>{consensus.fallback ? `${formatTime(consensus.fallback.timeSec)} ${consensus.fallback.recommendation.toUpperCase()}` : "无候选"}</strong><p>完整时长校验 → 低遮挡形式 → 审计</p></article>
             </div>
             <div className="analysis-segments">
               {analysis.segments.map((segment) => (
                 <article key={segment.id}>
                   <b>{formatTime(segment.startSec)}–{formatTime(segment.endSec)}</b>
                   <strong>{segment.label}</strong>
-                  <span>叙事强度 {Math.round(segment.narrativeIntensity * 100)}%</span>
+                  <span>{segment.interruptionRisk === null ? "叙事强度" : "打断风险"} {Math.round((segment.interruptionRisk ?? segment.narrativeIntensity) * 100)}%</span>
+                  {segment.interruptionRiskCategories.length ? <small>{segment.interruptionRiskCategories.map((category) => riskCategoryLabels[category] ?? category).join(" · ")}</small> : null}
                 </article>
               ))}
             </div>
             <p className="analysis-disclosure"><ShieldIcon />{analysis.mode === "live"
-              ? `${providerLabel} ${analysis.model} 已对这段 89.5 秒素材完成真实推理；密钥不进入网站，页面只读取经过协议校验的缓存结果。`
+              ? `${providerLabel} ${analysis.model} 已对这段 89.5 秒素材完成 ${consensus.runCount} 次真实推理；情绪强度、叙事关键性和连续观看需求分开判断，密钥不进入网站。`
               : "当前结果用于验证协议与下游决策，尚未伪装成模型实测。配置 API Key 后可由本地分析命令生成同结构 JSON 并替换。"}</p>
           </section>
         </section>

@@ -43,6 +43,8 @@ test("server-renders the detailed decision console separately", async () => {
   assert.match(html, /模型可以替换，决策协议不变/);
   assert.match(html, /TwelveLabs/);
   assert.match(html, /真实推理/);
+  assert.match(html, /同一 MP4 独立运行/);
+  assert.match(html, /一致度/);
   assert.match(html, /01:25/);
   assert.match(html, /敏感保护/);
   assert.doesNotMatch(html, /搜索决策/);
