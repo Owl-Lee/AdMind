@@ -21,7 +21,9 @@ test("server-renders the AdMind decision console", async () => {
   assert.match(html, /广告必须出现/);
   assert.match(html, /传统投放/);
   assert.match(html, /AdMind/);
-  assert.match(html, /01:22/);
+  assert.match(html, /高潮插播 · 内容理解/);
+  assert.match(html, /暂停查看 · 交互保护/);
+  assert.match(html, /保留用户的查看任务/);
   assert.match(html, /决策后台/);
   assert.doesNotMatch(html, /搜索决策/);
   assert.doesNotMatch(html, /雷霆大页游/);
