@@ -31,8 +31,6 @@ test("server-renders separate showcase and decision-method views", async () => {
   assert.match(html, /约束信号/);
   assert.match(html, /TwelveLabs API/);
   assert.match(html, /React \+ TypeScript/);
-  assert.match(html, /AI 负责/);
-  assert.match(html, /AdMind 负责/);
   assert.doesNotMatch(html, /180 CPM/);
   assert.doesNotMatch(html, />BLOCK</);
   assert.doesNotMatch(html, /决策后台/);

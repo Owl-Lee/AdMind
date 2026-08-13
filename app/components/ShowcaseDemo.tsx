@@ -112,20 +112,6 @@ function DecisionMethod({ analysisRuns, consensus }: { analysisRuns: VideoAnalys
         </div>
       </section>
 
-      <section className="method-responsibility">
-        <div>
-          <p>AI 负责</p>
-          <h2>看懂视频，给出候选时间。</h2>
-          <span>它返回场景说明、时间段和判断置信度，但不直接决定广告一定要播。</span>
-        </div>
-        <i>＋</i>
-        <div>
-          <p>AdMind 负责</p>
-          <h2>守住边界，产出最终计划。</h2>
-          <span>它结合播放器事件、伦理规则、广告时长与商业约束，给出可解释的最终决定。</span>
-        </div>
-      </section>
-
       <section className="method-stack">
         <div className="method-section-heading">
           <p>TECH STACK</p>
