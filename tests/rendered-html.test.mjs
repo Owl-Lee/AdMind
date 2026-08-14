@@ -22,6 +22,10 @@ test("server-renders separate showcase and decision-method views", async () => {
   assert.match(html, /传统投放/);
   assert.match(html, /高潮插播 · 内容连续性/);
   assert.match(html, /暂停状态 · 任务保护/);
+  assert.match(html, /这一次暂停，系统实际看到了什么/);
+  assert.match(html, /页面状态/);
+  assert.match(html, /当前帧视觉/);
+  assert.match(html, /暂停即全屏覆盖/);
   assert.match(html, /伦理场景 · 硬规则保护/);
   assert.match(html, /正在加载视频/);
   assert.match(html, /真实救援、医疗转运或灾后纪实/);

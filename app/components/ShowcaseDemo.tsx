@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import type { AnalysisConsensus, DecisionResponse, Scenario, Strategy, VideoAnalysis } from "@admind/contracts";
 import { ChevronIcon, PlayIcon, ShieldIcon, SparkIcon } from "./icons";
 import { AdCreative } from "./AdCreative";
+import { detectFacesInPausedFrame, type FaceDetectionEvidence } from "../lib/face-detector";
+import { choosePauseAdPlacement, type PlacementDecision } from "../lib/pause-decision";
 
 export type DemoMedia = {
   id: string;
@@ -149,11 +151,22 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const resumeAfterAdRef = useRef(false);
   const seekingRef = useRef(false);
   const scrubbingRef = useRef(false);
+  const pauseObservationRef = useRef(0);
   const [strategy, setStrategy] = useState<Strategy>("baseline");
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
   const [adRemaining, setAdRemaining] = useState<number | null>(null);
   const [pausePending, setPausePending] = useState(false);
+  const [pauseStartedAt, setPauseStartedAt] = useState<number | null>(null);
+  const [pauseSeconds, setPauseSeconds] = useState(0);
+  const [pageVisible, setPageVisible] = useState(true);
+  const [pageFocused, setPageFocused] = useState(true);
+  const [seeking, setSeeking] = useState(false);
+  const [seekCount, setSeekCount] = useState(0);
+  const [pausePhase, setPausePhase] = useState<"idle" | "observing" | "analyzing" | "delivered" | "deferred">("idle");
+  const [deferredReason, setDeferredReason] = useState("");
+  const [faceEvidence, setFaceEvidence] = useState<FaceDetectionEvidence | null>(null);
+  const [placementDecision, setPlacementDecision] = useState<PlacementDecision>(() => choosePauseAdPlacement([]));
   const [variantIndex, setVariantIndex] = useState(0);
   const [silentPlayback] = useState(() =>
     typeof window !== "undefined" && new URLSearchParams(window.location.search).get("silent") === "1",
@@ -173,6 +186,32 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     && decision.outcome === "blocked"
     && time >= scenario.nominalOpportunitySec - 0.5;
 
+  const stopPauseObservation = (reason?: string) => {
+    pauseObservationRef.current += 1;
+    setPausePending(false);
+    setPauseStartedAt(null);
+    setPauseSeconds(0);
+    setAdRemaining(null);
+    if (reason) {
+      setPausePhase("deferred");
+      setDeferredReason(reason);
+    } else {
+      setPausePhase("idle");
+      setDeferredReason("");
+    }
+  };
+
+  const startPauseObservation = () => {
+    pauseObservationRef.current += 1;
+    setPausePending(true);
+    setPauseStartedAt(performance.now());
+    setPauseSeconds(0);
+    setPausePhase("observing");
+    setDeferredReason("");
+    setFaceEvidence(null);
+    setPlacementDecision(choosePauseAdPlacement([]));
+  };
+
   const resetPlayback = () => {
     const video = videoRef.current;
     video?.pause();
@@ -181,6 +220,13 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     resumeAfterAdRef.current = false;
     setAdRemaining(null);
     setPausePending(false);
+    setPauseStartedAt(null);
+    setPauseSeconds(0);
+    setPausePhase("idle");
+    setSeeking(false);
+    setDeferredReason("");
+    setFaceEvidence(null);
+    setPlacementDecision(choosePauseAdPlacement([]));
     setPlaying(false);
     setTime(0);
   };
@@ -193,6 +239,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
 
   useEffect(() => {
     if (adRemaining === null) return;
+    if (isPauseScenario && strategy === "admind") return;
     const timer = window.setTimeout(() => {
       if (adRemaining > 1) {
         setAdRemaining(adRemaining - 1);
@@ -204,32 +251,67 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
       }
     }, 1000);
     return () => window.clearTimeout(timer);
-  }, [adRemaining, selected?.format]);
+  }, [adRemaining, isPauseScenario, selected?.format, strategy]);
 
   useEffect(() => {
     if (!isPauseScenario || !pausePending || strategy !== "admind" || !selected) return;
+    const observationId = pauseObservationRef.current;
     const timer = window.setTimeout(() => {
       const video = videoRef.current;
-      if (video?.paused && document.visibilityState === "visible" && !seekingRef.current) {
+      if (!video?.paused || document.visibilityState !== "visible" || !document.hasFocus() || seekingRef.current) {
+        stopPauseObservation("暂停未稳定，广告任务已进入待交付队列。");
+        return;
+      }
+      setPausePhase("analyzing");
+      void detectFacesInPausedFrame(video).then((evidence) => {
+        if (pauseObservationRef.current !== observationId || !video.paused) return;
+        const nextPlacement = choosePauseAdPlacement(evidence.faces);
+        setFaceEvidence(evidence);
+        setPlacementDecision(nextPlacement);
+        setPausePending(false);
+        if (nextPlacement.placement === "none") {
+          setPauseStartedAt(null);
+          setPausePhase("deferred");
+          setDeferredReason("当前画面没有安全位置，广告任务已顺延。");
+          return;
+        }
         triggeredRef.current[strategy] = true;
         setAdRemaining(selected.durationSec);
-      }
-      setPausePending(false);
-    }, 2000);
+        setPausePhase("delivered");
+      });
+    }, 1500);
     return () => window.clearTimeout(timer);
   }, [isPauseScenario, pausePending, selected, strategy]);
 
   useEffect(() => {
     if (!isPauseScenario) return;
     const handleVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        setPausePending(false);
-        setAdRemaining(null);
-      }
+      const visible = document.visibilityState === "visible";
+      setPageVisible(visible);
+      if (!visible && (pausePending || adRemaining !== null)) stopPauseObservation("页面已隐藏，本次广告取消并顺延。");
+    };
+    const handleFocus = () => setPageFocused(true);
+    const handleBlur = () => {
+      setPageFocused(false);
+      if (pausePending || adRemaining !== null) stopPauseObservation("窗口失去焦点，本次广告暂停并顺延。");
     };
     document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [isPauseScenario]);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [adRemaining, isPauseScenario, pausePending]);
+
+  useEffect(() => {
+    if (!isPauseScenario || pauseStartedAt === null) return;
+    const update = () => setPauseSeconds((performance.now() - pauseStartedAt) / 1000);
+    update();
+    const timer = window.setInterval(update, 100);
+    return () => window.clearInterval(timer);
+  }, [isPauseScenario, pauseStartedAt]);
 
   const switchStrategy = (nextStrategy: Strategy) => {
     resetPlayback();
@@ -240,12 +322,12 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     const video = videoRef.current;
     if (!video || !mediaReady) return;
     triggeredRef.current[strategy] = false;
-    setAdRemaining(null);
+    stopPauseObservation();
 
     const run = () => {
       if (isPauseScenario && selected) {
         if (strategy === "admind") {
-          video.addEventListener("seeked", () => setPausePending(true), { once: true });
+          video.addEventListener("seeked", startPauseObservation, { once: true });
         }
         video.currentTime = selected.timeSec;
         setTime(selected.timeSec);
@@ -276,9 +358,10 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const togglePlayback = () => {
     const video = videoRef.current;
     if (!video || !mediaReady || (adActive && selected?.format === "fullscreen")) return;
-    setPausePending(false);
-    if (adActive) setAdRemaining(null);
-    if (video.paused) void video.play();
+    if (video.paused) {
+      stopPauseObservation();
+      void video.play();
+    }
     else video.pause();
   };
 
@@ -289,8 +372,12 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     const boundedTime = Math.min(Math.max(0, nextTime), knownDuration);
     video.currentTime = boundedTime;
     setTime(boundedTime);
-    setAdRemaining(null);
-    setPausePending(false);
+    if (isPauseScenario && (pausePending || adActive)) {
+      stopPauseObservation("用户拖动了进度，本次广告取消并顺延。");
+    } else {
+      setAdRemaining(null);
+      setPausePending(false);
+    }
     triggeredRef.current[strategy] = false;
   };
 
@@ -312,14 +399,24 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const handlePause = () => {
     setPlaying(false);
     const video = videoRef.current;
-    if (!isPauseScenario || !video || video.currentTime < 1 || triggeredRef.current[strategy] || !selected) return;
+    if (!isPauseScenario || !video || video.currentTime < 1 || !selected || seekingRef.current) return;
     if (strategy === "baseline") {
       triggeredRef.current[strategy] = true;
       setAdRemaining(selected.durationSec);
     } else {
-      setPausePending(true);
+      startPauseObservation();
     }
   };
+
+  const handlePlay = () => {
+    setPlaying(true);
+    if (isPauseScenario && (pausePending || adActive)) {
+      stopPauseObservation(pausePhase === "delivered" ? undefined : "暂停时间不足，广告任务已顺延到下一次稳定机会。");
+    }
+  };
+
+  const placementClass = placementDecision.placement === "none" ? "" : `placement-${placementDecision.placement}`;
+  const pauseAdExpanded = isPauseScenario && strategy === "admind" && pauseSeconds >= 8;
 
   return (
     <section className={first ? "showcase-demo" : "showcase-demo showcase-demo-following"} id={`scenario-${scenario.id.toLowerCase()}`}>
@@ -367,8 +464,12 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
                   : decision.outcome === "blocked"
                     ? isProtectedScenario ? "AdMind：伦理规则阻止投放" : "AdMind：窗口内不投放"
                     : selected?.format === "muted_card" ? "AdMind：延后并降低遮挡" : "AdMind：等待自然转场"}</strong>
-              <small>{isPauseScenario && strategy === "admind" && pausePending
-                ? "正在确认稳定暂停…"
+              <small>{isPauseScenario && strategy === "admind" && pausePhase === "observing"
+                ? "正在确认稳定暂停；恢复播放、拖动或离开页面都会取消…"
+                : isPauseScenario && strategy === "admind" && pausePhase === "analyzing"
+                  ? "正在用本地 MediaPipe 分析当前暂停帧…"
+                  : isPauseScenario && strategy === "admind" && pausePhase === "deferred"
+                    ? deferredReason
                 : isProtectedScenario && strategy === "baseline"
                   ? `${formatTime(scenario.nominalOpportunitySec)} 到点即播，不读取伦理信号`
                   : media.modelFinding}</small>
@@ -390,14 +491,18 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             onClick={togglePlayback}
             onLoadedMetadata={() => setMediaReady(true)}
             onPause={handlePause}
-            onPlay={() => setPlaying(true)}
+            onPlay={handlePlay}
             onSeeking={() => {
               seekingRef.current = true;
-              setPausePending(false);
-              if (isPauseScenario) setAdRemaining(null);
+              setSeeking(true);
+              if (isPauseScenario) {
+                setSeekCount((count) => count + 1);
+                if (pausePending || adActive) stopPauseObservation("用户正在拖动进度，广告任务已顺延。");
+              }
             }}
             onSeeked={() => {
               seekingRef.current = false;
+              setSeeking(false);
               if (!scrubbingRef.current) syncPlayback();
             }}
             onTimeUpdate={syncPlayback}
@@ -420,8 +525,29 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
                   : `${formatTime(selected?.timeSec ?? scenario.safeOpportunitySec)} AI 计划`}</span>
           </div>
 
+          {isPauseScenario && strategy === "admind" && faceEvidence?.status === "ready" ? faceEvidence.faces.map((face, index) => (
+            <span
+              aria-hidden="true"
+              className="pause-face-box"
+              key={`${face.x}-${face.y}-${index}`}
+              style={{
+                left: `${face.x * 100}%`,
+                top: `${face.y * 100}%`,
+                width: `${face.width * 100}%`,
+                height: `${face.height * 100}%`,
+              }}
+            />
+          )) : null}
+
+          {isPauseScenario && strategy === "admind" && adActive && placementDecision.placement !== "none" ? (
+            <span
+              aria-hidden="true"
+              className={`pause-placement-outline ${placementClass}`}
+            />
+          ) : null}
+
           {adActive && selected ? (
-            <div className={selected.format === "fullscreen" ? "ad-overlay fullscreen real-ad" : "ad-overlay card real-ad-card"}>
+            <div className={`${selected.format === "fullscreen" ? "ad-overlay fullscreen real-ad" : "ad-overlay card real-ad-card"} ${isPauseScenario && strategy === "admind" ? placementClass : ""} ${pauseAdExpanded ? "pause-expanded" : ""}`}>
               <AdCreative
                 fullscreen={selected.format === "fullscreen"}
                 onDismiss={() => setAdRemaining(null)}
@@ -466,6 +592,51 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             <span className="showcase-quality">720p</span>
           </div>
         </div>
+
+        {isPauseScenario ? (
+          <section className="pause-evidence" aria-live="polite">
+            <div className="pause-evidence-heading">
+              <div>
+                <span>LIVE PLAYER SIGNALS</span>
+                <strong>这一次暂停，系统实际看到了什么？</strong>
+              </div>
+              <b className={`pause-phase ${pausePhase}`}>{strategy === "baseline"
+                ? "传统模式：不参与决策"
+                : pausePhase === "observing" ? "确认暂停"
+                  : pausePhase === "analyzing" ? "分析画面"
+                    : pausePhase === "delivered" ? "已安全展示"
+                      : pausePhase === "deferred" ? "已顺延"
+                        : "等待暂停"}</b>
+            </div>
+            <div className="pause-signal-grid">
+              <article><span>暂停时长</span><strong>{pauseStartedAt === null ? "—" : `${pauseSeconds.toFixed(1)} 秒`}</strong><small>{pauseSeconds >= 1.5 ? "已达到稳定阈值" : "1.5 秒后才进入视觉判断"}</small></article>
+              <article><span>播放器动作</span><strong>{seeking ? "正在拖动" : playing ? "播放中" : "已暂停"}</strong><small>本次会话已检测 {seekCount} 次拖动</small></article>
+              <article><span>页面状态</span><strong>{pageVisible ? pageFocused ? "可见且有焦点" : "可见但失焦" : "页面已隐藏"}</strong><small>hidden 取消；visible + blur 暂缓</small></article>
+              <article><span>当前帧视觉</span><strong>{faceEvidence?.status === "ready" ? `${faceEvidence.faces.length} 张人脸` : faceEvidence?.status === "unavailable" ? "模型回退" : "尚未分析"}</strong><small>{faceEvidence?.status === "ready" ? `本地推理 ${faceEvidence.inferenceMs} ms` : "只在稳定暂停后运行一次"}</small></article>
+            </div>
+            <div className="pause-placement-result">
+              <div>
+                <span>最终决定</span>
+                <strong>{strategy === "baseline"
+                  ? "暂停即全屏覆盖"
+                  : pausePhase === "deferred" ? "这次不投，进入待交付队列"
+                    : pausePhase === "delivered" ? `${placementDecision.placement.replace("top-", "顶部").replace("bottom-", "底部").replace("left", "左侧").replace("right", "右侧")} · ${pauseAdExpanded ? "扩展卡片" : "静音小卡片"}`
+                      : "等待有效暂停信号"}</strong>
+                <p>{strategy === "baseline" ? "固定规则不读取播放器状态，也不分析画面遮挡。" : pausePhase === "deferred" ? deferredReason : placementDecision.reason}</p>
+              </div>
+              <div className="pause-risk-bars">
+                {placementDecision.assessments.slice(0, 2).map((assessment) => (
+                  <p key={assessment.placement}>
+                    <span>{assessment.placement.endsWith("left") ? "左上" : "右上"}遮挡风险</span>
+                    <i><b style={{ width: `${Math.round(assessment.risk * 100)}%` }} /></i>
+                    <strong>{Math.round(assessment.risk * 100)}%</strong>
+                  </p>
+                ))}
+              </div>
+            </div>
+            {pausePhase === "deferred" ? <p className="pause-queue-note">待交付队列 → 下一次稳定暂停继续尝试 → 仍无机会时交给 S1 的安全插播点；S3 受保护场景永不补量。</p> : null}
+          </section>
+        ) : null}
 
       </article>
     </section>

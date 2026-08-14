@@ -23,7 +23,7 @@ export function AdCreative({ scenarioId, fullscreen, remaining, onDismiss }: AdC
         <div className="ad-badge real-countdown">广告 · {remaining}s</div>
       ) : (
         <>
-          <span className="native-ad-label">广告 · {remaining}s</span>
+          <span className="native-ad-label">{scenarioId === "S2" ? "暂停广告 · 静音" : `广告 · ${remaining}s`}</span>
           <span className="native-muted">静音</span>
           {onDismiss ? <button className="native-ad-close" aria-label={scenarioId === "S2" ? "关闭广告，保留暂停画面" : "关闭广告"} onClick={onDismiss}>×</button> : null}
         </>
