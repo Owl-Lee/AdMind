@@ -316,12 +316,10 @@ button { color: inherit; }
 .showcase-section-heading .showcase-scene-label { margin-bottom: 12px; color: #6d4ef6; font-size: 12px; font-weight: 800; letter-spacing: .08em; }
 .showcase-section-heading .showcase-scene-summary { max-width: 650px; margin: 17px 0 0; color: #74747d; font-size: 14px; line-height: 1.7; }
 .showcase-material-switcher { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 0 0 18px; padding: 6px; border: 1px solid #e5e5ea; border-radius: 20px; background: #f3f3f6; }
-.showcase-material-switcher button { display: grid; gap: 5px; min-width: 0; padding: 14px 16px; border: 0; border-radius: 15px; color: #777781; background: transparent; cursor: pointer; text-align: left; }
-.showcase-material-switcher button span { font-size: 10px; font-weight: 800; letter-spacing: .08em; }
-.showcase-material-switcher button strong { overflow: hidden; color: #65656e; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.showcase-material-switcher button { min-width: 0; padding: 15px 16px; border: 0; border-radius: 15px; color: #777781; background: transparent; cursor: pointer; text-align: left; }
+.showcase-material-switcher button span { font-size: 12px; font-weight: 800; letter-spacing: .04em; }
 .showcase-material-switcher button.active { background: white; box-shadow: 0 4px 14px rgba(20,20,25,.08); }
 .showcase-material-switcher button.active span { color: #6d4ef6; }
-.showcase-material-switcher button.active strong { color: #111114; }
 .showcase-toggle { display: flex; flex: 0 0 auto; padding: 4px; border: 1px solid #e5e5ea; border-radius: 999px; background: #f1f1f4; }
 .showcase-toggle button { display: flex; height: 38px; align-items: center; gap: 6px; padding: 0 17px; border: 0; border-radius: 999px; color: #707079; background: transparent; cursor: pointer; font-size: 13px; font-weight: 700; }
 .showcase-toggle button svg { width: 14px; }
@@ -339,10 +337,14 @@ button { color: inherit; }
 .showcase-state.smart { background: #20b486; box-shadow: 0 0 0 5px rgba(32,180,134,.1); }
 .showcase-player-meta button { padding: 8px 14px; border: 0; border-radius: 999px; color: #5b3eea; background: #f0edff; cursor: pointer; font-size: 12px; font-weight: 800; }
 .showcase-video-stage { aspect-ratio: 16/8.7; }
-.showcase-video-topline { top: 18px; right: 20px; left: 20px; font-size: 11px; }
+.showcase-video-topline { top: 18px; right: 20px; left: 20px; justify-content: flex-end; font-size: 11px; }
 .showcase-controls { right: 18px; bottom: 13px; left: 18px; gap: 10px; font-size: 11px; }
 .showcase-controls button { width: 30px; height: 30px; }
-.showcase-controls input { height: 4px; }
+.showcase-controls input { height: 22px; margin: -9px 0; appearance: none; background: transparent; touch-action: none; }
+.showcase-controls input::-webkit-slider-runnable-track { height: 4px; border-radius: 999px; background: rgba(255,255,255,.42); }
+.showcase-controls input::-webkit-slider-thumb { width: 15px; height: 15px; margin-top: -5.5px; appearance: none; border: 0; border-radius: 50%; background: #8d76ff; box-shadow: 0 0 0 4px rgba(141,118,255,.18); }
+.showcase-controls input::-moz-range-track { height: 4px; border-radius: 999px; background: rgba(255,255,255,.42); }
+.showcase-controls input::-moz-range-thumb { width: 15px; height: 15px; border: 0; border-radius: 50%; background: #8d76ff; box-shadow: 0 0 0 4px rgba(141,118,255,.18); }
 .showcase-quality { color: rgba(255,255,255,.82); font-size: 11px; }
 .showcase-player-card .ad-overlay.real-ad-card { top: 22px; right: 22px; width: 310px; min-height: 0; border-radius: 16px; }
 .showcase-player-card .native-ad-label, .showcase-player-card .native-muted { padding: 6px 9px; font-size: 9px; }

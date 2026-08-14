@@ -148,6 +148,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const triggeredRef = useRef<Record<Strategy, boolean>>({ baseline: false, admind: false });
   const resumeAfterAdRef = useRef(false);
   const seekingRef = useRef(false);
+  const scrubbingRef = useRef(false);
   const [strategy, setStrategy] = useState<Strategy>("baseline");
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
@@ -164,7 +165,9 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const selected = decision.selected;
   const adActive = adRemaining !== null;
   const decisionTime = selected?.timeSec ?? scenario.nominalOpportunitySec;
-  const protectionActive = isProtectedScenario && strategy === "admind" && time >= scenario.nominalOpportunitySec - 2;
+  const blockedNoticeActive = strategy === "admind"
+    && decision.outcome === "blocked"
+    && time >= scenario.nominalOpportunitySec - 0.5;
 
   const resetPlayback = () => {
     const video = videoRef.current;
@@ -182,6 +185,10 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     resetPlayback();
     setVariantIndex(nextIndex);
   };
+
+  useEffect(() => {
+    videoRef.current?.load();
+  }, [media.src]);
 
   useEffect(() => {
     if (adRemaining === null) return;
@@ -233,21 +240,36 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     if (!video) return;
     triggeredRef.current[strategy] = false;
     setAdRemaining(null);
-    if (isPauseScenario && selected) {
-      if (strategy === "admind") {
-        video.addEventListener("seeked", () => setPausePending(true), { once: true });
+
+    const run = () => {
+      if (isPauseScenario && selected) {
+        if (strategy === "admind") {
+          video.addEventListener("seeked", () => setPausePending(true), { once: true });
+        }
+        video.currentTime = selected.timeSec;
+        setTime(selected.timeSec);
+        video.pause();
+        if (strategy === "baseline") {
+          triggeredRef.current[strategy] = true;
+          setAdRemaining(selected.durationSec);
+        }
+        return;
       }
-      video.currentTime = selected.timeSec;
-      setTime(selected.timeSec);
-      video.pause();
-      if (strategy === "baseline") {
-        triggeredRef.current[strategy] = true;
-        setAdRemaining(selected.durationSec);
-      }
+
+      const previewTime = Math.max(0, decisionTime - 2.5);
+      video.currentTime = previewTime;
+      setTime(previewTime);
+      void video.play();
+    };
+
+    if (video.readyState >= 1) {
+      run();
       return;
     }
-    video.currentTime = Math.max(0, decisionTime - 2.5);
-    void video.play();
+
+    video.addEventListener("loadedmetadata", run, { once: true });
+    video.load();
+    if (!isPauseScenario) void video.play();
   };
 
   const togglePlayback = () => {
@@ -262,11 +284,13 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const seek = (nextTime: number) => {
     const video = videoRef.current;
     if (!video) return;
-    video.currentTime = nextTime;
-    setTime(nextTime);
+    const knownDuration = Number.isFinite(video.duration) ? video.duration : scenario.durationSec;
+    const boundedTime = Math.min(Math.max(0, nextTime), knownDuration);
+    video.currentTime = boundedTime;
+    setTime(boundedTime);
     setAdRemaining(null);
     setPausePending(false);
-    triggeredRef.current[strategy] = nextTime > (selected?.timeSec ?? scenario.durationSec);
+    triggeredRef.current[strategy] = false;
   };
 
   const syncPlayback = () => {
@@ -274,7 +298,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     if (!video) return;
     const current = video.currentTime;
     setTime(current);
-    if (isPauseScenario || !selected || triggeredRef.current[strategy] || current < selected.timeSec) return;
+    if (scrubbingRef.current || seekingRef.current || isPauseScenario || !selected || triggeredRef.current[strategy] || current < selected.timeSec) return;
 
     triggeredRef.current[strategy] = true;
     setAdRemaining(selected.durationSec);
@@ -305,7 +329,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
           <p className="showcase-scene-summary">{isPauseScenario
             ? "同一次暂停，同一则保量游戏广告。系统只根据当前播放器中的暂停、拖动和页面可见性判断交互状态，再决定能否展示以及放在哪里。"
             : isProtectedScenario
-                ? "同一条高价保量活动命中角色受伤场景。伦理与品牌安全规则先于排序执行；没有合规窗口时，系统宁可记录交付缺口，也不强行插播。"
+                ? "同一条高价保量活动命中真实海上救援场景。伦理与品牌安全规则先于排序执行；没有合规窗口时，系统宁可记录交付缺口，也不强行插播。"
               : "同一条视频，同一则保量广告。系统理解内容张力，寻找符合合同约束的低打断窗口。"}</p>
         </div>
         <div className="showcase-toggle" role="group" aria-label={`${isPauseScenario ? "暂停状态" : isProtectedScenario ? "敏感场景" : "高潮插播"}投放策略`}>
@@ -318,13 +342,13 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
         <div className="showcase-material-switcher" role="group" aria-label="切换分析素材">
           {variants.map((variant, index) => (
             <button
+              aria-label={variant.media.category}
               aria-pressed={variantIndex === index}
               className={variantIndex === index ? "active" : ""}
               key={variant.media.id}
               onClick={() => switchVariant(index)}
             >
               <span>{variant.media.category}</span>
-              <strong>{variant.media.label}</strong>
             </button>
           ))}
         </div>
@@ -345,7 +369,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
               <small>{isPauseScenario && strategy === "admind" && pausePending ? "正在确认稳定暂停…" : media.modelFinding}</small>
             </div>
           </div>
-          <button onClick={jumpToDecision}>{isPauseScenario ? "模拟暂停" : "查看"} {formatTime(decisionTime)}</button>
+          <button onClick={jumpToDecision}>{isPauseScenario ? "模拟暂停" : "查看广告投放点"}</button>
         </div>
 
         <div className="video-stage showcase-video-stage">
@@ -360,7 +384,10 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
               setPausePending(false);
               if (isPauseScenario) setAdRemaining(null);
             }}
-            onSeeked={() => { seekingRef.current = false; }}
+            onSeeked={() => {
+              seekingRef.current = false;
+              if (!scrubbingRef.current) syncPlayback();
+            }}
             onTimeUpdate={syncPlayback}
             playsInline
             preload="metadata"
@@ -371,7 +398,6 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
           </video>
 
           <div className="video-topline showcase-video-topline">
-            <span>{isPauseScenario ? "只使用当前播放器事件" : media.sourceLabel}</span>
             <span>{isPauseScenario
               ? "暂停 · 拖动 · 页面可见性"
               : strategy === "baseline"
@@ -392,8 +418,13 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             </div>
           ) : null}
 
-          {protectionActive ? (
-            <div className="showcase-protection-note"><ShieldIcon /><div><strong>广告已阻止</strong><span>高价保量活动未越过受保护场景；交付缺口已记录。</span></div></div>
+          {blockedNoticeActive ? (
+            <div className="showcase-protection-note"><ShieldIcon /><div>
+              <strong>{isProtectedScenario ? "广告已阻止" : "本段不投放"}</strong>
+              <span>{isProtectedScenario
+                ? "真实救援仍在进行；高价保量活动不得越过伦理边界。"
+                : "允许的延后范围内没有低打断窗口；系统记录交付缺口。"}</span>
+            </div></div>
           ) : null}
 
           <div className="video-controls showcase-controls">
@@ -406,6 +437,13 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
               max={scenario.durationSec}
               min={0}
               onChange={(event) => seek(Number(event.target.value))}
+              onKeyUp={() => syncPlayback()}
+              onPointerCancel={() => { scrubbingRef.current = false; }}
+              onPointerDown={() => { scrubbingRef.current = true; }}
+              onPointerUp={() => {
+                scrubbingRef.current = false;
+                syncPlayback();
+              }}
               step="0.1"
               type="range"
               value={time}

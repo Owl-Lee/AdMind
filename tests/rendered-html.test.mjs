@@ -23,6 +23,8 @@ test("server-renders separate showcase and decision-method views", async () => {
   assert.match(html, /高潮插播 · 内容连续性/);
   assert.match(html, /暂停状态 · 任务保护/);
   assert.match(html, /伦理场景 · 硬规则保护/);
+  assert.match(html, /查看广告投放点/);
+  assert.match(html, /真实海上救援场景/);
   assert.match(html, /一段视频，如何变成/);
   assert.match(html, /视频理解 API/);
   assert.match(html, /系统同时看三类信息/);
@@ -36,6 +38,9 @@ test("server-renders separate showcase and decision-method views", async () => {
   assert.doesNotMatch(html, /决策后台/);
   assert.doesNotMatch(html, /搜索决策/);
   assert.doesNotMatch(html, /雷霆大页游/);
+  assert.doesNotMatch(html, />CHARGE<\/strong>/);
+  assert.doesNotMatch(html, />Coffee Run<\/strong>/);
+  assert.doesNotMatch(html, />Llamigos<\/strong>/);
   assert.doesNotMatch(html, /Your site is taking shape/);
 });
 
