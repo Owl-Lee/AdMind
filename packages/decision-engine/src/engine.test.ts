@@ -3,7 +3,9 @@ import { VideoAnalysisSchema } from "@admind/contracts";
 import { aggregateAnalyses } from "../../video-analyzer/src/consensus";
 import chargeRun1 from "../../../analysis/runs/charge-twelvelabs-01.json";
 import chargeRun2 from "../../../analysis/runs/charge-twelvelabs-02.json";
-import { createS1Request, createS1RequestFromAnalysis, createS2Request, createS3Request, decide } from "./index";
+import usnsMedicalRun from "../../../analysis/runs/usns-medical-twelvelabs.json";
+import femaRecoveryRun from "../../../analysis/runs/fema-recovery-twelvelabs.json";
+import { createS1Request, createS1RequestFromAnalysis, createS2Request, createS3Request, createS3RequestFromAnalysis, decide } from "./index";
 
 describe("AdMind decision engine", () => {
   it("keeps the baseline at the fixed 45 second break", () => {
@@ -147,6 +149,28 @@ describe("AdMind decision engine", () => {
       expect.objectContaining({ code: "PROTECTED_CONTEXT", status: "reject" }),
       expect.objectContaining({ code: "MODEL_CONSENSUS_BLOCK", status: "reject" }),
       expect.objectContaining({ code: "CONTENT_OVERRUN", status: "reject" }),
+      expect.objectContaining({ code: "NO_ELIGIBLE_PLAN", status: "reject" }),
+    ]));
+  });
+
+  it.each([
+    ["medical evacuation", usnsMedicalRun, "来源标注为医疗后送任务", 10],
+    ["disaster aftermath", femaRecoveryRun, "模型识别为灾难与创伤语境", 15],
+  ])("combines live evidence with verified S3 policy for %s", (_name, rawAnalysis, policyReason, nominalOpportunitySec) => {
+    const analysis = VideoAnalysisSchema.parse(rawAnalysis);
+    const request = createS3RequestFromAnalysis(analysis, {
+      title: "受保护纪实内容 × 高价保量广告",
+      episodeTitle: "真实公共事件素材",
+      policyReason,
+      nominalOpportunitySec,
+    });
+    const result = decide(request);
+
+    expect(request.scenario.durationSec).toBe(analysis.media.durationSec);
+    expect(request.scenario.sceneSignals[0].label).toContain(policyReason);
+    expect(result.outcome).toBe("blocked");
+    expect(result.audit).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "PROTECTED_CONTEXT", status: "reject" }),
       expect.objectContaining({ code: "NO_ELIGIBLE_PLAN", status: "reject" }),
     ]));
   });

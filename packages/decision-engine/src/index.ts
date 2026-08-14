@@ -291,4 +291,5 @@ export function decide(input: DecisionRequest): DecisionResponse {
 }
 
 export { createS1Request, createS2Request, createS3Request } from "./fixtures";
-export { createS1RequestFromAnalysis } from "./from-analysis";
+export { createS1RequestFromAnalysis, createS3RequestFromAnalysis } from "./from-analysis";
+export type { ProtectedSourceContext } from "./from-analysis";

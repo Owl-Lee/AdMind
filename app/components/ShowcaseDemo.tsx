@@ -155,7 +155,9 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const [adRemaining, setAdRemaining] = useState<number | null>(null);
   const [pausePending, setPausePending] = useState(false);
   const [variantIndex, setVariantIndex] = useState(0);
-  const [silentPlayback, setSilentPlayback] = useState(false);
+  const [silentPlayback] = useState(() =>
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("silent") === "1",
+  );
   const [mediaReady, setMediaReady] = useState(false);
 
   const variants: ScenarioDemoVariant[] = [demo, ...(demo.alternatives ?? [])];
@@ -185,17 +187,9 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
 
   const switchVariant = (nextIndex: number) => {
     resetPlayback();
+    setMediaReady(false);
     setVariantIndex(nextIndex);
   };
-
-  useEffect(() => {
-    setSilentPlayback(new URLSearchParams(window.location.search).get("silent") === "1");
-  }, []);
-
-  useEffect(() => {
-    setMediaReady(false);
-    videoRef.current?.load();
-  }, [media.src]);
 
   useEffect(() => {
     if (adRemaining === null) return;
@@ -336,7 +330,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
           <p className="showcase-scene-summary">{isPauseScenario
             ? "同一次暂停，同一则保量游戏广告。系统只根据当前播放器中的暂停、拖动和页面可见性判断交互状态，再决定能否展示以及放在哪里。"
             : isProtectedScenario
-                ? "同一条高价保量活动命中真实海上救援场景。伦理与品牌安全规则先于排序执行；没有合规窗口时，系统宁可记录交付缺口，也不强行插播。"
+                ? "同一条高价保量活动命中真实救援、医疗转运或灾后纪实。伦理规则先于商业排序执行；片段处于受保护语境时，系统记录交付缺口而不强行插播。"
               : "同一条视频，同一则保量广告。系统理解内容张力，寻找符合合同约束的低打断窗口。"}</p>
         </div>
         <div className="showcase-toggle" role="group" aria-label={`${isPauseScenario ? "暂停状态" : isProtectedScenario ? "敏感场景" : "高潮插播"}投放策略`}>
@@ -373,10 +367,20 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
                   : decision.outcome === "blocked"
                     ? isProtectedScenario ? "AdMind：伦理规则阻止投放" : "AdMind：窗口内不投放"
                     : selected?.format === "muted_card" ? "AdMind：延后并降低遮挡" : "AdMind：等待自然转场"}</strong>
-              <small>{isPauseScenario && strategy === "admind" && pausePending ? "正在确认稳定暂停…" : media.modelFinding}</small>
+              <small>{isPauseScenario && strategy === "admind" && pausePending
+                ? "正在确认稳定暂停…"
+                : isProtectedScenario && strategy === "baseline"
+                  ? `${formatTime(scenario.nominalOpportunitySec)} 到点即播，不读取伦理信号`
+                  : media.modelFinding}</small>
             </div>
           </div>
-          <button disabled={!mediaReady} onClick={jumpToDecision}>{mediaReady ? (isPauseScenario ? "模拟暂停" : "查看广告投放点") : "正在加载视频…"}</button>
+          <button disabled={!mediaReady} onClick={jumpToDecision}>{mediaReady
+            ? isPauseScenario
+              ? "模拟暂停"
+              : isProtectedScenario
+                ? "查看规则触发点"
+                : "查看广告投放点"
+            : "正在加载视频…"}</button>
         </div>
 
         <div className="video-stage showcase-video-stage">
@@ -403,7 +407,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             ref={videoRef}
             src={media.src}
           >
-            {media.captionsSrc ? <track default kind="captions" label="中文" src={media.captionsSrc} srcLang="zh" /> : null}
+            <track default kind="captions" label="字幕" src={media.captionsSrc ?? "/empty.vtt"} srcLang={media.captionsSrc ? "zh" : "zxx"} />
           </video>
 
           <div className="video-topline showcase-video-topline">
@@ -412,7 +416,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
               : strategy === "baseline"
                 ? `${formatTime(scenario.nominalOpportunitySec)} 固定投放`
                 : decision.outcome === "blocked"
-                  ? isProtectedScenario ? "救援结束前禁止投放" : "未找到安全窗口"
+                  ? isProtectedScenario ? "受保护内容中禁止投放" : "未找到安全窗口"
                   : `${formatTime(selected?.timeSec ?? scenario.safeOpportunitySec)} AI 计划`}</span>
           </div>
 
@@ -431,7 +435,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             <div className="showcase-protection-note"><ShieldIcon /><div>
               <strong>{isProtectedScenario ? "广告已阻止" : "本段不投放"}</strong>
               <span>{isProtectedScenario
-                ? "真实救援仍在进行；高价保量活动不得越过伦理边界。"
+                ? `${media.category}处于受保护区间；高价保量活动不得越过伦理边界。`
                 : "允许的延后范围内没有低打断窗口；系统记录交付缺口。"}</span>
             </div></div>
           ) : null}

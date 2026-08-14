@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "1.0",
+  "analysisId": "twelvelabs-ed0634d48400",
+  "provider": "twelvelabs",
+  "mode": "live",
+  "model": "pegasus1.5",
+  "generatedAt": "2026-08-14T17:10:08.088Z",
+  "media": {
+    "fileName": "usns-medical-evacuation-720p.mp4",
+    "durationSec": 62.394,
+    "sha256": "ed0634d484009894a4a744b36439f61059d586f5af60be343159c5020cb9c6c7"
+  },
+  "segments": [
+    {
+      "id": "segment-1",
+      "startSec": 0,
+      "endSec": 26,
+      "label": "直升机准备",
+      "description": "夜间，军用直升机在舰艇甲板上静止，身穿安全背心的机组人员正在发出信号并准备起飞。",
+      "narrativeIntensity": 0.3,
+      "emotionalIntensity": 0.2,
+      "narrativeCriticality": 0.2,
+      "interruptionRisk": 0.3,
+      "interruptionRiskCategories": [],
+      "motionIntensity": 0.2,
+      "audioIntensity": 0.4,
+      "dialogueActive": false,
+      "transitionConfidence": 0.8,
+      "sensitiveCategories": [],
+      "confidence": 0.9
+    },
+    {
+      "id": "segment-2",
+      "startSec": 26,
+      "endSec": 38,
+      "label": "直升机起飞",
+      "description": "直升机从甲板升空并飞入夜空。这是该片段的主要动作序列。",
+      "narrativeIntensity": 0.8,
+      "emotionalIntensity": 0.6,
+      "narrativeCriticality": 0.9,
+      "interruptionRisk": 0.9,
+      "interruptionRiskCategories": [
+        "performance_continuity"
+      ],
+      "motionIntensity": 0.8,
+      "audioIntensity": 0.9,
+      "dialogueActive": false,
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [],
+      "confidence": 0.95
+    },
+    {
+      "id": "segment-3",
+      "startSec": 38,
+      "endSec": 62.3,
+      "label": "起飞后观察",
+      "description": "甲板上的机组人员目送直升机离开。镜头平移展示舰艇结构和剩余人员。",
+      "narrativeIntensity": 0.2,
+      "emotionalIntensity": 0.2,
+      "narrativeCriticality": 0.1,
+      "interruptionRisk": 0.2,
+      "interruptionRiskCategories": [],
+      "motionIntensity": 0.3,
+      "audioIntensity": 0.5,
+      "dialogueActive": false,
+      "transitionConfidence": 0.8,
+      "sensitiveCategories": [],
+      "confidence": 0.85
+    }
+  ],
+  "candidateBreaks": [
+    {
+      "timeSec": 10,
+      "label": "名义机会点",
+      "recommendation": "delay",
+      "reasons": [
+        "视频处于准备阶段，但叙事正朝着起飞高潮推进。此时打断可能会破坏操作序列的连贯性。"
+      ],
+      "confidence": 0.7,
+      "sourceSegmentIds": [
+        "segment-1"
+      ]
+    },
+    {
+      "timeSec": 38,
+      "label": "起飞后边界",
+      "recommendation": "allow",
+      "reasons": [
+        "主要动作（起飞）已结束。场景过渡到静态观察镜头，提供了自然的叙事停顿，中断风险低。"
+      ],
+      "confidence": 0.9,
+      "sourceSegmentIds": [
+        "segment-3"
+      ]
+    }
+  ],
+  "limitations": [
+    "无法分析音频内容，评估仅依赖视觉线索。",
+    "具体任务背景是根据视觉元素（军事装备、舰艇甲板）推断的，未明确说明。"
+  ]
+}

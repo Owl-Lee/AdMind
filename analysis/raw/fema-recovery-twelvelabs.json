@@ -1,0 +1,148 @@
+{
+  "segments": [
+    {
+      "id": "segment-1",
+      "startSec": 0.0,
+      "endSec": 11.0,
+      "label": "FEMA officials briefing",
+      "description": "FEMA官员讨论庞塞的情况，确立灾难应对背景。",
+      "narrativeIntensity": 0.4,
+      "emotionalIntensity": 0.3,
+      "narrativeCriticality": 0.5,
+      "interruptionRisk": 0.3,
+      "interruptionRiskCategories": [
+        "disaster_or_trauma"
+      ],
+      "motionIntensity": 0.2,
+      "audioIntensity": 0.5,
+      "dialogueActive": true,
+      "transitionConfidence": 0.8,
+      "sensitiveCategories": [
+        "disaster"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "id": "segment-2",
+      "startSec": 11.0,
+      "endSec": 34.0,
+      "label": "Damage statistics and drone footage",
+      "description": "FEMA代表提供屋顶损坏和援助需求的具体统计数据，随后展示被毁房屋的无人机画面。",
+      "narrativeIntensity": 0.7,
+      "emotionalIntensity": 0.6,
+      "narrativeCriticality": 0.8,
+      "interruptionRisk": 0.7,
+      "interruptionRiskCategories": [
+        "disaster_or_trauma"
+      ],
+      "motionIntensity": 0.4,
+      "audioIntensity": 0.6,
+      "dialogueActive": true,
+      "transitionConfidence": 0.7,
+      "sensitiveCategories": [
+        "disaster"
+      ],
+      "confidence": 0.9
+    },
+    {
+      "id": "segment-3",
+      "startSec": 34.0,
+      "endSec": 46.0,
+      "label": "Isolated mountain community",
+      "description": "蒙塔利亚诺社区的视觉画面显示居民被隔离，马匹在清理后的道路上徘徊，突显隔离的严重性。",
+      "narrativeIntensity": 0.6,
+      "emotionalIntensity": 0.5,
+      "narrativeCriticality": 0.6,
+      "interruptionRisk": 0.5,
+      "interruptionRiskCategories": [
+        "disaster_or_trauma"
+      ],
+      "motionIntensity": 0.3,
+      "audioIntensity": 0.4,
+      "dialogueActive": true,
+      "transitionConfidence": 0.7,
+      "sensitiveCategories": [
+        "disaster"
+      ],
+      "confidence": 0.85
+    },
+    {
+      "id": "segment-4",
+      "startSec": 46.0,
+      "endSec": 69.0,
+      "label": "Survivor testimony and destruction",
+      "description": "当地居民描述家园被毁和床垫丢失的情况，画面展示碎片和受损的基础设施。",
+      "narrativeIntensity": 0.9,
+      "emotionalIntensity": 0.9,
+      "narrativeCriticality": 0.9,
+      "interruptionRisk": 0.9,
+      "interruptionRiskCategories": [
+        "disaster_or_trauma",
+        "death_or_grief"
+      ],
+      "motionIntensity": 0.3,
+      "audioIntensity": 0.7,
+      "dialogueActive": true,
+      "transitionConfidence": 0.6,
+      "sensitiveCategories": [
+        "disaster"
+      ],
+      "confidence": 0.95
+    },
+    {
+      "id": "segment-5",
+      "startSec": 69.0,
+      "endSec": 90.0,
+      "label": "Reporter sign-off",
+      "description": "记者站在废墟中，发表关于FEMA存在的结束语并签退。",
+      "narrativeIntensity": 0.5,
+      "emotionalIntensity": 0.4,
+      "narrativeCriticality": 0.6,
+      "interruptionRisk": 0.4,
+      "interruptionRiskCategories": [
+        "disaster_or_trauma"
+      ],
+      "motionIntensity": 0.2,
+      "audioIntensity": 0.5,
+      "dialogueActive": true,
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [
+        "disaster"
+      ],
+      "confidence": 0.9
+    }
+  ],
+  "candidateBreaks": [
+    {
+      "timeSec": 15.0,
+      "label": "Nominal opportunity",
+      "recommendation": "delay",
+      "reasons": [
+        "该片段正处于解释损坏统计数据和展示破坏无人机画面的关键阶段。",
+        "由于灾难背景，叙事和情感强度很高。"
+      ],
+      "confidence": 0.8,
+      "sourceSegmentIds": [
+        "segment-2"
+      ]
+    },
+    {
+      "timeSec": 85.0,
+      "label": "Final sign-off",
+      "recommendation": "delay",
+      "reasons": [
+        "记者正在发表关于FEMA角色的最终结束语和总结。",
+        "打断新闻报道的结尾通常会破坏叙事流程。"
+      ],
+      "confidence": 0.7,
+      "sourceSegmentIds": [
+        "segment-5"
+      ]
+    }
+  ],
+  "limitations": [
+    "视频是连续的灾难新闻报道，很难在不破坏叙事流程的情况下找到真正“安全”的中断点。",
+    "幸存者证词（46秒-69秒）的情感分量使得该范围内的任何中断都非常不合适。",
+    "15秒的标称机会落在密集的信息片段中，需要延迟。"
+  ]
+}

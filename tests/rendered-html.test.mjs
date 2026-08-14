@@ -24,7 +24,10 @@ test("server-renders separate showcase and decision-method views", async () => {
   assert.match(html, /暂停状态 · 任务保护/);
   assert.match(html, /伦理场景 · 硬规则保护/);
   assert.match(html, /正在加载视频/);
-  assert.match(html, /真实海上救援场景/);
+  assert.match(html, /真实救援、医疗转运或灾后纪实/);
+  assert.match(html, /海上救援/);
+  assert.match(html, /医疗转运/);
+  assert.match(html, /灾后现场/);
   assert.match(html, /一段视频，如何变成/);
   assert.match(html, /视频理解 API/);
   assert.match(html, /系统同时看三类信息/);

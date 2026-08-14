@@ -5,7 +5,15 @@ import {
   type VideoAnalysis,
   type VideoAnalysisSegment,
 } from "@admind/contracts";
-import { createS1Request } from "./fixtures";
+import { createS1Request, createS3Request } from "./fixtures";
+
+export type ProtectedSourceContext = {
+  title: string;
+  episodeTitle: string;
+  viewerSegment?: string;
+  policyReason: string;
+  nominalOpportunitySec?: number;
+};
 
 function segmentAt(analysis: VideoAnalysis, timeSec: number): VideoAnalysisSegment | undefined {
   return analysis.segments.find((segment) => segment.startSec <= timeSec && timeSec < segment.endSec)
@@ -132,6 +140,72 @@ export function createS1RequestFromAnalysis(
       }],
     }));
   }
+
+  return DecisionRequestSchema.parse(request);
+}
+
+/**
+ * Combines live video-understanding evidence with a verified source classification.
+ * The model describes the sequence and interruption risk; the deterministic policy
+ * owns the ethical boundary and therefore marks every in-content opportunity as
+ * protected. This deliberately avoids asking the model to make the final policy call.
+ */
+export function createS3RequestFromAnalysis(
+  analysis: VideoAnalysis,
+  source: ProtectedSourceContext,
+  strategy: DecisionRequest["strategy"] = "admind",
+): DecisionRequest {
+  const request = createS3Request(strategy);
+  const nominalTime = source.nominalOpportunitySec
+    ?? analysis.candidateBreaks.slice().sort((left, right) => left.timeSec - right.timeSec)[0]?.timeSec
+    ?? Math.min(5, analysis.media.durationSec / 4);
+
+  request.scenario = {
+    ...request.scenario,
+    title: source.title,
+    episodeTitle: source.episodeTitle,
+    durationSec: analysis.media.durationSec,
+    nominalOpportunitySec: nominalTime,
+    safeOpportunitySec: analysis.media.durationSec,
+    viewerSegment: source.viewerSegment ?? "长视频纪实内容用户",
+    sceneSignals: analysis.candidateBreaks
+      .filter((candidate) => candidate.timeSec >= nominalTime && candidate.timeSec <= analysis.media.durationSec)
+      .sort((left, right) => left.timeSec - right.timeSec)
+      .map((candidate) => {
+        const segment = segmentAt(analysis, candidate.timeSec);
+        return {
+          timeSec: candidate.timeSec,
+          label: `${source.policyReason} · ${candidate.label}`,
+          tension: Math.max(segment?.narrativeIntensity ?? 0, segment?.interruptionRisk ?? 0.5),
+          transition: candidate.recommendation === "allow",
+          protectedContext: candidate.timeSec < analysis.media.durationSec,
+          opportunity: candidate.timeSec < analysis.media.durationSec ? "protected" as const : "boundary" as const,
+          modelRecommendation: candidate.recommendation,
+          modelConfidence: candidate.confidence,
+          modelAgreement: 1,
+        };
+      }),
+  };
+
+  if (request.scenario.sceneSignals.length === 0) {
+    const segment = segmentAt(analysis, nominalTime);
+    request.scenario.sceneSignals = [{
+      timeSec: nominalTime,
+      label: `${source.policyReason} · 片段内机会点`,
+      tension: Math.max(segment?.narrativeIntensity ?? 0, segment?.interruptionRisk ?? 0.5),
+      transition: false,
+      protectedContext: true,
+      opportunity: "protected",
+      modelRecommendation: "uncertain",
+      modelConfidence: segment?.confidence ?? 0,
+      modelAgreement: 1,
+    }];
+  }
+
+  request.campaigns = request.campaigns.map((campaign) => ({
+    ...campaign,
+    maxDeferralSec: Math.max(0, analysis.media.durationSec - nominalTime),
+  }));
 
   return DecisionRequestSchema.parse(request);
 }
