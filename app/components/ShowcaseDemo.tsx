@@ -32,27 +32,6 @@ type ShowcaseDemoProps = {
   consensus: AnalysisConsensus;
 };
 
-const seekableMediaCache = new Map<string, Promise<string>>();
-
-function loadSeekableMedia(src: string) {
-  const cached = seekableMediaCache.get(src);
-  if (cached) return cached;
-
-  const request = fetch(src, { credentials: "same-origin" })
-    .then((response) => {
-      if (!response.ok) throw new Error(`视频加载失败：${response.status}`);
-      return response.blob();
-    })
-    .then((blob) => URL.createObjectURL(blob))
-    .catch((error) => {
-      seekableMediaCache.delete(src);
-      throw error;
-    });
-
-  seekableMediaCache.set(src, request);
-  return request;
-}
-
 function formatTime(value: number) {
   const minutes = Math.floor(value / 60);
   const seconds = Math.floor(value % 60);
@@ -176,16 +155,12 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const [adRemaining, setAdRemaining] = useState<number | null>(null);
   const [pausePending, setPausePending] = useState(false);
   const [variantIndex, setVariantIndex] = useState(0);
-  const [preparedMedia, setPreparedMedia] = useState<{ id: string; url: string } | null>(null);
-  const [mediaReady, setMediaReady] = useState(false);
-  const [mediaLoadFailed, setMediaLoadFailed] = useState(false);
   const [silentPlayback, setSilentPlayback] = useState(false);
+  const [mediaReady, setMediaReady] = useState(false);
 
   const variants: ScenarioDemoVariant[] = [demo, ...(demo.alternatives ?? [])];
   const activeDemo = variants[variantIndex] ?? variants[0];
   const { scenario, baseline, admind, media } = activeDemo;
-  const playbackSrc = preparedMedia?.id === media.id ? preparedMedia.url : null;
-  const interactionReady = mediaReady && playbackSrc !== null;
   const isPauseScenario = scenario.id === "S2";
   const isProtectedScenario = scenario.id === "S3";
   const decision = strategy === "baseline" ? baseline : admind;
@@ -218,32 +193,9 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    const video = videoRef.current;
-    video?.pause();
-    setPlaying(false);
-    setTime(0);
-    setAdRemaining(null);
     setMediaReady(false);
-    setMediaLoadFailed(false);
-    setPreparedMedia(null);
-
-    void loadSeekableMedia(media.src)
-      .then((url) => {
-        if (!cancelled) setPreparedMedia({ id: media.id, url });
-      })
-      .catch(() => {
-        if (!cancelled) setMediaLoadFailed(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    videoRef.current?.load();
   }, [media.src]);
-
-  useEffect(() => {
-    if (playbackSrc) videoRef.current?.load();
-  }, [playbackSrc]);
 
   useEffect(() => {
     if (adRemaining === null) return;
@@ -292,7 +244,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
 
   const jumpToDecision = () => {
     const video = videoRef.current;
-    if (!video || !interactionReady) return;
+    if (!video || !mediaReady) return;
     triggeredRef.current[strategy] = false;
     setAdRemaining(null);
 
@@ -329,7 +281,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
 
   const togglePlayback = () => {
     const video = videoRef.current;
-    if (!video || !interactionReady || (adActive && selected?.format === "fullscreen")) return;
+    if (!video || !mediaReady || (adActive && selected?.format === "fullscreen")) return;
     setPausePending(false);
     if (adActive) setAdRemaining(null);
     if (video.paused) void video.play();
@@ -338,7 +290,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
 
   const seek = (nextTime: number) => {
     const video = videoRef.current;
-    if (!video || !interactionReady) return;
+    if (!video || !mediaReady) return;
     const knownDuration = Number.isFinite(video.duration) ? video.duration : scenario.durationSec;
     const boundedTime = Math.min(Math.max(0, nextTime), knownDuration);
     video.currentTime = boundedTime;
@@ -424,9 +376,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
               <small>{isPauseScenario && strategy === "admind" && pausePending ? "正在确认稳定暂停…" : media.modelFinding}</small>
             </div>
           </div>
-          <button disabled={!interactionReady} onClick={jumpToDecision}>
-            {mediaLoadFailed ? "视频加载失败" : interactionReady ? (isPauseScenario ? "模拟暂停" : "查看广告投放点") : "正在准备视频…"}
-          </button>
+          <button disabled={!mediaReady} onClick={jumpToDecision}>{mediaReady ? (isPauseScenario ? "模拟暂停" : "查看广告投放点") : "正在加载视频…"}</button>
         </div>
 
         <div className="video-stage showcase-video-stage">
@@ -434,12 +384,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             className="content-video"
             onEnded={() => setPlaying(false)}
             onClick={togglePlayback}
-            onLoadedMetadata={() => {
-              if (playbackSrc) {
-                setTime(0);
-                setMediaReady(true);
-              }
-            }}
+            onLoadedMetadata={() => setMediaReady(true)}
             onPause={handlePause}
             onPlay={() => setPlaying(true)}
             onSeeking={() => {
@@ -456,17 +401,10 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             playsInline
             preload="metadata"
             ref={videoRef}
-            src={playbackSrc ?? undefined}
+            src={media.src}
           >
             {media.captionsSrc ? <track default kind="captions" label="中文" src={media.captionsSrc} srcLang="zh" /> : null}
           </video>
-
-          {!interactionReady ? (
-            <div className="showcase-media-loading" role="status">
-              <span />
-              <strong>{mediaLoadFailed ? "视频加载失败，请刷新后重试" : "正在准备可拖动视频…"}</strong>
-            </div>
-          ) : null}
 
           <div className="video-topline showcase-video-topline">
             <span>{isPauseScenario
@@ -505,7 +443,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             <span>{formatTime(time)}</span>
             <input
               aria-label="视频进度"
-              disabled={!interactionReady}
+              disabled={!mediaReady}
               max={scenario.durationSec}
               min={0}
               onInput={(event) => seek(Number(event.currentTarget.value))}

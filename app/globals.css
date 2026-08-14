@@ -348,10 +348,6 @@ button { color: inherit; }
 .showcase-controls input::-moz-range-thumb { width: 15px; height: 15px; border: 0; border-radius: 50%; background: #8d76ff; box-shadow: 0 0 0 4px rgba(141,118,255,.18); }
 .showcase-controls input:disabled { cursor: wait; opacity: .45; }
 .showcase-quality { color: rgba(255,255,255,.82); font-size: 11px; }
-.showcase-media-loading { position: absolute; z-index: 6; inset: 0; display: flex; align-items: center; justify-content: center; gap: 12px; color: rgba(255,255,255,.86); background: #080a10; }
-.showcase-media-loading span { width: 19px; height: 19px; border: 2px solid rgba(255,255,255,.24); border-top-color: #8d76ff; border-radius: 50%; animation: showcase-spin .8s linear infinite; }
-.showcase-media-loading strong { font-size: 12px; font-weight: 750; }
-@keyframes showcase-spin { to { transform: rotate(360deg); } }
 .showcase-player-card .ad-overlay.real-ad-card { top: 22px; right: 22px; width: 310px; min-height: 0; border-radius: 16px; }
 .showcase-player-card .native-ad-label, .showcase-player-card .native-muted { padding: 6px 9px; font-size: 9px; }
 .showcase-player-card .real-countdown { top: 17px; right: 18px; padding: 7px 10px; font-size: 10px; }
