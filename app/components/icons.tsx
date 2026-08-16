@@ -30,6 +30,14 @@ export const GridIcon = (props: IconProps) => (
 export const PlayIcon = (props: IconProps) => (
   <Icon {...props}><path d="M8 5.5v13l10-6.5-10-6.5Z" {...stroke} /></Icon>
 );
+export const VolumeIcon = ({ level, ...props }: IconProps & { level: "high" | "low" | "muted" }) => (
+  <Icon {...props}>
+    <path d="M4 10v4h3l4 3.5v-11L7 10H4Z" {...stroke} />
+    {level === "low" ? <path d="M14 10a3 3 0 0 1 0 4" {...stroke} /> : null}
+    {level === "high" ? <><path d="M14 9a4.2 4.2 0 0 1 0 6" {...stroke} /><path d="M17 6.5a7.6 7.6 0 0 1 0 11" {...stroke} /></> : null}
+    {level === "muted" ? <><path d="m15 10 5 5" {...stroke} /><path d="m20 10-5 5" {...stroke} /></> : null}
+  </Icon>
+);
 export const RouteIcon = (props: IconProps) => (
   <Icon {...props}><circle cx="6" cy="6" r="2" {...stroke} /><circle cx="18" cy="18" r="2" {...stroke} /><path d="M8 6h4a3 3 0 0 1 3 3v6a3 3 0 0 0 3 3" {...stroke} /></Icon>
 );
