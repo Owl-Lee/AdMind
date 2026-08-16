@@ -906,7 +906,7 @@ function NarrativeJourney({ scenarios }: { scenarios: ScenarioDemo[] }) {
           {scenarios.map((demo, index) => {
             const copy = storyStepCopy[index] ?? storyStepCopy.at(-1)!;
             return (
-              <div className="attio-story-chapter" data-scenario-id={demo.scenario.id} data-story-panel id={`story-${demo.scenario.id.toLowerCase()}`} key={demo.scenario.id}>
+              <div className="attio-story-chapter" data-scenario-id={demo.scenario.id} id={`story-${demo.scenario.id.toLowerCase()}`} key={demo.scenario.id}>
                 <div className="attio-story-copy">
                   <p>{copy.eyebrow}</p>
                   <h3>{copy.title}</h3>
@@ -932,60 +932,6 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
     return () => window.removeEventListener("hashchange", syncView);
   }, []);
 
-  useEffect(() => {
-    if (view !== "demo") return;
-
-    const finePointer = window.matchMedia("(min-width: 901px) and (pointer: fine)");
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (!finePointer.matches || reducedMotion.matches) return;
-
-    const panels = Array.from(document.querySelectorAll<HTMLElement>("[data-story-panel]"));
-    if (panels.length < 2) return;
-
-    let wheelLocked = false;
-    let wheelIntent = 0;
-    let releaseTimer = 0;
-
-    const currentPanelIndex = () => panels.reduce((closest, panel, index) => {
-      const distance = Math.abs(panel.getBoundingClientRect().top - 92);
-      return distance < closest.distance ? { index, distance } : closest;
-    }, { index: 0, distance: Number.POSITIVE_INFINITY }).index;
-
-    const handleWheel = (event: WheelEvent) => {
-      if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
-      const target = event.target instanceof Element ? event.target : null;
-      if (target?.closest("input, textarea, select, [data-native-scroll]")) return;
-
-      const direction = Math.sign(event.deltaY);
-      if (!direction) return;
-
-      const currentIndex = currentPanelIndex();
-      const nextIndex = Math.min(panels.length - 1, Math.max(0, currentIndex + direction));
-      if (nextIndex === currentIndex) return;
-
-      event.preventDefault();
-      if (wheelLocked) return;
-
-      const normalizedDelta = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? event.deltaY * 16 : event.deltaY;
-      wheelIntent += normalizedDelta;
-      if (Math.abs(wheelIntent) < 34) return;
-
-      wheelIntent = 0;
-      wheelLocked = true;
-      panels[nextIndex].scrollIntoView({ behavior: "smooth", block: "start" });
-      window.clearTimeout(releaseTimer);
-      releaseTimer = window.setTimeout(() => {
-        wheelLocked = false;
-      }, 760);
-    };
-
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    return () => {
-      window.removeEventListener("wheel", handleWheel);
-      window.clearTimeout(releaseTimer);
-    };
-  }, [view, scenarios]);
-
   const switchView = (nextView: "demo" | "decision") => {
     document.querySelectorAll("video").forEach((video) => video.pause());
     setView(nextView);
@@ -1008,7 +954,7 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
 
       <main id="top">
         <div hidden={view !== "demo"}>
-            <section className="showcase-hero" data-story-panel>
+            <section className="showcase-hero">
               <div className="showcase-hero-grid">
                 <div className="showcase-hero-copy">
                   <p className="showcase-kicker"><i /> AI 广告决策引擎</p>

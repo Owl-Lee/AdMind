@@ -1473,7 +1473,7 @@ button { color: inherit; }
   .attio-story-nav button { flex-basis: auto; }
 }
 
-/* Four-act narrative: one wheel gesture advances one calm, video-first chapter. */
+/* Four-act narrative with natural, continuous document scrolling. */
 .showcase-page { overflow-x: clip; }
 
 .attio-story {
@@ -1503,18 +1503,7 @@ button { color: inherit; }
   margin-top: clamp(52px, 8vh, 92px);
 }
 
-.showcase-hero,
-.attio-story-chapter {
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-}
-
 @media (min-width: 901px) and (pointer: fine) {
-  html:has(.showcase-page) {
-    scroll-behavior: smooth;
-    scroll-snap-type: y proximity;
-  }
-
   .showcase-hero {
     min-height: 100svh;
   }
@@ -1552,10 +1541,6 @@ button { color: inherit; }
   .attio-story-chapter .showcase-player-meta .showcase-status-copy small { display: none; }
   .attio-story-chapter .showcase-player-actions { display: grid; gap: 8px; }
   .attio-story-chapter .showcase-player-actions > button { width: 100%; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html:has(.showcase-page) { scroll-snap-type: none; }
 }
 
 /* Give the first act a center of gravity and turn its whitespace into direction. */
