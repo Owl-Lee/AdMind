@@ -1611,9 +1611,11 @@ button { color: inherit; }
 /* Keep each scene readable at a glance: one conclusion and one short reason. */
 .attio-story-copy > p {
   color: #4e47a2;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: .06em;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1.4;
+  letter-spacing: .04em;
 }
 
 .attio-story-copy h3 {
@@ -1633,7 +1635,7 @@ button { color: inherit; }
 }
 
 @media (max-width: 520px) {
-  .attio-story-copy > p { font-size: 12px; }
+  .attio-story-copy > p { font-size: 13px; }
   .attio-story-copy h3 { font-size: 30px; }
   .attio-story-copy > span { font-size: 16px; }
 }
