@@ -66,6 +66,7 @@ export default function Home() {
             captionsSrc: "/charge-demo-zh.vtt",
             sourceLabel: "CHARGE · Blender Studio",
             modelFinding: "00:45 战斗高潮；01:25 仍需等待并改用低遮挡形式",
+            analysis,
           },
           alternatives: [
             {
@@ -79,6 +80,7 @@ export default function Home() {
                 src: "/media/coffee-run-emotion-720p.mp4",
                 sourceLabel: "Coffee Run · Blender Studio",
                 modelFinding: "求婚、医院与悲伤记忆连续出现；窗口内没有安全插播点",
+                analysis: coffeeAnalysis,
               },
             },
             {
@@ -92,6 +94,7 @@ export default function Home() {
                 src: "/media/llamigos-chase-720p.mp4",
                 sourceLabel: "Caminandes: Llamigos · Blender",
                 modelFinding: "00:20 矿车高潮；00:51 危险已过但仍处于恢复段",
+                analysis: llamigosAnalysis,
               },
             },
           ],
@@ -137,6 +140,7 @@ export default function Home() {
             src: "/media/coast-guard-rescue-720p.mp4",
             sourceLabel: "U.S. Coast Guard · Public Domain",
             modelFinding: "00:05 识别为高紧张度真实救援；整段没有内部安全窗口，本次不投放",
+            analysis: coastGuardAnalysis,
           },
           alternatives: [
             {
@@ -150,6 +154,7 @@ export default function Home() {
                 src: "/media/usns-medical-evacuation-720p.mp4",
                 sourceLabel: "U.S. Navy · Public Domain",
                 modelFinding: "来源已核验为医疗后送；API 识别出 00:26–00:38 的连续高风险任务阶段，本次不投放",
+                analysis: usnsMedicalAnalysis,
               },
             },
             {
@@ -163,6 +168,7 @@ export default function Home() {
                 src: "/media/fema-hurricane-recovery-720p.mp4",
                 sourceLabel: "FEMA · Public Domain",
                 modelFinding: "00:15 建议延后；00:46–01:09 为幸存者证词与灾后破坏，整段维持伦理保护",
+                analysis: femaRecoveryAnalysis,
               },
             },
           ],

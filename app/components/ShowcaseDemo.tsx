@@ -14,6 +14,7 @@ export type DemoMedia = {
   src: string;
   sourceLabel: string;
   modelFinding: string;
+  analysis?: VideoAnalysis;
   captionsSrc?: string;
   quality?: string;
 };
@@ -45,6 +46,43 @@ function asPercent(value = 0) {
   return Math.round(Math.max(0, Math.min(1, value)) * 100);
 }
 
+function asTenPoint(value = 0) {
+  return (Math.max(0, Math.min(1, value)) * 10).toFixed(1);
+}
+
+function asEvidenceScore(value = 0) {
+  return Math.max(0, Math.min(1, value)).toFixed(2);
+}
+
+const ANALYSIS_LABELS: Record<string, string> = {
+  "Stealing the Core": "核心能量被盗",
+  "Robot Fight": "机器人战斗",
+  "Violent Confrontation": "激烈对抗",
+  "Fight Climax": "战斗高潮",
+  "Fight Ends": "战斗结束",
+  "Mid-Fight": "战斗进行中",
+  "Post-Fight Recovery": "战斗后恢复",
+  "FEMA officials briefing": "FEMA 官员简报",
+  "Damage statistics and drone footage": "灾情数据与航拍画面",
+  "Isolated mountain community": "受灾山区社区",
+  "Survivor testimony and destruction": "幸存者讲述与灾后破坏",
+  "Reporter sign-off": "记者结语",
+  "Final sign-off": "最终结语",
+  "Introduction and Setup": "开场铺垫",
+  "Mine Cart Climax": "矿车追逐高潮",
+  "Freefall and Impact": "坠落与撞击",
+  "Resolution and Reveal": "危机解除与揭示",
+  "Nominal Opportunity": "原定广告候选点",
+  "Nominal opportunity": "原定广告候选点",
+  "Post-Climax Recovery": "高潮后恢复",
+  "名义机会点": "原定广告候选点",
+};
+
+function localizeAnalysisLabel(label: string) {
+  const evidenceLabel = label.split(" · ").at(-1) ?? label;
+  return ANALYSIS_LABELS[evidenceLabel] ?? evidenceLabel;
+}
+
 function formatPlacement(value: PlacementDecision["placement"]) {
   return value
     .replace("top-", "顶部")
@@ -62,7 +100,7 @@ function DecisionMethod({ analysisRuns, consensus }: { analysisRuns: VideoAnalys
   return (
     <section className="method-page" id="decision">
       <header className="method-hero">
-        <p>HOW ADMIND WORKS</p>
+        <p>ADMIND 如何工作</p>
         <h1>一段视频，如何变成<br />一次投放决定？</h1>
         <span>现成的视频理解 API 负责看懂内容；AdMind 负责把内容信号、播放器事件与商业边界组合成可执行方案。</span>
       </header>
@@ -95,7 +133,7 @@ function DecisionMethod({ analysisRuns, consensus }: { analysisRuns: VideoAnalys
 
       <section className="method-signals">
         <div className="method-section-heading">
-          <p>THREE SIGNAL LAYERS</p>
+          <p>三层决策信号</p>
           <h2>系统同时看三类信息。</h2>
           <span>不是让一个模型包办所有决定，而是把不同来源的信号放进同一套决策流程。</span>
         </div>
@@ -120,7 +158,7 @@ function DecisionMethod({ analysisRuns, consensus }: { analysisRuns: VideoAnalys
 
       <section className="method-example">
         <div className="method-example-copy">
-          <p>REAL API EXAMPLE</p>
+          <p>真实 API 案例</p>
           <h2>同一段 CHARGE，<br />两次分析得到一致判断。</h2>
           <span>系统没有因为“到了固定时间”就插广告，而是先确认当时处于战斗高潮，再寻找剧情恢复后的窗口。</span>
           <div className="method-example-facts">
@@ -145,7 +183,7 @@ function DecisionMethod({ analysisRuns, consensus }: { analysisRuns: VideoAnalys
 
       <section className="method-stack">
         <div className="method-section-heading">
-          <p>TECH STACK</p>
+          <p>技术栈</p>
           <h2>目前这套原型用了什么？</h2>
         </div>
         <div>
@@ -175,8 +213,14 @@ function ScenarioDecisionEvidence({
   const nearestSignal = scenario.sceneSignals
     .slice()
     .sort((left, right) => Math.abs(left.timeSec - time) - Math.abs(right.timeSec - time))[0];
-  const tension = asPercent(nearestSignal?.tension);
-  const confidence = asPercent(nearestSignal?.modelConfidence);
+  const currentSegment = media.analysis?.segments.find((segment) => segment.startSec <= time && time < segment.endSec)
+    ?? media.analysis?.segments.find((segment) => segment.endSec === time)
+    ?? media.analysis?.segments.at(-1);
+  const tensionScore = currentSegment?.narrativeIntensity ?? nearestSignal?.tension ?? 0;
+  const interruptionRiskScore = currentSegment?.interruptionRisk ?? nearestSignal?.tension ?? 0;
+  const confidenceScore = currentSegment?.confidence ?? nearestSignal?.modelConfidence ?? 0;
+  const tension = asPercent(tensionScore);
+  const confidence = asPercent(confidenceScore);
   const agreement = asPercent(nearestSignal?.modelAgreement ?? 1);
   const plannedTime = decision.selected?.timeSec ?? scenario.safeOpportunitySec;
   const reachedNominal = time >= scenario.nominalOpportunitySec - 0.25;
@@ -202,16 +246,16 @@ function ScenarioDecisionEvidence({
     <section className={`pause-evidence scenario-evidence ${isProtectedScenario ? "protected" : "content"}`} aria-live="polite">
       <div className="pause-evidence-heading">
         <div>
-          <span>{isProtectedScenario ? "LIVE ETHICAL SIGNALS" : "LIVE CONTENT SIGNALS"}</span>
+          <span>{isProtectedScenario ? "实时伦理信号" : "实时内容信号"}</span>
           <strong>{isProtectedScenario ? "这一刻，为什么不能插播？" : "这一刻，适合打断吗？"}</strong>
         </div>
         <b className={`pause-phase ${isProtectedScenario ? "protected" : reachedPlan ? "delivered" : "analyzing"}`}>{phase}</b>
       </div>
       <div className="pause-signal-grid">
         <article><span>当前播放位置</span><strong>{formatTime(time)}</strong><small>原定广告点 {formatTime(scenario.nominalOpportunitySec)}</small></article>
-        <article><span>最近模型信号</span><strong>{nearestSignal?.label ?? "等待内容信号"}</strong><small>证据时间 {formatTime(nearestSignal?.timeSec ?? 0)}</small></article>
-        <article><span>{isProtectedScenario ? "伦理上下文" : "内容张力"}</span><strong>{isProtectedScenario ? nearestSignal?.protectedContext ? "受保护" : "待确认" : `${tension}%`}</strong><small>{isProtectedScenario ? `${media.category} · 规则优先` : `张力越高，越不应打断`}</small></article>
-        <article><span>模型证据</span><strong>{confidence}% 置信</strong><small>{agreement}% 一致 · 拒绝 {decision.rejectedCount} 个候选</small></article>
+        <article><span>当前分析片段</span><strong>{localizeAnalysisLabel(currentSegment?.label ?? nearestSignal?.label ?? "等待内容信号")}</strong><small>{currentSegment ? `${formatTime(currentSegment.startSec)}–${formatTime(currentSegment.endSec)}` : `证据时间 ${formatTime(nearestSignal?.timeSec ?? 0)}`}</small></article>
+        <article><span>{isProtectedScenario ? "伦理上下文" : "片段张力评分"}</span><strong>{isProtectedScenario ? nearestSignal?.protectedContext ? "受保护" : "待确认" : `${asTenPoint(tensionScore)} / 10`}</strong><small>{isProtectedScenario ? `${media.category} · 内容风险 ${asTenPoint(interruptionRiskScore)} / 10` : `片段级评分，不是逐帧测量`}</small></article>
+        <article><span>分析可信度</span><strong>{asEvidenceScore(confidenceScore)}</strong><small>模型证据评分，非统计学置信区间</small></article>
       </div>
       <div className="pause-placement-result">
         <div>
@@ -226,7 +270,9 @@ function ScenarioDecisionEvidence({
           <p><span>{isProtectedScenario ? "伦理优先级" : "模型置信"}</span><i><b style={{ width: `${isProtectedScenario ? 100 : confidence}%` }} /></i><strong>{isProtectedScenario ? 100 : confidence}%</strong></p>
         </div>
       </div>
-      <p className="scenario-evidence-foot">{media.modelFinding}</p>
+      <p className="scenario-evidence-foot">{isProtectedScenario
+        ? `${media.category}已由素材来源与视频分析共同确认；伦理规则在整段内容中保持优先，不在片内补量。`
+        : `${media.modelFinding} · 多次分析一致度 ${agreement}%，已拒绝 ${decision.rejectedCount} 个不合格候选。`}</p>
     </section>
   );
 }
@@ -587,6 +633,9 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             className="content-video"
             onEnded={() => setPlaying(false)}
             onClick={togglePlayback}
+            key={media.id}
+            onCanPlay={() => setMediaReady(true)}
+            onError={() => setMediaReady(false)}
             onLoadedMetadata={() => setMediaReady(true)}
             onPause={handlePause}
             onPlay={handlePlay}
@@ -710,7 +759,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
           <section className="pause-evidence" aria-live="polite">
             <div className="pause-evidence-heading">
               <div>
-                <span>LIVE PLAYER SIGNALS</span>
+                <span>实时播放器信号</span>
                 <strong>这一次暂停，系统实际看到了什么？</strong>
               </div>
               <b className={`pause-phase ${pausePhase}`}>{pausePhase === "observing" ? "确认暂停"
@@ -798,7 +847,7 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
       <main id="top">
         <div hidden={view !== "demo"}>
             <section className="showcase-hero">
-              <p className="showcase-kicker">AI AD DECISION ENGINE</p>
+              <p className="showcase-kicker">AI 广告决策引擎</p>
               <h1>广告必须出现，<br />也不必毁掉剧情。</h1>
               <p className="showcase-lead">AdMind 理解内容与用户动作，在商业约束下决定广告何时出现、以什么形式出现，以及何时不该出现。</p>
               <div className="showcase-actions">
