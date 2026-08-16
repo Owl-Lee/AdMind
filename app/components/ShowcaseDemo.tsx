@@ -864,9 +864,7 @@ function NarrativeJourney({ scenarios }: { scenarios: ScenarioDemo[] }) {
   const [activeId, setActiveId] = useState(scenarios[0]?.scenario.id ?? "");
 
   useEffect(() => {
-    const sections = scenarios
-      .map((demo) => document.getElementById(`scenario-${demo.scenario.id.toLowerCase()}`))
-      .filter((section): section is HTMLElement => Boolean(section));
+    const sections = Array.from(document.querySelectorAll<HTMLElement>(".attio-story-chapter[data-scenario-id]"));
     if (!sections.length) return;
 
     const observer = new IntersectionObserver((entries) => {
@@ -874,9 +872,8 @@ function NarrativeJourney({ scenarios }: { scenarios: ScenarioDemo[] }) {
         .filter((entry) => entry.isIntersecting)
         .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
       if (mostVisible) {
-        const sectionId = mostVisible.target.id.replace("scenario-", "");
-        const matchingScenario = scenarios.find((demo) => demo.scenario.id.toLowerCase() === sectionId);
-        if (matchingScenario) setActiveId(matchingScenario.scenario.id);
+        const scenarioId = (mostVisible.target as HTMLElement).dataset.scenarioId;
+        if (scenarioId) setActiveId(scenarioId);
       }
     }, { rootMargin: "-24% 0px -46%", threshold: [0.1, 0.35, 0.65] });
 
@@ -885,16 +882,11 @@ function NarrativeJourney({ scenarios }: { scenarios: ScenarioDemo[] }) {
   }, [scenarios]);
 
   const goToScenario = (id: string) => {
-    document.getElementById(`scenario-${id.toLowerCase()}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById(`story-${id.toLowerCase()}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
     <section className="attio-story" id="demo" aria-label="AdMind 产品演示">
-      <div className="attio-story-intro">
-        <p>产品如何判断</p>
-        <h2>不是三段功能介绍，<br />而是一次完整的决策旅程。</h2>
-        <span>每一步都保留真实的播放器、规则和证据面板；滚动时，叙事和当前场景同步前进。</span>
-      </div>
       <div className="attio-story-layout">
         <nav className="attio-story-nav" aria-label="AdMind 三段决策旅程">
           <div className="attio-story-progress" aria-hidden="true"><i style={{ height: `${Math.max(34, (scenarios.findIndex((demo) => demo.scenario.id === activeId) + 1) * 33)}%` }} /></div>
@@ -914,7 +906,7 @@ function NarrativeJourney({ scenarios }: { scenarios: ScenarioDemo[] }) {
           {scenarios.map((demo, index) => {
             const copy = storyStepCopy[index] ?? storyStepCopy.at(-1)!;
             return (
-              <div className="attio-story-chapter" key={demo.scenario.id}>
+              <div className="attio-story-chapter" data-scenario-id={demo.scenario.id} data-story-panel id={`story-${demo.scenario.id.toLowerCase()}`} key={demo.scenario.id}>
                 <div className="attio-story-copy">
                   <p>{copy.eyebrow}</p>
                   <h3>{copy.title}</h3>
@@ -940,6 +932,60 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
     return () => window.removeEventListener("hashchange", syncView);
   }, []);
 
+  useEffect(() => {
+    if (view !== "demo") return;
+
+    const finePointer = window.matchMedia("(min-width: 901px) and (pointer: fine)");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (!finePointer.matches || reducedMotion.matches) return;
+
+    const panels = Array.from(document.querySelectorAll<HTMLElement>("[data-story-panel]"));
+    if (panels.length < 2) return;
+
+    let wheelLocked = false;
+    let wheelIntent = 0;
+    let releaseTimer = 0;
+
+    const currentPanelIndex = () => panels.reduce((closest, panel, index) => {
+      const distance = Math.abs(panel.getBoundingClientRect().top - 92);
+      return distance < closest.distance ? { index, distance } : closest;
+    }, { index: 0, distance: Number.POSITIVE_INFINITY }).index;
+
+    const handleWheel = (event: WheelEvent) => {
+      if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+      const target = event.target instanceof Element ? event.target : null;
+      if (target?.closest("input, textarea, select, [data-native-scroll]")) return;
+
+      const direction = Math.sign(event.deltaY);
+      if (!direction) return;
+
+      const currentIndex = currentPanelIndex();
+      const nextIndex = Math.min(panels.length - 1, Math.max(0, currentIndex + direction));
+      if (nextIndex === currentIndex) return;
+
+      event.preventDefault();
+      if (wheelLocked) return;
+
+      const normalizedDelta = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? event.deltaY * 16 : event.deltaY;
+      wheelIntent += normalizedDelta;
+      if (Math.abs(wheelIntent) < 34) return;
+
+      wheelIntent = 0;
+      wheelLocked = true;
+      panels[nextIndex].scrollIntoView({ behavior: "smooth", block: "start" });
+      window.clearTimeout(releaseTimer);
+      releaseTimer = window.setTimeout(() => {
+        wheelLocked = false;
+      }, 760);
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      window.clearTimeout(releaseTimer);
+    };
+  }, [view, scenarios]);
+
   const switchView = (nextView: "demo" | "decision") => {
     document.querySelectorAll("video").forEach((video) => video.pause());
     setView(nextView);
@@ -962,14 +1008,14 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
 
       <main id="top">
         <div hidden={view !== "demo"}>
-            <section className="showcase-hero">
+            <section className="showcase-hero" data-story-panel>
               <div className="showcase-hero-grid">
                 <div className="showcase-hero-copy">
                   <p className="showcase-kicker"><i /> AI 广告决策引擎</p>
                   <h1>广告必须出现，<br />也不必<span>毁掉剧情。</span></h1>
                   <p className="showcase-lead">AdMind 理解内容与用户动作，在商业约束下决定广告何时出现、以什么形式出现，以及何时不该出现。</p>
                   <div className="showcase-actions">
-                    <a className="showcase-primary" href="#demo">开始体验 <ChevronIcon /></a>
+                    <a className="showcase-primary" href={scenarios[0] ? `#story-${scenarios[0].scenario.id.toLowerCase()}` : "#demo"}>开始体验 <ChevronIcon /></a>
                     <button className="showcase-secondary" onClick={() => switchView("decision")}>查看决策方式 <ChevronIcon /></button>
                   </div>
                   <div className="showcase-hero-facts" aria-label="AdMind 三类决策能力">
