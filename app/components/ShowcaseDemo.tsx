@@ -104,8 +104,7 @@ function HeroDecisionPreview({ demo }: { demo: ScenarioDemo }) {
         <b>ADMIND · LIVE DECISION</b>
       </div>
       <div className="hero-preview-stage">
-        <span className="hero-preview-orbit" aria-hidden="true" />
-        <span className="hero-preview-subject" aria-hidden="true" />
+        <video aria-hidden="true" autoPlay loop muted playsInline preload="metadata" src={demo.media.src} tabIndex={-1} />
         <span className="hero-preview-signal"><i /> 内容信号已更新</span>
         <span className="hero-preview-plan">{formatTime(plannedTime)}<small>安全窗口</small></span>
       </div>
@@ -330,6 +329,8 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     typeof window !== "undefined" && new URLSearchParams(window.location.search).get("silent") === "1",
   );
   const [mediaReady, setMediaReady] = useState(false);
+  const [volume, setVolume] = useState(0.65);
+  const [volumeOpen, setVolumeOpen] = useState(false);
 
   const variants: ScenarioDemoVariant[] = [demo, ...(demo.alternatives ?? [])];
   const activeDemo = variants[variantIndex] ?? variants[0];
@@ -384,11 +385,14 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     setPauseSeconds(0);
     setPausePhase("idle");
     setSeeking(false);
+    setSeekCount(0);
     setDeferredReason("");
     setFaceEvidence(null);
     setPlacementDecision(choosePauseAdPlacement([]));
     setPlaying(false);
     setTime(0);
+    seekingRef.current = false;
+    scrubbingRef.current = false;
   };
 
   const switchVariant = (nextIndex: number) => {
@@ -472,6 +476,13 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     const timer = window.setInterval(update, 100);
     return () => window.clearInterval(timer);
   }, [isPauseScenario, pauseStartedAt]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.volume = volume;
+    video.muted = silentPlayback || volume === 0;
+  }, [media.id, silentPlayback, volume]);
 
   const switchStrategy = (nextStrategy: Strategy) => {
     resetPlayback();
@@ -575,6 +586,17 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     }
   };
 
+  const beginScrub = () => {
+    if (scrubbingRef.current) return;
+    scrubbingRef.current = true;
+    if (isPauseScenario) setSeekCount((count) => count + 1);
+  };
+
+  const finishScrub = () => {
+    scrubbingRef.current = false;
+    syncPlayback();
+  };
+
   const placementClass = placementDecision.placement === "none" ? "" : `placement-${placementDecision.placement}`;
   const showPauseEvidence = isPauseScenario && strategy === "admind";
   const showAdMindEvidence = strategy === "admind";
@@ -667,10 +689,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             onSeeking={() => {
               seekingRef.current = true;
               setSeeking(true);
-              if (isPauseScenario) {
-                setSeekCount((count) => count + 1);
-                if (pausePending || adActive) stopPauseObservation("用户正在拖动进度，广告任务已顺延。");
-              }
+              if (isPauseScenario && (pausePending || adActive)) stopPauseObservation("用户正在拖动进度，广告任务已顺延。");
             }}
             onSeeked={() => {
               seekingRef.current = false;
@@ -678,7 +697,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
               if (!scrubbingRef.current) syncPlayback();
             }}
             onTimeUpdate={syncPlayback}
-            muted={silentPlayback}
+            muted={silentPlayback || volume === 0}
             playsInline
             preload="metadata"
             ref={videoRef}
@@ -759,22 +778,46 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             </button>
             <span>{formatTime(time)}</span>
             <input
+              className="video-progress"
               aria-label="视频进度"
               disabled={!mediaReady}
               max={scenario.durationSec}
               min={0}
               onInput={(event) => seek(Number(event.currentTarget.value))}
-              onKeyUp={() => syncPlayback()}
-              onPointerCancel={() => { scrubbingRef.current = false; }}
-              onPointerDown={() => { scrubbingRef.current = true; }}
-              onPointerUp={() => {
-                scrubbingRef.current = false;
-                syncPlayback();
+              onKeyDown={(event) => {
+                if (["ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"].includes(event.key)) beginScrub();
               }}
+              onKeyUp={finishScrub}
+              onPointerCancel={finishScrub}
+              onPointerDown={beginScrub}
+              onPointerUp={finishScrub}
               step="0.1"
               type="range"
               value={time}
             />
+            <div className={`volume-control ${volumeOpen ? "open" : ""}`}>
+              <button
+                aria-expanded={volumeOpen}
+                aria-label={volumeOpen ? "收起音量调节" : "打开音量调节"}
+                className="volume-toggle"
+                onClick={() => setVolumeOpen((open) => !open)}
+                type="button"
+              >
+                <span aria-hidden="true" className={`volume-speaker ${volume === 0 ? "muted" : ""}`} />
+              </button>
+              <div className="volume-popover" hidden={!volumeOpen}>
+                <input
+                  aria-label={`视频音量 ${Math.round(volume * 100)}%`}
+                  className="volume-slider"
+                  max="1"
+                  min="0"
+                  onInput={(event) => setVolume(Number(event.currentTarget.value))}
+                  step="0.01"
+                  type="range"
+                  value={volume}
+                />
+              </div>
+            </div>
             <span>{formatTime(scenario.durationSec)}</span>
             <span className="showcase-quality">{media.quality ?? "720p"}</span>
           </div>
@@ -795,7 +838,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             </div>
             <div className="pause-signal-grid">
               <article><span>暂停时长</span><strong>{pauseStartedAt === null ? "—" : `${pauseSeconds.toFixed(1)} 秒`}</strong><small>{pauseSeconds >= 1.5 ? "已达到稳定阈值" : "1.5 秒后才进入视觉判断"}</small></article>
-              <article><span>播放器动作</span><strong>{seeking ? "正在拖动" : playing ? "播放中" : "已暂停"}</strong><small>本次会话已检测 {seekCount} 次拖动</small></article>
+              <article><span>播放器动作</span><strong>{seeking ? "正在拖动" : playing ? "播放中" : "已暂停"}</strong><small>本次会话已拖动 {seekCount} 次</small></article>
               <article><span>页面状态</span><strong>{pageVisible ? pageFocused ? "可见且有焦点" : "可见但失焦" : "页面已隐藏"}</strong><small>hidden 取消；visible + blur 暂缓</small></article>
               <article><span>当前帧视觉</span><strong>{faceEvidence?.status === "ready" ? `${faceEvidence.faces.length + faceEvidence.subjects.length} 个避让目标` : faceEvidence?.status === "unavailable" ? "模型回退" : "尚未分析"}</strong><small>{faceEvidence?.status === "ready" ? `人脸 ${faceEvidence.faces.length} · 主体 ${faceEvidence.subjects.length} · ${faceEvidence.inferenceMs} ms` : "只在稳定暂停后运行一次"}</small></article>
             </div>
@@ -810,14 +853,13 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
               <div className="pause-risk-bars">
                 {riskRows.map((assessment, index) => (
                   <p key={assessment.placement}>
-                    <span>{index === 0 ? "采用" : "对照"}：{formatPlacement(assessment.placement)}</span>
+                    <span>{index === 0 ? "推荐位置" : "风险最高"}：{formatPlacement(assessment.placement)}</span>
                     <i><b style={{ width: `${Math.round(assessment.risk * 100)}%` }} /></i>
                     <strong>{Math.round(assessment.risk * 100)}%</strong>
                   </p>
                 ))}
               </div>
             </div>
-            {pausePhase === "deferred" ? <p className="pause-queue-note">待交付队列 → 下一次稳定暂停继续尝试 → 仍无机会时交给 S1 的安全插播点；S3 受保护场景永不补量。</p> : null}
           </section>
         ) : showAdMindEvidence ? (
           <ScenarioDecisionEvidence
@@ -831,6 +873,13 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
           <div className="pause-compact-note">
             <strong>{strategy === "baseline" ? "传统模式：不参与判断" : "基础暂停素材：保留播放器画面"}</strong>
             <span>{strategy === "baseline" ? "一旦暂停便直接全屏展示广告，不读取拖动、页面状态或画面主体。" : "切换到“复杂角色画面”可查看完整的实时信号与避让过程。"}</span>
+          </div>
+        ) : null}
+
+        {showPauseEvidence && pausePhase === "deferred" ? (
+          <div className="pause-queue-note">
+            <strong>广告任务已顺延</strong>
+            <span>等待下一次稳定暂停；仍无安全位置，再交给 S1 的低打断窗口。S3 保护场景绝不补量。</span>
           </div>
         ) : null}
 
@@ -972,9 +1021,9 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
                 </div>
                 <HeroDecisionPreview demo={scenarios[0]} />
               </div>
-              <a className="hero-scroll-cue" href={scenarios[0] ? `#story-${scenarios[0].scenario.id.toLowerCase()}` : "#demo"} aria-label="向下滚动，进入剧情高点场景">
-                <span><small>向下滚动</small><strong>01 · 剧情高点</strong></span>
-              </a>
+              <div className="hero-bubble-cluster" aria-hidden="true">
+                <span /><span /><span /><span />
+              </div>
             </section>
 
             <NarrativeJourney scenarios={scenarios} />
