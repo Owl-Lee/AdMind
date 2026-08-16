@@ -628,7 +628,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
               <article><span>暂停时长</span><strong>{pauseStartedAt === null ? "—" : `${pauseSeconds.toFixed(1)} 秒`}</strong><small>{pauseSeconds >= 1.5 ? "已达到稳定阈值" : "1.5 秒后才进入视觉判断"}</small></article>
               <article><span>播放器动作</span><strong>{seeking ? "正在拖动" : playing ? "播放中" : "已暂停"}</strong><small>本次会话已检测 {seekCount} 次拖动</small></article>
               <article><span>页面状态</span><strong>{pageVisible ? pageFocused ? "可见且有焦点" : "可见但失焦" : "页面已隐藏"}</strong><small>hidden 取消；visible + blur 暂缓</small></article>
-              <article><span>当前帧视觉</span><strong>{faceEvidence?.status === "ready" ? `${faceEvidence.faces.length} 张人脸` : faceEvidence?.status === "unavailable" ? "模型回退" : "尚未分析"}</strong><small>{faceEvidence?.status === "ready" ? `本地推理 ${faceEvidence.inferenceMs} ms` : "只在稳定暂停后运行一次"}</small></article>
+              <article><span>当前帧视觉</span><strong>{faceEvidence?.status === "ready" ? `${faceEvidence.faces.length} 个脸部候选` : faceEvidence?.status === "unavailable" ? "模型回退" : "尚未分析"}</strong><small>{faceEvidence?.status === "ready" ? `双向本地推理 ${faceEvidence.inferenceMs} ms` : "只在稳定暂停后运行一次"}</small></article>
             </div>
             <div className="pause-placement-result">
               <div>

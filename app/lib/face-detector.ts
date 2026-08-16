@@ -8,6 +8,8 @@ export type FaceDetectionEvidence = {
 };
 
 let detectorPromise: Promise<import("@mediapipe/tasks-vision").FaceDetector> | null = null;
+const PRIMARY_MIN_CONFIDENCE = 0.34;
+const MIRROR_MIN_CONFIDENCE = 0.46;
 
 async function getDetector() {
   if (!detectorPromise) {
@@ -21,7 +23,7 @@ async function getDetector() {
           delegate: "CPU",
         },
         runningMode: "IMAGE",
-        minDetectionConfidence: 0.25,
+        minDetectionConfidence: PRIMARY_MIN_CONFIDENCE,
       });
     });
   }
@@ -52,10 +54,14 @@ function normalizeDetections(
   width: number,
   height: number,
   mirrored = false,
+  minimumScore = PRIMARY_MIN_CONFIDENCE,
 ) {
   return detections.flatMap((detection) => {
     const box = detection.boundingBox;
     if (!box) return [];
+    const confidence = detection.categories.reduce((highest, category) => Math.max(highest, category.score), 0);
+    const aspectRatio = box.width / Math.max(1, box.height);
+    if (confidence < minimumScore || aspectRatio < 0.52 || aspectRatio > 1.55) return [];
     const normalizedWidth = Math.min(1, box.width / width);
     const normalizedX = mirrored
       ? 1 - (box.originX + box.width) / width
@@ -96,6 +102,7 @@ export async function detectFacesInPausedFrame(video: HTMLVideoElement): Promise
         mirrorCanvas.width,
         mirrorCanvas.height,
         true,
+        MIRROR_MIN_CONFIDENCE,
       );
     }
     const inferenceMs = Math.round(performance.now() - startedAt);
@@ -104,7 +111,7 @@ export async function detectFacesInPausedFrame(video: HTMLVideoElement): Promise
       status: "ready",
       faces,
       inferenceMs,
-      message: faces.length > 0 ? `MediaPipe 检测到 ${faces.length} 张人脸。` : "MediaPipe 未在当前帧检测到人脸。",
+      message: faces.length > 0 ? `MediaPipe 检测到 ${faces.length} 个脸部候选。` : "MediaPipe 未在当前帧检测到稳定脸部候选。",
     };
   } catch (error) {
     detectorPromise = null;

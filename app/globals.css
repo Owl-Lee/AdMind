@@ -805,7 +805,7 @@ button { color: inherit; }
 .pause-detail-open .pause-signal-grid { grid-template-columns: repeat(2,1fr); margin-top: 15px; border-radius: 14px; }.pause-detail-open .pause-signal-grid article { min-height: 89px; padding: 13px; }.pause-detail-open .pause-signal-grid strong { font-size: 14px; }
 .pause-detail-open .pause-placement-result { grid-template-columns: 1fr; gap: 14px; margin-top: 14px; padding: 16px; border-radius: 14px; }.pause-detail-open .pause-placement-result > div:first-child strong { font-size: 16px; }.pause-detail-open .pause-queue-note { margin-top: 11px; font-size: 9px; }
 .pause-detail-open .pause-risk-bars p { grid-template-columns: 95px 1fr 30px; }
-.pause-face-box { animation: pause-face-evidence 1.65s ease both; }.pause-face-box::after { content: "检测中"; }
+.pause-face-box { animation: pause-face-evidence 1.65s ease both; }.pause-face-box::after { content: "脸部候选"; }
 .showcase-player-card .ad-overlay.pause-fullscreen { inset: 0; width: 100%; height: 100%; border-radius: 0; animation: pause-fullscreen-in .26s ease both; }
 @keyframes pause-face-evidence { 0% { opacity: 0; transform: scale(.97); } 16%,72% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.015); } }
 @keyframes pause-fullscreen-in { from { opacity: .45; transform: scale(.965); } to { opacity: 1; transform: scale(1); } }
