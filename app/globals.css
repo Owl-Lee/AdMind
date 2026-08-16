@@ -1329,3 +1329,146 @@ button { color: inherit; }
 @media (max-width: 900px) {
   .attio-story-nav { top: 68px; margin-inline: 0; }
 }
+
+/* Video-first polish: depth lives around the stage, never on top of the video. */
+.attio-story {
+  position: relative;
+  isolation: isolate;
+}
+.attio-story::before {
+  position: absolute;
+  z-index: -1;
+  top: 140px;
+  right: -9vw;
+  width: min(780px, 78vw);
+  height: 540px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(151,142,255,.12), rgba(132,227,197,.07) 42%, transparent 69%);
+  filter: blur(6px);
+  content: "";
+  pointer-events: none;
+}
+.attio-story-intro {
+  position: relative;
+  padding: 10px 0 20px;
+}
+.attio-story-intro::after {
+  display: block;
+  width: 52px;
+  height: 3px;
+  margin-top: 28px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #756be2, #4dbd9a);
+  box-shadow: 0 5px 12px rgba(105,95,219,.2);
+  content: "";
+}
+.attio-story-intro h2 {
+  color: #27243c;
+  text-wrap: balance;
+}
+.attio-story-nav {
+  position: sticky;
+  overflow: visible;
+  border-color: rgba(87,78,170,.14);
+  background: linear-gradient(115deg, rgba(255,255,255,.92), rgba(246,245,255,.86));
+  box-shadow: 0 14px 40px rgba(47,42,93,.1), inset 0 1px 0 rgba(255,255,255,.92);
+}
+.attio-story-nav::before {
+  position: absolute;
+  top: 0;
+  right: 20px;
+  left: 20px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(129,119,234,.45), transparent);
+  content: "";
+}
+.attio-story-nav button {
+  position: relative;
+  overflow: hidden;
+  justify-content: center;
+  min-height: 43px;
+  border: 1px solid transparent;
+  color: #747185;
+}
+.attio-story-nav button b {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 7px;
+  color: #77728f;
+  background: rgba(112,103,177,.08);
+  transition: color .22s ease, background .22s ease, transform .22s ease;
+}
+.attio-story-nav button:hover {
+  color: #4f4990;
+  background: rgba(255,255,255,.72);
+  transform: translateY(-1px);
+}
+.attio-story-nav button.active {
+  border-color: rgba(110,100,224,.22);
+  color: #373169;
+  background: linear-gradient(135deg, #eeecff, #e9fbf5);
+  box-shadow: 0 5px 15px rgba(83,75,181,.11), inset 0 1px 0 rgba(255,255,255,.85);
+}
+.attio-story-nav button.active b {
+  color: white;
+  background: linear-gradient(135deg, #7c70e9, #5b51c5);
+  box-shadow: 0 4px 10px rgba(92,82,203,.28);
+  transform: scale(1.06);
+}
+.attio-story-chapter {
+  position: relative;
+  padding: 32px;
+  border: 1px solid rgba(67,60,128,.08);
+  border-radius: 32px;
+  background: linear-gradient(145deg, rgba(255,255,255,.78), rgba(248,248,255,.58));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+}
+.attio-story-chapter::before {
+  position: absolute;
+  z-index: -1;
+  top: 82px;
+  right: 6%;
+  width: 72%;
+  height: 68%;
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(123,111,233,.14), rgba(65,187,147,.08));
+  filter: blur(26px);
+  content: "";
+}
+.attio-story-chapter + .attio-story-chapter { margin-top: 76px; }
+.attio-story-copy { position: relative; padding-left: 17px; }
+.attio-story-copy::before {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 3px;
+  border-radius: 99px;
+  background: linear-gradient(#776ce3, #57c29f);
+  content: "";
+}
+.attio-story-copy h3 { text-wrap: balance; }
+.attio-story-chapter .showcase-material-switcher {
+  border-color: rgba(86,77,166,.12);
+  background: rgba(241,240,249,.72);
+}
+.attio-story-chapter .showcase-player-card {
+  position: relative;
+  border-radius: 27px;
+  box-shadow: 0 28px 82px rgba(43,40,83,.13), 0 5px 16px rgba(43,40,83,.04);
+}
+.attio-story-chapter .showcase-player-meta {
+  background: linear-gradient(90deg, rgba(255,255,255,.98), rgba(248,247,255,.93));
+}
+.attio-story-chapter .showcase-player-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 36px 96px rgba(43,40,83,.17), 0 5px 16px rgba(43,40,83,.04);
+}
+@media (max-width: 700px) {
+  .attio-story-chapter { padding: 22px 14px 14px; border-radius: 24px; }
+  .attio-story-chapter + .attio-story-chapter { margin-top: 52px; }
+  .attio-story-nav { overflow-x: auto; }
+  .attio-story-nav button { flex-basis: auto; }
+}
