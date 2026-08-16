@@ -92,6 +92,32 @@ function formatPlacement(value: PlacementDecision["placement"]) {
     .replace("none", "无安全位置");
 }
 
+function HeroDecisionPreview({ demo }: { demo: ScenarioDemo }) {
+  const planned = demo.admind.selected;
+  const plannedTime = planned?.timeSec ?? demo.scenario.safeOpportunitySec;
+  const outcome = demo.admind.outcome === "blocked" ? "本段不投放" : `计划 ${formatTime(plannedTime)}`;
+
+  return (
+    <aside className="hero-decision-preview" aria-label="AdMind 实时决策快照">
+      <div className="hero-preview-windowbar">
+        <span aria-hidden="true" /><span aria-hidden="true" /><span aria-hidden="true" />
+        <b>ADMIND · LIVE DECISION</b>
+      </div>
+      <div className="hero-preview-stage">
+        <span className="hero-preview-orbit" aria-hidden="true" />
+        <span className="hero-preview-subject" aria-hidden="true" />
+        <span className="hero-preview-signal"><i /> 内容信号已更新</span>
+        <span className="hero-preview-plan">{formatTime(plannedTime)}<small>安全窗口</small></span>
+      </div>
+      <div className="hero-preview-evidence">
+        <div><span>模型观察</span><strong>{demo.media.modelFinding}</strong></div>
+        <div className="hero-preview-rule"><span>规则决定</span><strong>{outcome}</strong></div>
+      </div>
+      <span className="hero-preview-chip">证据评分 <b>{asEvidenceScore(demo.media.analysis?.segments[0]?.confidence ?? 0)}</b></span>
+    </aside>
+  );
+}
+
 function DecisionMethod({ analysisRuns, consensus }: { analysisRuns: VideoAnalysis[]; consensus: AnalysisConsensus }) {
   const latestRun = analysisRuns.at(-1) ?? analysisRuns[0];
   const climax = latestRun.candidateBreaks.find((candidate) => Math.abs(candidate.timeSec - 45) <= 1);
@@ -847,12 +873,22 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
       <main id="top">
         <div hidden={view !== "demo"}>
             <section className="showcase-hero">
-              <p className="showcase-kicker">AI 广告决策引擎</p>
-              <h1>广告必须出现，<br />也不必毁掉剧情。</h1>
-              <p className="showcase-lead">AdMind 理解内容与用户动作，在商业约束下决定广告何时出现、以什么形式出现，以及何时不该出现。</p>
-              <div className="showcase-actions">
-                <a className="showcase-primary" href="#demo">开始体验</a>
-                <button className="showcase-secondary" onClick={() => switchView("decision")}>查看决策方式 <ChevronIcon /></button>
+              <div className="showcase-hero-grid">
+                <div className="showcase-hero-copy">
+                  <p className="showcase-kicker"><i /> AI 广告决策引擎</p>
+                  <h1>广告必须出现，<br />也不必<span>毁掉剧情。</span></h1>
+                  <p className="showcase-lead">AdMind 理解内容与用户动作，在商业约束下决定广告何时出现、以什么形式出现，以及何时不该出现。</p>
+                  <div className="showcase-actions">
+                    <a className="showcase-primary" href="#demo">开始体验 <ChevronIcon /></a>
+                    <button className="showcase-secondary" onClick={() => switchView("decision")}>查看决策方式 <ChevronIcon /></button>
+                  </div>
+                  <div className="showcase-hero-facts" aria-label="AdMind 三类决策能力">
+                    <div><b>S1</b><span>避开剧情高点</span></div>
+                    <div><b>S2</b><span>保护暂停时刻</span></div>
+                    <div><b>S3</b><span>伦理优先拦截</span></div>
+                  </div>
+                </div>
+                <HeroDecisionPreview demo={scenarios[0]} />
               </div>
             </section>
 
