@@ -277,7 +277,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
       setPausePhase("analyzing");
       void detectFacesInPausedFrame(video).then((evidence) => {
         if (pauseObservationRef.current !== observationId || !video.paused) return;
-        const nextPlacement = choosePauseAdPlacement(evidence.faces);
+        const nextPlacement = choosePauseAdPlacement([...evidence.faces, ...evidence.subjects]);
         setFaceEvidence(evidence);
         setPlacementDecision(nextPlacement);
         setPausePending(false);
@@ -565,6 +565,21 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             />
           )) : null}
 
+          {isPauseScenario && strategy === "admind" && faceEvidence?.status === "ready" && pauseSeconds < 3.3 ? faceEvidence.subjects.map((subject, index) => (
+            <span
+              aria-hidden="true"
+              className="pause-subject-box"
+              data-label={subject.label}
+              key={`${subject.x}-${subject.y}-${index}`}
+              style={{
+                left: `${subject.x * 100}%`,
+                top: `${subject.y * 100}%`,
+                width: `${subject.width * 100}%`,
+                height: `${subject.height * 100}%`,
+              }}
+            />
+          )) : null}
+
           {isPauseScenario && strategy === "admind" && adActive && placementDecision.placement !== "none" ? (
             <span
               aria-hidden="true"
@@ -636,7 +651,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
               <article><span>暂停时长</span><strong>{pauseStartedAt === null ? "—" : `${pauseSeconds.toFixed(1)} 秒`}</strong><small>{pauseSeconds >= 1.5 ? "已达到稳定阈值" : "1.5 秒后才进入视觉判断"}</small></article>
               <article><span>播放器动作</span><strong>{seeking ? "正在拖动" : playing ? "播放中" : "已暂停"}</strong><small>本次会话已检测 {seekCount} 次拖动</small></article>
               <article><span>页面状态</span><strong>{pageVisible ? pageFocused ? "可见且有焦点" : "可见但失焦" : "页面已隐藏"}</strong><small>hidden 取消；visible + blur 暂缓</small></article>
-              <article><span>当前帧视觉</span><strong>{faceEvidence?.status === "ready" ? `${faceEvidence.faces.length} 个脸部候选` : faceEvidence?.status === "unavailable" ? "模型回退" : "尚未分析"}</strong><small>{faceEvidence?.status === "ready" ? `双向本地推理 ${faceEvidence.inferenceMs} ms` : "只在稳定暂停后运行一次"}</small></article>
+              <article><span>当前帧视觉</span><strong>{faceEvidence?.status === "ready" ? `${faceEvidence.faces.length + faceEvidence.subjects.length} 个避让目标` : faceEvidence?.status === "unavailable" ? "模型回退" : "尚未分析"}</strong><small>{faceEvidence?.status === "ready" ? `人脸 ${faceEvidence.faces.length} · 主体 ${faceEvidence.subjects.length} · ${faceEvidence.inferenceMs} ms` : "只在稳定暂停后运行一次"}</small></article>
             </div>
             <div className="pause-placement-result">
               <div>

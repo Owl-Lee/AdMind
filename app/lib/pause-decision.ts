@@ -67,10 +67,10 @@ function expand(rect: NormalizedRect, padding = 0.035): NormalizedRect {
   return { x, y, width: right - x, height: bottom - y };
 }
 
-export function choosePauseAdPlacement(faces: NormalizedRect[]): PlacementDecision {
+export function choosePauseAdPlacement(targets: NormalizedRect[]): PlacementDecision {
   const assessments = Object.entries(CANDIDATES).map(([placement, region]) => {
-    const faceOverlap = Math.min(1, faces.reduce((total, face) => total + intersectionRatio(region, expand(face, 0.065)), 0));
-    const faceProximity = faces.reduce((highest, face) => Math.max(highest, proximityRatio(region, expand(face, 0.045))), 0);
+    const faceOverlap = Math.min(1, targets.reduce((total, target) => total + intersectionRatio(region, expand(target, 0.065)), 0));
+    const faceProximity = targets.reduce((highest, target) => Math.max(highest, proximityRatio(region, expand(target, 0.045))), 0);
     const reservedAreaOverlap = intersectionRatio(region, RESERVED_BOTTOM);
     const risk = Math.min(1, faceOverlap * 0.72 + faceProximity * 0.28 + reservedAreaOverlap * 0.68);
     return {
@@ -95,8 +95,8 @@ export function choosePauseAdPlacement(faces: NormalizedRect[]): PlacementDecisi
   return {
     placement: best.placement,
     assessments,
-    reason: faces.length > 0
-      ? `检测到 ${faces.length} 张人脸，${side}的画面遮挡风险最低。`
-      : "当前帧未检测到人脸，优先使用不遮挡字幕与控制条的顶部区域。",
+    reason: targets.length > 0
+      ? `检测到 ${targets.length} 个视觉避让目标，${side}的画面遮挡风险最低。`
+      : "当前帧未检测到稳定主体，优先使用不遮挡字幕与控制条的顶部区域。",
   };
 }
