@@ -41,6 +41,10 @@ function formatTime(value: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
+function asPercent(value = 0) {
+  return Math.round(Math.max(0, Math.min(1, value)) * 100);
+}
+
 function formatPlacement(value: PlacementDecision["placement"]) {
   return value
     .replace("top-", "顶部")
@@ -151,6 +155,78 @@ function DecisionMethod({ analysisRuns, consensus }: { analysisRuns: VideoAnalys
           <article><span>验证方式</span><strong>重复分析 + 自动测试</strong><p>比较多次 API 结果，并检查最终计划是否完整可执行。</p></article>
         </div>
       </section>
+    </section>
+  );
+}
+
+function ScenarioDecisionEvidence({
+  decision,
+  isProtectedScenario,
+  media,
+  scenario,
+  time,
+}: {
+  decision: DecisionResponse;
+  isProtectedScenario: boolean;
+  media: DemoMedia;
+  scenario: Scenario;
+  time: number;
+}) {
+  const nearestSignal = scenario.sceneSignals
+    .slice()
+    .sort((left, right) => Math.abs(left.timeSec - time) - Math.abs(right.timeSec - time))[0];
+  const tension = asPercent(nearestSignal?.tension);
+  const confidence = asPercent(nearestSignal?.modelConfidence);
+  const agreement = asPercent(nearestSignal?.modelAgreement ?? 1);
+  const plannedTime = decision.selected?.timeSec ?? scenario.safeOpportunitySec;
+  const reachedNominal = time >= scenario.nominalOpportunitySec - 0.25;
+  const reachedPlan = decision.outcome === "scheduled" && time >= plannedTime - 0.25;
+  const phase = isProtectedScenario
+    ? "伦理保护中"
+    : reachedPlan
+      ? "低打断窗口"
+      : reachedNominal
+        ? "继续等待"
+        : "持续观察";
+  const finalTitle = isProtectedScenario
+    ? "硬规则拦截：本片不投放"
+    : decision.outcome === "blocked"
+      ? "窗口内不强行插播"
+      : reachedPlan
+        ? `执行 ${formatTime(plannedTime)} · ${decision.selected?.format === "muted_card" ? "静音卡片" : "完整广告"}`
+        : reachedNominal
+          ? `拒绝原定点，等待 ${formatTime(plannedTime)}`
+          : "尚未进入商业投放窗口";
+
+  return (
+    <section className={`pause-evidence scenario-evidence ${isProtectedScenario ? "protected" : "content"}`} aria-live="polite">
+      <div className="pause-evidence-heading">
+        <div>
+          <span>{isProtectedScenario ? "LIVE ETHICAL SIGNALS" : "LIVE CONTENT SIGNALS"}</span>
+          <strong>{isProtectedScenario ? "这一刻，为什么不能插播？" : "这一刻，适合打断吗？"}</strong>
+        </div>
+        <b className={`pause-phase ${isProtectedScenario ? "protected" : reachedPlan ? "delivered" : "analyzing"}`}>{phase}</b>
+      </div>
+      <div className="pause-signal-grid">
+        <article><span>当前播放位置</span><strong>{formatTime(time)}</strong><small>原定广告点 {formatTime(scenario.nominalOpportunitySec)}</small></article>
+        <article><span>最近模型信号</span><strong>{nearestSignal?.label ?? "等待内容信号"}</strong><small>证据时间 {formatTime(nearestSignal?.timeSec ?? 0)}</small></article>
+        <article><span>{isProtectedScenario ? "伦理上下文" : "内容张力"}</span><strong>{isProtectedScenario ? nearestSignal?.protectedContext ? "受保护" : "待确认" : `${tension}%`}</strong><small>{isProtectedScenario ? `${media.category} · 规则优先` : `张力越高，越不应打断`}</small></article>
+        <article><span>模型证据</span><strong>{confidence}% 置信</strong><small>{agreement}% 一致 · 拒绝 {decision.rejectedCount} 个候选</small></article>
+      </div>
+      <div className="pause-placement-result">
+        <div>
+          <span>当前决策</span>
+          <strong>{finalTitle}</strong>
+          <p>{isProtectedScenario
+            ? "视频理解负责识别救援、医疗或灾后语境；伦理硬规则负责最终阻止投放，竞价不能覆盖这条边界。"
+            : "模型先判断原定点的内容张力，再在合同允许的延后范围中寻找恢复、转场或片尾窗口。"}</p>
+        </div>
+        <div className="pause-risk-bars">
+          <p><span>{isProtectedScenario ? "内容风险" : "当前张力"}</span><i><b style={{ width: `${tension}%` }} /></i><strong>{tension}%</strong></p>
+          <p><span>{isProtectedScenario ? "伦理优先级" : "模型置信"}</span><i><b style={{ width: `${isProtectedScenario ? 100 : confidence}%` }} /></i><strong>{isProtectedScenario ? 100 : confidence}%</strong></p>
+        </div>
+      </div>
+      <p className="scenario-evidence-foot">{media.modelFinding}</p>
     </section>
   );
 }
@@ -429,6 +505,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
 
   const placementClass = placementDecision.placement === "none" ? "" : `placement-${placementDecision.placement}`;
   const showPauseEvidence = isPauseScenario && strategy === "admind";
+  const showAdMindEvidence = strategy === "admind";
   const pauseAdFullscreen = isPauseScenario && strategy === "admind" && pauseSeconds >= 8;
   const fullscreenAd = selected?.format === "fullscreen" || pauseAdFullscreen;
   const riskRows = placementDecision.assessments.length > 1
@@ -465,7 +542,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
         </div>
       ) : null}
 
-      <article className={`showcase-player-card ${showPauseEvidence ? "pause-player-card pause-detail-open" : ""}`}>
+      <article className={`showcase-player-card ${showAdMindEvidence ? "signal-player-card signal-detail-open pause-detail-open" : ""}`}>
         <div className="showcase-player-meta">
           <div className="showcase-status-copy">
             <span className={strategy === "baseline" ? "showcase-state baseline" : "showcase-state smart"} />
@@ -668,6 +745,14 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             </div>
             {pausePhase === "deferred" ? <p className="pause-queue-note">待交付队列 → 下一次稳定暂停继续尝试 → 仍无机会时交给 S1 的安全插播点；S3 受保护场景永不补量。</p> : null}
           </section>
+        ) : showAdMindEvidence ? (
+          <ScenarioDecisionEvidence
+            decision={decision}
+            isProtectedScenario={isProtectedScenario}
+            media={media}
+            scenario={scenario}
+            time={time}
+          />
         ) : isPauseScenario ? (
           <div className="pause-compact-note">
             <strong>{strategy === "baseline" ? "传统模式：不参与判断" : "基础暂停素材：保留播放器画面"}</strong>
