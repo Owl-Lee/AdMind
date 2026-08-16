@@ -103,7 +103,7 @@ export default function Home() {
           media: {
             id: "charge-pause",
             label: "CHARGE",
-            category: "暂停查看",
+            category: "简单角色画面",
             src: "/media/admind-charge-demo-720p.mp4",
             captionsSrc: "/charge-demo-zh.vtt",
             sourceLabel: "CHARGE · Blender Studio",

@@ -10,6 +10,25 @@ export type FaceDetectionEvidence = {
 let detectorPromise: Promise<import("@mediapipe/tasks-vision").FaceDetector> | null = null;
 const PRIMARY_MIN_CONFIDENCE = 0.34;
 const MIRROR_MIN_CONFIDENCE = 0.46;
+const CROP_MIN_CONFIDENCE = 0.48;
+
+type SourceRegion = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+type FaceCandidate = NormalizedRect & {
+  confidence: number;
+};
+
+const FULL_FRAME: SourceRegion = { x: 0, y: 0, width: 1, height: 1 };
+const DETAIL_REGIONS: SourceRegion[] = [
+  { x: 0, y: 0, width: 0.58, height: 1 },
+  { x: 0.42, y: 0, width: 0.58, height: 1 },
+  { x: 0.17, y: 0.06, width: 0.66, height: 0.88 },
+];
 
 async function getDetector() {
   if (!detectorPromise) {
@@ -41,12 +60,25 @@ function intersectionOverUnion(a: NormalizedRect, b: NormalizedRect) {
   return union > 0 ? intersection / union : 0;
 }
 
-function deduplicateFaces(faces: NormalizedRect[]) {
-  return faces.reduce<NormalizedRect[]>((unique, face) => {
-    if (unique.some((candidate) => intersectionOverUnion(candidate, face) > 0.42)) return unique;
+function isSameFace(a: NormalizedRect, b: NormalizedRect) {
+  const aCenterX = a.x + a.width / 2;
+  const aCenterY = a.y + a.height / 2;
+  const bCenterX = b.x + b.width / 2;
+  const bCenterY = b.y + b.height / 2;
+  const centerDistance = Math.hypot(aCenterX - bCenterX, aCenterY - bCenterY);
+  const faceScale = Math.max(Math.sqrt(a.width * a.height), Math.sqrt(b.width * b.height));
+  return intersectionOverUnion(a, b) > 0.25 || centerDistance < faceScale * 0.32;
+}
+
+function deduplicateFaces(faces: FaceCandidate[]) {
+  return faces
+    .sort((a, b) => b.confidence - a.confidence)
+    .reduce<FaceCandidate[]>((unique, face) => {
+    if (unique.some((candidate) => isSameFace(candidate, face))) return unique;
     unique.push(face);
     return unique;
-  }, []);
+  }, [])
+    .map(({ confidence: _confidence, ...face }) => face);
 }
 
 function normalizeDetections(
@@ -55,6 +87,7 @@ function normalizeDetections(
   height: number,
   mirrored = false,
   minimumScore = PRIMARY_MIN_CONFIDENCE,
+  sourceRegion: SourceRegion = FULL_FRAME,
 ) {
   return detections.flatMap((detection) => {
     const box = detection.boundingBox;
@@ -66,13 +99,48 @@ function normalizeDetections(
     const normalizedX = mirrored
       ? 1 - (box.originX + box.width) / width
       : box.originX / width;
+    const localX = Math.max(0, Math.min(1 - normalizedWidth, normalizedX));
+    const localY = Math.max(0, box.originY / height);
     return [{
-      x: Math.max(0, Math.min(1 - normalizedWidth, normalizedX)),
-      y: Math.max(0, box.originY / height),
-      width: normalizedWidth,
-      height: Math.min(1, box.height / height),
+      x: sourceRegion.x + localX * sourceRegion.width,
+      y: sourceRegion.y + localY * sourceRegion.height,
+      width: normalizedWidth * sourceRegion.width,
+      height: Math.min(1, box.height / height) * sourceRegion.height,
+      confidence,
     }];
   });
+}
+
+function detectRegion(
+  detector: import("@mediapipe/tasks-vision").FaceDetector,
+  video: HTMLVideoElement,
+  region: SourceRegion,
+) {
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const context = canvas.getContext("2d");
+  if (!context) return [];
+  context.drawImage(
+    video,
+    region.x * video.videoWidth,
+    region.y * video.videoHeight,
+    region.width * video.videoWidth,
+    region.height * video.videoHeight,
+    0,
+    0,
+    canvas.width,
+    canvas.height,
+  );
+  const result = detector.detect(canvas);
+  return normalizeDetections(
+    result.detections,
+    canvas.width,
+    canvas.height,
+    false,
+    CROP_MIN_CONFIDENCE,
+    region,
+  );
 }
 
 export async function detectFacesInPausedFrame(video: HTMLVideoElement): Promise<FaceDetectionEvidence> {
@@ -91,7 +159,7 @@ export async function detectFacesInPausedFrame(video: HTMLVideoElement): Promise
     mirrorCanvas.width = video.videoWidth;
     mirrorCanvas.height = video.videoHeight;
     const context = mirrorCanvas.getContext("2d");
-    let mirroredFaces: NormalizedRect[] = [];
+    let mirroredFaces: FaceCandidate[] = [];
     if (context) {
       context.translate(mirrorCanvas.width, 0);
       context.scale(-1, 1);
@@ -105,8 +173,9 @@ export async function detectFacesInPausedFrame(video: HTMLVideoElement): Promise
         MIRROR_MIN_CONFIDENCE,
       );
     }
+    const detailFaces = DETAIL_REGIONS.flatMap((region) => detectRegion(detector, video, region));
     const inferenceMs = Math.round(performance.now() - startedAt);
-    const faces = deduplicateFaces([...directFaces, ...mirroredFaces]);
+    const faces = deduplicateFaces([...directFaces, ...mirroredFaces, ...detailFaces]);
     return {
       status: "ready",
       faces,

@@ -811,3 +811,64 @@ button { color: inherit; }
 @keyframes pause-fullscreen-in { from { opacity: .45; transform: scale(.965); } to { opacity: 1; transform: scale(1); } }
 
 @media (max-width: 980px) { .pause-player-card.pause-detail-open { grid-template-columns: 1fr; }.pause-detail-open .pause-evidence { grid-column: 1; border-top: 1px solid var(--admind-line); border-left: 0; }.pause-interaction-hint { max-width: 245px; white-space: normal; text-align: center; }.pause-compact-note { align-items: flex-start; flex-direction: column; gap: 6px; }.pause-compact-note span { text-align: left; } }
+
+/* S2 controls: compact material pills, with the core comparison attached to the player. */
+.pause-material-switcher {
+  display: inline-flex;
+  width: auto;
+  max-width: 100%;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 5px;
+  border-color: rgba(82,74,158,.1);
+  border-radius: 999px;
+  background: rgba(244,243,252,.72);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.92), 0 12px 34px rgba(46,42,91,.07);
+  backdrop-filter: blur(18px) saturate(135%);
+}
+.pause-material-switcher button {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  border-radius: 999px;
+  text-align: center;
+}
+.pause-material-switcher button.active {
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 7px 20px rgba(42,39,85,.1), inset 0 1px 0 white;
+}
+.pause-player-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+}
+.pause-strategy-toggle {
+  margin: 0;
+  padding: 5px;
+  border-color: rgba(91,82,184,.16);
+  background: rgba(239,237,255,.88);
+  box-shadow: 0 9px 26px rgba(65,57,139,.12), inset 0 1px 0 rgba(255,255,255,.95);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+.pause-strategy-toggle button {
+  min-width: 104px;
+  height: 44px;
+  justify-content: center;
+  padding: 0 19px;
+  font-size: 13px;
+}
+.pause-strategy-toggle button.active {
+  color: #fff;
+  background: linear-gradient(145deg,#786ee0,#6258c8);
+  box-shadow: 0 8px 20px rgba(83,73,181,.24), inset 0 1px 0 rgba(255,255,255,.22);
+}
+.pause-strategy-toggle button.active svg { color: #fff; }
+
+@media (max-width: 760px) {
+  .pause-material-switcher { display: inline-flex; width: auto; }
+  .pause-material-switcher button { flex: 1 1 auto; padding-inline: 13px; }
+  .pause-player-actions { width: 100%; align-items: stretch; flex-direction: column; }
+  .pause-interaction-hint { max-width: none; justify-content: center; }
+  .pause-strategy-toggle { width: 100%; }
+  .pause-strategy-toggle button { min-width: 0; }
+}
