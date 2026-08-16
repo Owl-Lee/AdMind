@@ -21,11 +21,52 @@ async function getDetector() {
           delegate: "CPU",
         },
         runningMode: "IMAGE",
-        minDetectionConfidence: 0.42,
+        minDetectionConfidence: 0.25,
       });
     });
   }
   return detectorPromise;
+}
+
+function intersectionOverUnion(a: NormalizedRect, b: NormalizedRect) {
+  const left = Math.max(a.x, b.x);
+  const top = Math.max(a.y, b.y);
+  const right = Math.min(a.x + a.width, b.x + b.width);
+  const bottom = Math.min(a.y + a.height, b.y + b.height);
+  if (right <= left || bottom <= top) return 0;
+  const intersection = (right - left) * (bottom - top);
+  const union = a.width * a.height + b.width * b.height - intersection;
+  return union > 0 ? intersection / union : 0;
+}
+
+function deduplicateFaces(faces: NormalizedRect[]) {
+  return faces.reduce<NormalizedRect[]>((unique, face) => {
+    if (unique.some((candidate) => intersectionOverUnion(candidate, face) > 0.42)) return unique;
+    unique.push(face);
+    return unique;
+  }, []);
+}
+
+function normalizeDetections(
+  detections: ReturnType<import("@mediapipe/tasks-vision").FaceDetector["detect"]>["detections"],
+  width: number,
+  height: number,
+  mirrored = false,
+) {
+  return detections.flatMap((detection) => {
+    const box = detection.boundingBox;
+    if (!box) return [];
+    const normalizedWidth = Math.min(1, box.width / width);
+    const normalizedX = mirrored
+      ? 1 - (box.originX + box.width) / width
+      : box.originX / width;
+    return [{
+      x: Math.max(0, Math.min(1 - normalizedWidth, normalizedX)),
+      y: Math.max(0, box.originY / height),
+      width: normalizedWidth,
+      height: Math.min(1, box.height / height),
+    }];
+  });
 }
 
 export async function detectFacesInPausedFrame(video: HTMLVideoElement): Promise<FaceDetectionEvidence> {
@@ -37,17 +78,28 @@ export async function detectFacesInPausedFrame(video: HTMLVideoElement): Promise
     const detector = await getDetector();
     const startedAt = performance.now();
     const result = detector.detect(video);
+    const directFaces = normalizeDetections(result.detections, video.videoWidth, video.videoHeight);
+
+    // A mirrored second pass improves recall for profile faces without sending frames off-device.
+    const mirrorCanvas = document.createElement("canvas");
+    mirrorCanvas.width = video.videoWidth;
+    mirrorCanvas.height = video.videoHeight;
+    const context = mirrorCanvas.getContext("2d");
+    let mirroredFaces: NormalizedRect[] = [];
+    if (context) {
+      context.translate(mirrorCanvas.width, 0);
+      context.scale(-1, 1);
+      context.drawImage(video, 0, 0, mirrorCanvas.width, mirrorCanvas.height);
+      const mirroredResult = detector.detect(mirrorCanvas);
+      mirroredFaces = normalizeDetections(
+        mirroredResult.detections,
+        mirrorCanvas.width,
+        mirrorCanvas.height,
+        true,
+      );
+    }
     const inferenceMs = Math.round(performance.now() - startedAt);
-    const faces = result.detections.flatMap((detection) => {
-      const box = detection.boundingBox;
-      if (!box) return [];
-      return [{
-        x: Math.max(0, box.originX / video.videoWidth),
-        y: Math.max(0, box.originY / video.videoHeight),
-        width: Math.min(1, box.width / video.videoWidth),
-        height: Math.min(1, box.height / video.videoHeight),
-      }];
-    });
+    const faces = deduplicateFaces([...directFaces, ...mirroredFaces]);
     return {
       status: "ready",
       faces,

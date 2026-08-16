@@ -44,6 +44,21 @@ function intersectionRatio(region: NormalizedRect, obstacle: NormalizedRect) {
   return ((right - left) * (bottom - top)) / area(region);
 }
 
+function proximityRatio(region: NormalizedRect, obstacle: NormalizedRect) {
+  const horizontalGap = Math.max(
+    region.x - (obstacle.x + obstacle.width),
+    obstacle.x - (region.x + region.width),
+    0,
+  );
+  const verticalGap = Math.max(
+    region.y - (obstacle.y + obstacle.height),
+    obstacle.y - (region.y + region.height),
+    0,
+  );
+  const distance = Math.hypot(horizontalGap, verticalGap);
+  return Math.max(0, 1 - distance / 0.48);
+}
+
 function expand(rect: NormalizedRect, padding = 0.035): NormalizedRect {
   const x = Math.max(0, rect.x - padding);
   const y = Math.max(0, rect.y - padding);
@@ -54,9 +69,10 @@ function expand(rect: NormalizedRect, padding = 0.035): NormalizedRect {
 
 export function choosePauseAdPlacement(faces: NormalizedRect[]): PlacementDecision {
   const assessments = Object.entries(CANDIDATES).map(([placement, region]) => {
-    const faceOverlap = Math.min(1, faces.reduce((total, face) => total + intersectionRatio(region, expand(face)), 0));
+    const faceOverlap = Math.min(1, faces.reduce((total, face) => total + intersectionRatio(region, expand(face, 0.065)), 0));
+    const faceProximity = faces.reduce((highest, face) => Math.max(highest, proximityRatio(region, expand(face, 0.045))), 0);
     const reservedAreaOverlap = intersectionRatio(region, RESERVED_BOTTOM);
-    const risk = Math.min(1, faceOverlap * 0.86 + reservedAreaOverlap * 0.74);
+    const risk = Math.min(1, faceOverlap * 0.72 + faceProximity * 0.28 + reservedAreaOverlap * 0.68);
     return {
       placement: placement as PlacementAssessment["placement"],
       region,

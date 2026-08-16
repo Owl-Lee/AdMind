@@ -15,6 +15,7 @@ export type DemoMedia = {
   sourceLabel: string;
   modelFinding: string;
   captionsSrc?: string;
+  quality?: string;
 };
 
 export type ScenarioDemoVariant = {
@@ -38,6 +39,15 @@ function formatTime(value: number) {
   const minutes = Math.floor(value / 60);
   const seconds = Math.floor(value % 60);
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function formatPlacement(value: PlacementDecision["placement"]) {
+  return value
+    .replace("top-", "顶部")
+    .replace("bottom-", "底部")
+    .replace("left", "左侧")
+    .replace("right", "右侧")
+    .replace("none", "无安全位置");
 }
 
 function DecisionMethod({ analysisRuns, consensus }: { analysisRuns: VideoAnalysis[]; consensus: AnalysisConsensus }) {
@@ -192,6 +202,8 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     setPauseStartedAt(null);
     setPauseSeconds(0);
     setAdRemaining(null);
+    setFaceEvidence(null);
+    setPlacementDecision(choosePauseAdPlacement([]));
     if (reason) {
       setPausePhase("deferred");
       setDeferredReason(reason);
@@ -416,7 +428,13 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   };
 
   const placementClass = placementDecision.placement === "none" ? "" : `placement-${placementDecision.placement}`;
-  const pauseAdExpanded = isPauseScenario && strategy === "admind" && pauseSeconds >= 8;
+  const isComplexPauseMedia = media.id === "sprite-fright-pause";
+  const showPauseEvidence = isPauseScenario && strategy === "admind" && isComplexPauseMedia;
+  const pauseAdFullscreen = isPauseScenario && strategy === "admind" && pauseSeconds >= 8;
+  const fullscreenAd = selected?.format === "fullscreen" || pauseAdFullscreen;
+  const riskRows = placementDecision.assessments.length > 1
+    ? [placementDecision.assessments[0], placementDecision.assessments.at(-1)!]
+    : placementDecision.assessments;
 
   return (
     <section className={first ? "showcase-demo" : "showcase-demo showcase-demo-following"} id={`scenario-${scenario.id.toLowerCase()}`}>
@@ -452,7 +470,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
         </div>
       ) : null}
 
-      <article className="showcase-player-card">
+      <article className={`showcase-player-card ${showPauseEvidence ? "pause-player-card pause-detail-open" : ""}`}>
         <div className="showcase-player-meta">
           <div className="showcase-status-copy">
             <span className={strategy === "baseline" ? "showcase-state baseline" : "showcase-state smart"} />
@@ -475,13 +493,13 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
                   : media.modelFinding}</small>
             </div>
           </div>
-          <button disabled={!mediaReady} onClick={jumpToDecision}>{mediaReady
-            ? isPauseScenario
-              ? "模拟暂停"
-              : isProtectedScenario
+          {isPauseScenario ? (
+            <span className="pause-interaction-hint">点击视频画面暂停，体验真实播放器判断</span>
+          ) : <button disabled={!mediaReady} onClick={jumpToDecision}>{mediaReady
+            ? isProtectedScenario
                 ? "查看规则触发点"
                 : "查看广告投放点"
-            : "正在加载视频…"}</button>
+            : "正在加载视频…"}</button>}
         </div>
 
         <div className="video-stage showcase-video-stage">
@@ -525,7 +543,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
                   : `${formatTime(selected?.timeSec ?? scenario.safeOpportunitySec)} AI 计划`}</span>
           </div>
 
-          {isPauseScenario && strategy === "admind" && faceEvidence?.status === "ready" ? faceEvidence.faces.map((face, index) => (
+          {isPauseScenario && strategy === "admind" && faceEvidence?.status === "ready" && pauseSeconds < 3.3 ? faceEvidence.faces.map((face, index) => (
             <span
               aria-hidden="true"
               className="pause-face-box"
@@ -547,9 +565,9 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
           ) : null}
 
           {adActive && selected ? (
-            <div className={`${selected.format === "fullscreen" ? "ad-overlay fullscreen real-ad" : "ad-overlay card real-ad-card"} ${isPauseScenario && strategy === "admind" ? placementClass : ""} ${pauseAdExpanded ? "pause-expanded" : ""}`}>
+            <div className={`${fullscreenAd ? "ad-overlay fullscreen real-ad" : "ad-overlay card real-ad-card"} ${isPauseScenario && strategy === "admind" && !pauseAdFullscreen ? placementClass : ""} ${pauseAdFullscreen ? "pause-fullscreen" : ""}`}>
               <AdCreative
-                fullscreen={selected.format === "fullscreen"}
+                fullscreen={fullscreenAd}
                 onDismiss={() => setAdRemaining(null)}
                 remaining={adRemaining}
                 scenarioId={scenario.id}
@@ -589,20 +607,18 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
               value={time}
             />
             <span>{formatTime(scenario.durationSec)}</span>
-            <span className="showcase-quality">720p</span>
+            <span className="showcase-quality">{media.quality ?? "720p"}</span>
           </div>
         </div>
 
-        {isPauseScenario ? (
+        {showPauseEvidence ? (
           <section className="pause-evidence" aria-live="polite">
             <div className="pause-evidence-heading">
               <div>
                 <span>LIVE PLAYER SIGNALS</span>
                 <strong>这一次暂停，系统实际看到了什么？</strong>
               </div>
-              <b className={`pause-phase ${pausePhase}`}>{strategy === "baseline"
-                ? "传统模式：不参与决策"
-                : pausePhase === "observing" ? "确认暂停"
+              <b className={`pause-phase ${pausePhase}`}>{pausePhase === "observing" ? "确认暂停"
                   : pausePhase === "analyzing" ? "分析画面"
                     : pausePhase === "delivered" ? "已安全展示"
                       : pausePhase === "deferred" ? "已顺延"
@@ -617,17 +633,15 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             <div className="pause-placement-result">
               <div>
                 <span>最终决定</span>
-                <strong>{strategy === "baseline"
-                  ? "暂停即全屏覆盖"
-                  : pausePhase === "deferred" ? "这次不投，进入待交付队列"
-                    : pausePhase === "delivered" ? `${placementDecision.placement.replace("top-", "顶部").replace("bottom-", "底部").replace("left", "左侧").replace("right", "右侧")} · ${pauseAdExpanded ? "扩展卡片" : "静音小卡片"}`
+                <strong>{pausePhase === "deferred" ? "这次不投，进入待交付队列"
+                    : pausePhase === "delivered" ? `${pauseAdFullscreen ? "全屏广告" : `${formatPlacement(placementDecision.placement)} · 静音小卡片`}`
                       : "等待有效暂停信号"}</strong>
-                <p>{strategy === "baseline" ? "固定规则不读取播放器状态，也不分析画面遮挡。" : pausePhase === "deferred" ? deferredReason : placementDecision.reason}</p>
+                <p>{pausePhase === "deferred" ? deferredReason : pauseAdFullscreen ? "稳定暂停已超过 8 秒：完成一次完整曝光；恢复播放会立即关闭广告。" : placementDecision.reason}</p>
               </div>
               <div className="pause-risk-bars">
-                {placementDecision.assessments.slice(0, 2).map((assessment) => (
+                {riskRows.map((assessment, index) => (
                   <p key={assessment.placement}>
-                    <span>{assessment.placement.endsWith("left") ? "左上" : "右上"}遮挡风险</span>
+                    <span>{index === 0 ? "采用" : "对照"}：{formatPlacement(assessment.placement)}</span>
                     <i><b style={{ width: `${Math.round(assessment.risk * 100)}%` }} /></i>
                     <strong>{Math.round(assessment.risk * 100)}%</strong>
                   </p>
@@ -636,6 +650,11 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             </div>
             {pausePhase === "deferred" ? <p className="pause-queue-note">待交付队列 → 下一次稳定暂停继续尝试 → 仍无机会时交给 S1 的安全插播点；S3 受保护场景永不补量。</p> : null}
           </section>
+        ) : isPauseScenario ? (
+          <div className="pause-compact-note">
+            <strong>{strategy === "baseline" ? "传统模式：不参与判断" : "基础暂停素材：保留播放器画面"}</strong>
+            <span>{strategy === "baseline" ? "一旦暂停便直接全屏展示广告，不读取拖动、页面状态或画面主体。" : "切换到“复杂角色画面”可查看完整的实时信号与避让过程。"}</span>
+          </div>
         ) : null}
 
       </article>

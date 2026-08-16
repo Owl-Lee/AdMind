@@ -119,6 +119,7 @@ export default function Home() {
                 label: "Sprite Fright",
                 category: "复杂角色画面",
                 src: "/media/sprite-fright-pause-demo-540p.mp4",
+                quality: "540p",
                 sourceLabel: "Sprite Fright · Blender Studio",
                 modelFinding: "暂停后才读取当前画面；本地 MediaPipe 实时寻找可避让区域，未识别到人脸时仍会避开字幕与控制条。",
               },
