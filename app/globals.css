@@ -1289,3 +1289,43 @@ button { color: inherit; }
   .attio-story-chapter + .attio-story-chapter { margin-top: 70px; }
   .attio-story-copy { margin-bottom: 20px; }
 }
+
+/* Video-first correction: the story navigator may guide, never steal the stage. */
+.attio-story { max-width: 1320px; }
+.attio-story-intro { margin-left: 0; }
+.attio-story-layout { display: block; }
+.attio-story-nav {
+  position: sticky;
+  z-index: 7;
+  top: 74px;
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  margin: 0 0 34px;
+  padding: 9px;
+  border: 1px solid rgba(80,72,172,.12);
+  border-radius: 17px;
+  background: rgba(252,252,255,.9);
+  box-shadow: 0 12px 28px rgba(43,40,83,.07);
+  backdrop-filter: blur(14px);
+}
+.attio-story-progress { display: none; }
+.attio-story-nav button {
+  flex: 1 0 190px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: max-content;
+  padding: 10px 13px;
+  border-radius: 12px;
+}
+.attio-story-nav button::before,
+.attio-story-nav button small { display: none; }
+.attio-story-nav button b { font-size: 11px; }
+.attio-story-nav button span { font-size: 14px; }
+.attio-story-nav button.active { background: #eeecff; }
+.attio-story-chapter .showcase-demo { width: 100%; }
+
+@media (max-width: 900px) {
+  .attio-story-nav { top: 68px; margin-inline: 0; }
+}
