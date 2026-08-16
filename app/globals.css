@@ -1072,3 +1072,66 @@ button { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .showcase-page *, .showcase-page *::before, .showcase-page *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+
+/* Readability pass: prioritize desktop legibility over decorative microcopy. */
+.showcase-page {
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+  font-size: 16px;
+}
+
+.showcase-page button,
+.showcase-page input { font-family: inherit; }
+
+.showcase-nav nav button { font-size: 15px; font-weight: 800; }
+.showcase-kicker,
+.showcase-hero-facts span { font-size: 13px; font-weight: 750; }
+.showcase-hero-facts b { font-size: 23px; line-height: 1; }
+
+.showcase-section-heading .showcase-scene-summary {
+  max-width: 720px;
+  font-size: 17px;
+  line-height: 1.8;
+  font-weight: 600;
+  color: #5f5e70;
+}
+
+.showcase-material-switcher button,
+.showcase-player-actions button { font-size: 15px; font-weight: 800; }
+.showcase-player-meta strong { font-size: 17px; }
+
+.showcase-player-meta small,
+.showcase-video-topline,
+.showcase-quality,
+.showcase-controls,
+.pause-interaction-hint,
+.pause-compact-note span,
+.pause-signal-grid span,
+.pause-signal-grid small,
+.pause-evidence-heading span,
+.pause-placement-result span,
+.scenario-evidence-foot { font-size: 13px; font-weight: 600; }
+
+.pause-compact-note strong,
+.pause-evidence-heading strong,
+.pause-placement-result strong { font-size: 16px; }
+
+@media (max-width: 760px) {
+  .showcase-nav nav button,
+  .showcase-material-switcher button,
+  .showcase-player-actions button { font-size: 14px; }
+
+  .showcase-section-heading .showcase-scene-summary { font-size: 15px; line-height: 1.7; }
+
+  .showcase-hero-facts span,
+  .showcase-player-meta small,
+  .showcase-video-topline,
+  .showcase-quality,
+  .showcase-controls,
+  .pause-interaction-hint,
+  .pause-compact-note span,
+  .pause-signal-grid span,
+  .pause-signal-grid small,
+  .pause-evidence-heading span,
+  .pause-placement-result span,
+  .scenario-evidence-foot { font-size: 12px; }
+}

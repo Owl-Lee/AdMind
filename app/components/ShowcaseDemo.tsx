@@ -588,13 +588,12 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     <section className={first ? "showcase-demo" : "showcase-demo showcase-demo-following"} id={`scenario-${scenario.id.toLowerCase()}`}>
       <div className="showcase-section-heading">
         <div>
-          <p className="showcase-scene-label">{isPauseScenario ? "暂停状态 · 任务保护" : isProtectedScenario ? "伦理场景 · 硬规则保护" : "高潮插播 · 内容连续性"}</p>
           <h2>{isPauseScenario ? "保留用户的查看任务。" : isProtectedScenario ? "有些边界，价格不能越过。" : "只改变投放决策。"}</h2>
           <p className="showcase-scene-summary">{isPauseScenario
-            ? "同一次暂停，同一则保量游戏广告。系统只根据当前播放器中的暂停、拖动和页面可见性判断交互状态，再决定能否展示以及放在哪里。"
+            ? "暂停后，系统判断是否展示广告，并避开用户正在查看的主体内容。"
             : isProtectedScenario
-                ? "同一条高价保量活动命中真实救援、医疗转运或灾后纪实。伦理规则先于商业排序执行；片段处于受保护语境时，系统记录交付缺口而不强行插播。"
-              : "同一条视频，同一则保量广告。系统理解内容张力，寻找符合合同约束的低打断窗口。"}</p>
+                ? "救援、医疗与灾后内容始终优先保护，系统不插入广告。"
+              : "比较固定插播与 AdMind 的低打断投放。"}</p>
         </div>
       </div>
 
