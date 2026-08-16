@@ -9,13 +9,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AdMind｜广告需要出现，也不必毁掉剧情",
     description: "同一个商业目标，更少的用户打断。",
-    images: [{ url: "/og-localsend-refresh.png", width: 1536, height: 1024, alt: "AdMind 广告决策演示" }],
+    images: [{ url: "/og-attio-story.png", width: 1664, height: 936, alt: "AdMind 产品决策旅程演示" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "AdMind｜广告需要出现，也不必毁掉剧情",
     description: "同一个商业目标，更少的用户打断。",
-    images: ["/og-localsend-refresh.png"],
+    images: ["/og-attio-story.png"],
   },
 };
 

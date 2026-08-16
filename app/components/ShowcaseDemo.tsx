@@ -839,6 +839,97 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   );
 }
 
+const storyStepCopy = [
+  {
+    eyebrow: "01 · 识别剧情高点",
+    title: "高点出现时，系统先让内容完成它的情绪。",
+    description: "AdMind 先读片段张力与安全窗口，再决定广告能否进入，而不是只按固定秒数触发。",
+    nav: "剧情高点",
+  },
+  {
+    eyebrow: "02 · 理解用户动作",
+    title: "用户暂停，不等于用户愿意被打断。",
+    description: "暂停、拖动、页面可见性和画面主体共同构成一次可解释的实时判断。",
+    nav: "用户暂停",
+  },
+  {
+    eyebrow: "03 · 守住伦理边界",
+    title: "有些场景，商业目标必须让位。",
+    description: "敏感内容进入保护区后，系统明确拒绝插播，并把原因留给决策者查看。",
+    nav: "伦理边界",
+  },
+];
+
+function NarrativeJourney({ scenarios }: { scenarios: ScenarioDemo[] }) {
+  const [activeId, setActiveId] = useState(scenarios[0]?.scenario.id ?? "");
+
+  useEffect(() => {
+    const sections = scenarios
+      .map((demo) => document.getElementById(`scenario-${demo.scenario.id.toLowerCase()}`))
+      .filter((section): section is HTMLElement => Boolean(section));
+    if (!sections.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const mostVisible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (mostVisible) {
+        const sectionId = mostVisible.target.id.replace("scenario-", "");
+        const matchingScenario = scenarios.find((demo) => demo.scenario.id.toLowerCase() === sectionId);
+        if (matchingScenario) setActiveId(matchingScenario.scenario.id);
+      }
+    }, { rootMargin: "-24% 0px -46%", threshold: [0.1, 0.35, 0.65] });
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [scenarios]);
+
+  const goToScenario = (id: string) => {
+    document.getElementById(`scenario-${id.toLowerCase()}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  return (
+    <section className="attio-story" id="demo" aria-label="AdMind 产品演示">
+      <div className="attio-story-intro">
+        <p>产品如何判断</p>
+        <h2>不是三段功能介绍，<br />而是一次完整的决策旅程。</h2>
+        <span>每一步都保留真实的播放器、规则和证据面板；滚动时，叙事和当前场景同步前进。</span>
+      </div>
+      <div className="attio-story-layout">
+        <nav className="attio-story-nav" aria-label="AdMind 三段决策旅程">
+          <div className="attio-story-progress" aria-hidden="true"><i style={{ height: `${Math.max(34, (scenarios.findIndex((demo) => demo.scenario.id === activeId) + 1) * 33)}%` }} /></div>
+          {scenarios.map((demo, index) => {
+            const copy = storyStepCopy[index] ?? storyStepCopy.at(-1)!;
+            const active = demo.scenario.id === activeId;
+            return (
+              <button aria-current={active ? "location" : undefined} className={active ? "active" : ""} key={demo.scenario.id} onClick={() => goToScenario(demo.scenario.id)}>
+                <b>0{index + 1}</b>
+                <span>{copy.nav}</span>
+                <small>{active ? "正在演示" : "跳转查看"}</small>
+              </button>
+            );
+          })}
+        </nav>
+        <div className="attio-story-stage">
+          {scenarios.map((demo, index) => {
+            const copy = storyStepCopy[index] ?? storyStepCopy.at(-1)!;
+            return (
+              <div className="attio-story-chapter" key={demo.scenario.id}>
+                <div className="attio-story-copy">
+                  <p>{copy.eyebrow}</p>
+                  <h3>{copy.title}</h3>
+                  <span>{copy.description}</span>
+                </div>
+                <ScenarioExperience demo={demo} first={index === 0} />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDemoProps) {
   const [view, setView] = useState<"demo" | "decision">("demo");
 
@@ -891,9 +982,7 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
               </div>
             </section>
 
-            <div className="showcase-sequence" id="demo">
-              {scenarios.map((demo, index) => <ScenarioExperience demo={demo} first={index === 0} key={demo.scenario.id} />)}
-            </div>
+            <NarrativeJourney scenarios={scenarios} />
         </div>
         <div hidden={view !== "decision"}>
           <DecisionMethod analysisRuns={analysisRuns} consensus={consensus} />
