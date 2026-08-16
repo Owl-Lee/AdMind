@@ -17,8 +17,9 @@ let objectDetectorPromise: Promise<import("@mediapipe/tasks-vision").ObjectDetec
 const PRIMARY_MIN_CONFIDENCE = 0.34;
 const MIRROR_MIN_CONFIDENCE = 0.46;
 const CROP_MIN_CONFIDENCE = 0.48;
-const SUBJECT_MIN_CONFIDENCE = 0.52;
-const CROP_SUBJECT_MIN_CONFIDENCE = 0.62;
+// Placement safety favors recall: an extra obstacle is less harmful than covering a missed character.
+const SUBJECT_MIN_CONFIDENCE = 0.34;
+const CROP_SUBJECT_MIN_CONFIDENCE = 0.34;
 
 type SourceRegion = {
   x: number;
