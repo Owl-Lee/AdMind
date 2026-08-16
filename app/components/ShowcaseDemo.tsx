@@ -1026,6 +1026,10 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
                 </div>
                 <HeroDecisionPreview demo={scenarios[0]} />
               </div>
+              <a className="hero-scroll-cue" href={scenarios[0] ? `#story-${scenarios[0].scenario.id.toLowerCase()}` : "#demo"} aria-label="向下滚动，进入剧情高点场景">
+                <span><small>向下滚动</small><strong>01 · 剧情高点</strong></span>
+                <b><em>01</em><i aria-hidden="true" /><em>04</em></b>
+              </a>
             </section>
 
             <NarrativeJourney scenarios={scenarios} />
