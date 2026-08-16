@@ -109,6 +109,21 @@ export default function Home() {
             sourceLabel: "CHARGE · Blender Studio",
             modelFinding: "只读取暂停、拖动与页面可见性，不推断用户脑内意图",
           },
+          alternatives: [
+            {
+              scenario: s2.scenario,
+              baseline: decide(createS2Request("baseline")),
+              admind: decide(createS2Request("admind")),
+              media: {
+                id: "sprite-fright-pause",
+                label: "Sprite Fright",
+                category: "复杂角色画面",
+                src: "/media/sprite-fright-pause-demo-720p.mp4",
+                sourceLabel: "Sprite Fright · Blender Studio",
+                modelFinding: "暂停后才读取当前画面；本地 MediaPipe 实时寻找可避让区域，未识别到人脸时仍会避开字幕与控制条。",
+              },
+            },
+          ],
         },
         {
           scenario: s3.scenario,

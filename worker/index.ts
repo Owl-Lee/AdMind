@@ -27,6 +27,7 @@ const mediaAssets = new Map([
   ["/media/coast-guard-rescue-720p.mp4", "/coast-guard-rescue-720p.mp4"],
   ["/media/usns-medical-evacuation-720p.mp4", "/usns-medical-evacuation-720p.mp4"],
   ["/media/fema-hurricane-recovery-720p.mp4", "/fema-hurricane-recovery-720p.mp4"],
+  ["/media/sprite-fright-pause-demo-720p.mp4", "/sprite-fright-pause-demo-720p.mp4"],
 ]);
 
 function parseRange(value: string, size: number): { start: number; end: number } | null {
