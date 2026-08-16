@@ -841,21 +841,21 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
 
 const storyStepCopy = [
   {
-    eyebrow: "01 · 识别剧情高点",
-    title: "高点出现时，系统先让内容完成它的情绪。",
-    description: "AdMind 先读片段张力与安全窗口，再决定广告能否进入，而不是只按固定秒数触发。",
+    eyebrow: "01 · 剧情高点",
+    title: "避开剧情高点。",
+    description: "广告延后到低打断窗口。",
     nav: "剧情高点",
   },
   {
-    eyebrow: "02 · 理解用户动作",
-    title: "用户暂停，不等于用户愿意被打断。",
-    description: "暂停、拖动、页面可见性和画面主体共同构成一次可解释的实时判断。",
+    eyebrow: "02 · 用户暂停",
+    title: "暂停，也要保护画面。",
+    description: "系统判断停留、焦点与主体位置。",
     nav: "用户暂停",
   },
   {
-    eyebrow: "03 · 守住伦理边界",
-    title: "有些场景，商业目标必须让位。",
-    description: "敏感内容进入保护区后，系统明确拒绝插播，并把原因留给决策者查看。",
+    eyebrow: "03 · 伦理边界",
+    title: "敏感内容，不插广告。",
+    description: "伦理规则直接覆盖商业投放。",
     nav: "伦理边界",
   },
 ];
@@ -1028,7 +1028,6 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
               </div>
               <a className="hero-scroll-cue" href={scenarios[0] ? `#story-${scenarios[0].scenario.id.toLowerCase()}` : "#demo"} aria-label="向下滚动，进入剧情高点场景">
                 <span><small>向下滚动</small><strong>01 · 剧情高点</strong></span>
-                <b><em>01</em><i aria-hidden="true" /><em>04</em></b>
               </a>
             </section>
 

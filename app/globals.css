@@ -1587,7 +1587,7 @@ button { color: inherit; }
     left: 32px;
     display: flex;
     align-items: flex-end;
-    justify-content: space-between;
+    justify-content: flex-start;
     padding-top: 14px;
     border-top: 1px solid rgba(68,61,126,.1);
     color: #6f6c80;
@@ -1597,12 +1597,7 @@ button { color: inherit; }
   .hero-scroll-cue > span { display: grid; gap: 4px; }
   .hero-scroll-cue small { font-size: 11px; font-weight: 750; letter-spacing: .12em; }
   .hero-scroll-cue strong { color: #393564; font-size: 14px; }
-  .hero-scroll-cue > b { display: flex; align-items: center; gap: 9px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-style: normal; font-weight: 750; }
-  .hero-scroll-cue em { font-style: normal; }
-  .hero-scroll-cue i { position: relative; display: block; width: 72px; height: 1px; overflow: visible; background: #d9d6e8; }
-  .hero-scroll-cue i::after { position: absolute; top: -2px; left: 0; width: 5px; height: 5px; border-radius: 50%; background: #756be1; box-shadow: 0 0 0 4px rgba(117,107,225,.11); content: ""; transition: transform .28s ease; }
   .hero-scroll-cue:hover { color: #504a93; }
-  .hero-scroll-cue:hover i::after { transform: translateX(67px); }
 }
 
 @media (min-width: 901px) and (max-height: 760px) {
@@ -1612,6 +1607,33 @@ button { color: inherit; }
   .hero-scroll-cue { bottom: 18px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .hero-scroll-cue i::after { transition: none; }
+
+/* Keep each scene readable at a glance: one conclusion and one short reason. */
+.attio-story-copy > p {
+  color: #4e47a2;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .06em;
+}
+
+.attio-story-copy h3 {
+  color: #242138;
+  font-size: clamp(36px, 4vw, 52px);
+  font-weight: 680;
+  line-height: 1.12;
+  letter-spacing: -.045em;
+}
+
+.attio-story-copy > span {
+  margin-top: 14px;
+  color: #57566a;
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.6;
+}
+
+@media (max-width: 520px) {
+  .attio-story-copy > p { font-size: 12px; }
+  .attio-story-copy h3 { font-size: 30px; }
+  .attio-story-copy > span { font-size: 16px; }
 }
