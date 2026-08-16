@@ -17,7 +17,8 @@ let objectDetectorPromise: Promise<import("@mediapipe/tasks-vision").ObjectDetec
 const PRIMARY_MIN_CONFIDENCE = 0.34;
 const MIRROR_MIN_CONFIDENCE = 0.46;
 const CROP_MIN_CONFIDENCE = 0.48;
-const SUBJECT_MIN_CONFIDENCE = 0.34;
+const SUBJECT_MIN_CONFIDENCE = 0.52;
+const CROP_SUBJECT_MIN_CONFIDENCE = 0.62;
 
 type SourceRegion = {
   x: number;
@@ -206,11 +207,12 @@ function normalizeSubjects(
   width: number,
   height: number,
   sourceRegion: SourceRegion = FULL_FRAME,
+  minimumScore = SUBJECT_MIN_CONFIDENCE,
 ) {
   return detections.flatMap((detection) => {
     const box = detection.boundingBox;
     const category = detection.categories[0];
-    if (!box || !category || category.score < SUBJECT_MIN_CONFIDENCE) return [];
+    if (!box || !category || category.score < minimumScore) return [];
     const normalizedWidth = Math.min(1, box.width / width);
     const normalizedHeight = Math.min(1, box.height / height);
     const localX = Math.max(0, Math.min(1 - normalizedWidth, box.originX / width));
@@ -247,7 +249,13 @@ function detectSubjectsInRegion(
     canvas.width,
     canvas.height,
   );
-  return normalizeSubjects(detector.detect(canvas).detections, canvas.width, canvas.height, region);
+  return normalizeSubjects(
+    detector.detect(canvas).detections,
+    canvas.width,
+    canvas.height,
+    region,
+    CROP_SUBJECT_MIN_CONFIDENCE,
+  );
 }
 
 function deduplicateSubjects(subjects: Array<DetectedSubject & { confidence: number }>) {

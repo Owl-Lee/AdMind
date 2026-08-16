@@ -428,8 +428,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   };
 
   const placementClass = placementDecision.placement === "none" ? "" : `placement-${placementDecision.placement}`;
-  const isComplexPauseMedia = media.id === "sprite-fright-pause";
-  const showPauseEvidence = isPauseScenario && strategy === "admind" && isComplexPauseMedia;
+  const showPauseEvidence = isPauseScenario && strategy === "admind";
   const pauseAdFullscreen = isPauseScenario && strategy === "admind" && pauseSeconds >= 8;
   const fullscreenAd = selected?.format === "fullscreen" || pauseAdFullscreen;
   const riskRows = placementDecision.assessments.length > 1
@@ -448,12 +447,6 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
                 ? "同一条高价保量活动命中真实救援、医疗转运或灾后纪实。伦理规则先于商业排序执行；片段处于受保护语境时，系统记录交付缺口而不强行插播。"
               : "同一条视频，同一则保量广告。系统理解内容张力，寻找符合合同约束的低打断窗口。"}</p>
         </div>
-        {!isPauseScenario ? (
-          <div className="showcase-toggle" role="group" aria-label={`${isProtectedScenario ? "敏感场景" : "高潮插播"}投放策略`}>
-            <button aria-pressed={strategy === "baseline"} className={strategy === "baseline" ? "active" : ""} onClick={() => switchStrategy("baseline")}>传统投放</button>
-            <button aria-pressed={strategy === "admind"} className={strategy === "admind" ? "active" : ""} onClick={() => switchStrategy("admind")}><SparkIcon />AdMind</button>
-          </div>
-        ) : null}
       </div>
 
       {variants.length > 1 ? (
@@ -495,19 +488,21 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
                   : media.modelFinding}</small>
             </div>
           </div>
-          {isPauseScenario ? (
-            <div className="pause-player-actions">
+          <div className="showcase-player-actions">
+            {isPauseScenario ? (
               <span className="pause-interaction-hint">点击画面暂停，体验实时判断</span>
-              <div className="showcase-toggle pause-strategy-toggle" role="group" aria-label="暂停状态投放策略">
-                <button aria-pressed={strategy === "baseline"} className={strategy === "baseline" ? "active" : ""} onClick={() => switchStrategy("baseline")}>传统投放</button>
-                <button aria-pressed={strategy === "admind"} className={strategy === "admind" ? "active" : ""} onClick={() => switchStrategy("admind")}><SparkIcon />AdMind</button>
-              </div>
+            ) : (
+              <button disabled={!mediaReady} onClick={jumpToDecision}>{mediaReady
+                ? isProtectedScenario
+                    ? "查看规则触发点"
+                    : "查看广告投放点"
+                : "正在加载视频…"}</button>
+            )}
+            <div className="showcase-toggle player-strategy-toggle" role="group" aria-label={`${isPauseScenario ? "暂停状态" : isProtectedScenario ? "敏感场景" : "高潮插播"}投放策略`}>
+              <button aria-pressed={strategy === "baseline"} className={strategy === "baseline" ? "active" : ""} onClick={() => switchStrategy("baseline")}>传统投放</button>
+              <button aria-pressed={strategy === "admind"} className={strategy === "admind" ? "active" : ""} onClick={() => switchStrategy("admind")}><SparkIcon />AdMind</button>
             </div>
-          ) : <button disabled={!mediaReady} onClick={jumpToDecision}>{mediaReady
-            ? isProtectedScenario
-                ? "查看规则触发点"
-                : "查看广告投放点"
-            : "正在加载视频…"}</button>}
+          </div>
         </div>
 
         <div className="video-stage showcase-video-stage">
