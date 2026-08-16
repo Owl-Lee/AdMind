@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { AnalysisConsensus, DecisionResponse, Scenario, Strategy, VideoAnalysis } from "@admind/contracts";
 import { ChevronIcon, PlayIcon, ShieldIcon, SparkIcon, VolumeIcon } from "./icons";
 import { AdCreative } from "./AdCreative";
@@ -310,7 +310,6 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const scrubbingRef = useRef(false);
   const pauseObservationRef = useRef(0);
   const volumeControlRef = useRef<HTMLDivElement>(null);
-  const lastAudibleVolumeRef = useRef(0.65);
   const [strategy, setStrategy] = useState<Strategy>("baseline");
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
@@ -511,12 +510,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
 
   const updateVolume = (nextVolume: number) => {
     const boundedVolume = Math.max(0, Math.min(1, nextVolume));
-    if (boundedVolume > 0) lastAudibleVolumeRef.current = boundedVolume;
     setVolume(boundedVolume);
-  };
-
-  const toggleMute = () => {
-    updateVolume(volume > 0 ? 0 : lastAudibleVolumeRef.current || 0.65);
   };
 
   const finishDeliveredAd = (result: "completed" | "skipped") => {
@@ -866,14 +860,6 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
                 <VolumeIcon level={volumeLevel} />
               </button>
               <div className="volume-popover" hidden={!volumeOpen}>
-                <button
-                  aria-label={volume === 0 ? "恢复声音" : "静音"}
-                  className="volume-mute-toggle"
-                  onClick={toggleMute}
-                  type="button"
-                >
-                  <VolumeIcon level={volumeLevel} />
-                </button>
                 <input
                   aria-label={`视频音量 ${Math.round(volume * 100)}%`}
                   className="volume-slider"
@@ -881,6 +867,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
                   min="0"
                   onInput={(event) => updateVolume(Number(event.currentTarget.value))}
                   step="0.01"
+                  style={{ "--volume-level": `${volume * 100}%` } as CSSProperties}
                   type="range"
                   value={volume}
                 />
