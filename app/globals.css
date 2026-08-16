@@ -883,6 +883,7 @@ button { color: inherit; }
 .showcase-page {
   --shadow-tint: rgba(67, 58, 132, .13);
   --shadow-mint: rgba(52, 184, 148, .19);
+  --live-shadow-release: 2;
 }
 
 .showcase-hero {
