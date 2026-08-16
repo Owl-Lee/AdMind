@@ -839,6 +839,59 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   );
 }
 
+function NarrativeJourney({ scenarios }: { scenarios: ScenarioDemo[] }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const targets = scenarios
+      .map((scenario) => document.getElementById(`scenario-${scenario.scenario.id.toLowerCase()}`))
+      .filter((element): element is HTMLElement => Boolean(element));
+    if (!targets.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const current = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!current) return;
+      const next = targets.indexOf(current.target as HTMLElement);
+      if (next >= 0) setActiveIndex(next);
+    }, { threshold: [0.35, 0.55, 0.75] });
+
+    targets.forEach((target) => observer.observe(target));
+    return () => observer.disconnect();
+  }, [scenarios]);
+
+  return (
+    <section className="admind-journey" id="demo" aria-label="AdMind 三段决策体验">
+      <header className="admind-journey-intro">
+        <p>三段决策旅程</p>
+        <h2>让每一次广告出现，<br />都有可以解释的理由。</h2>
+        <span>不是把演示塞进卡片，而是沿着一条连续的观看路径，依次看见内容证据、交互状态与伦理边界如何共同影响决定。</span>
+      </header>
+      <div className="admind-journey-grid">
+        <nav className="admind-journey-nav" aria-label="选择决策场景">
+          {scenarios.map((demo, index) => (
+            <button
+              aria-current={activeIndex === index ? "step" : undefined}
+              className={activeIndex === index ? "active" : ""}
+              key={demo.scenario.id}
+              onClick={() => document.getElementById(`scenario-${demo.scenario.id.toLowerCase()}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            >
+              <span className="admind-journey-index">0{index + 1}</span>
+              <strong>{index === 0 ? "高点出现" : index === 1 ? "用户暂停" : "敏感语境"}</strong>
+              <small>{index === 0 ? "S1 · 延后候选点" : index === 1 ? "S2 · 保护当前画面" : "S3 · 伦理规则优先"}</small>
+              <i aria-hidden="true" />
+            </button>
+          ))}
+        </nav>
+        <div className="admind-journey-content">
+          {scenarios.map((demo, index) => <ScenarioExperience demo={demo} first={index === 0} key={demo.scenario.id} />)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDemoProps) {
   const [view, setView] = useState<"demo" | "decision">("demo");
 
@@ -891,9 +944,7 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
               </div>
             </section>
 
-            <div className="showcase-sequence" id="demo">
-              {scenarios.map((demo, index) => <ScenarioExperience demo={demo} first={index === 0} key={demo.scenario.id} />)}
-            </div>
+            <NarrativeJourney scenarios={scenarios} />
         </div>
         <div hidden={view !== "decision"}>
           <DecisionMethod analysisRuns={analysisRuns} consensus={consensus} />
