@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Read the project status and roadmap
+    url: https://github.com/Owl-Lee/AdMind/blob/main/docs/ROADMAP.md
+    about: Check whether the limitation or feature is already documented.
+  - name: Security vulnerability
+    url: https://github.com/Owl-Lee/AdMind/security
+    about: Use private vulnerability reporting for credential, code-execution or data-exposure issues.

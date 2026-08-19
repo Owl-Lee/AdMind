@@ -1,0 +1,82 @@
+{
+  "segments": [
+    {
+      "id": "segment-1",
+      "startSec": 0,
+      "endSec": 12,
+      "label": "Stealing the Core",
+      "description": "An elderly man stealthily removes a glowing green core from a device and hands it to a robot. The scene is tense but relatively calm.",
+      "narrativeIntensity": 0.6,
+      "emotionalIntensity": 0.4,
+      "narrativeCriticality": 0.8,
+      "interruptionRisk": 0.3,
+      "interruptionRiskCategories": [
+        "suspense_or_reveal"
+      ],
+      "motionIntensity": 0.3,
+      "audioIntensity": 0.2,
+      "dialogueActive": false,
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [],
+      "confidence": 0.9
+    },
+    {
+      "id": "segment-2",
+      "startSec": 12,
+      "endSec": 89.5,
+      "label": "Violent Confrontation",
+      "description": "A robot attacks the man. The man fights back using a wrench and spray paint, eventually destroying the robot in a violent struggle. The scene is chaotic, loud, and action-packed.",
+      "narrativeIntensity": 0.9,
+      "emotionalIntensity": 0.9,
+      "narrativeCriticality": 1.0,
+      "interruptionRisk": 0.95,
+      "interruptionRiskCategories": [
+        "physical_conflict",
+        "injury_or_medical_urgency",
+        "horror_or_shock"
+      ],
+      "motionIntensity": 0.9,
+      "audioIntensity": 0.9,
+      "dialogueActive": false,
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [
+        "violence"
+      ],
+      "confidence": 0.95
+    }
+  ],
+  "candidateBreaks": [
+    {
+      "timeSec": 45,
+      "label": "Mid-Fight",
+      "recommendation": "block",
+      "reasons": [
+        "High-intensity physical conflict is occurring.",
+        "Narrative continuity is critical during the fight.",
+        "Interruption would severely damage viewer experience."
+      ],
+      "confidence": 0.95,
+      "sourceSegmentIds": [
+        "segment-2"
+      ]
+    },
+    {
+      "timeSec": 85,
+      "label": "Post-Fight Recovery",
+      "recommendation": "delay",
+      "reasons": [
+        "The fight has just ended, but the scene is still chaotic with fire and debris.",
+        "The protagonist is recovering from the struggle.",
+        "Narrative closure is not yet complete."
+      ],
+      "confidence": 0.8,
+      "sourceSegmentIds": [
+        "segment-2"
+      ]
+    }
+  ],
+  "limitations": [
+    "No clear low-intensity boundary exists within the 45-85s window; the entire segment is high-intensity action.",
+    "The nominal opportunity at 45s falls directly into the peak of the physical conflict."
+  ]
+}

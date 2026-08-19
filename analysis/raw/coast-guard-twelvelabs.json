@@ -1,0 +1,60 @@
+{
+  "segments": [
+    {
+      "id": "segment-1",
+      "startSec": 0,
+      "endSec": 40,
+      "label": "直升机海上救援",
+      "description": "直升机在恶劣天气下从倾覆的帆船旁救起一名男子和一只狗。视频展示了从高空视角到水面救援，再到直升机吊篮升空的完整过程。",
+      "narrativeIntensity": 0.95,
+      "emotionalIntensity": 0.9,
+      "narrativeCriticality": 0.95,
+      "interruptionRisk": 0.95,
+      "interruptionRiskCategories": [
+        "disaster_or_trauma",
+        "injury_or_medical_urgency"
+      ],
+      "motionIntensity": 0.85,
+      "audioIntensity": 0.8,
+      "dialogueActive": false,
+      "transitionConfidence": 0.1,
+      "sensitiveCategories": [
+        "disaster_or_trauma"
+      ],
+      "confidence": 0.95
+    }
+  ],
+  "candidateBreaks": [
+    {
+      "timeSec": 5,
+      "label": "救援准备阶段",
+      "recommendation": "block",
+      "reasons": [
+        "视频处于高紧张度的救援行动初期，叙事连贯性极强。",
+        "插入广告会严重破坏紧急救援的沉浸感和情感张力。",
+        "属于灾难或创伤类内容，不适合商业打断。"
+      ],
+      "confidence": 0.95,
+      "sourceSegmentIds": [
+        "segment-1"
+      ]
+    },
+    {
+      "timeSec": 40,
+      "label": "救援结束",
+      "recommendation": "allow",
+      "reasons": [
+        "救援行动已完成，人员安全进入直升机，叙事达到高潮后的自然结束点。",
+        "视频片段结束，是唯一的逻辑中断点。"
+      ],
+      "confidence": 0.9,
+      "sourceSegmentIds": [
+        "segment-1"
+      ]
+    }
+  ],
+  "limitations": [
+    "视频为单一连续事件，缺乏内部自然停顿点，导致在5秒至40秒之间无法找到安全的广告插入位置。",
+    "无法推断视频结束后的后续内容，仅能基于当前片段判断。"
+  ]
+}

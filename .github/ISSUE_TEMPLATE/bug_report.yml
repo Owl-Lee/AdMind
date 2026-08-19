@@ -1,0 +1,81 @@
+name: Bug report
+description: Report a reproducible AdMind product or decision defect
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve AdMind. Remove API keys, private video URLs, account details and local paths before posting.
+
+  - type: dropdown
+    id: scenario
+    attributes:
+      label: Affected area
+      options:
+        - Home / navigation
+        - S1 · Climax avoidance
+        - S2 · Pause protection
+        - S3 · Ethical boundary
+        - Decision API
+        - Video analysis
+        - Build or development setup
+        - Documentation
+    validations:
+      required: true
+
+  - type: input
+    id: revision
+    attributes:
+      label: Version or commit
+      description: Use the Git commit, branch, or hosted version if known.
+      placeholder: main at abc1234
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and operating system
+      placeholder: Chrome 140 on Windows 11
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Select ...
+        3. Pause at ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized evidence
+      description: Add screenshots, console output or decision JSON after removing sensitive information.
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I reproduced this on the latest available revision.
+          required: true
+        - label: I removed API keys, private media, account details and local paths.
+          required: true

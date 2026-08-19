@@ -1,0 +1,56 @@
+name: Feature request
+description: Propose an improvement to the AdMind product or decision system
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the user, advertiser, policy or engineering situation before proposing a solution.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Product area
+      options:
+        - S1 · Timing and format
+        - S2 · Pause and placement
+        - S3 · Ethical policy
+        - Decision evidence and audit
+        - Video-analysis pipeline
+        - API or integration
+        - Accessibility or interface
+        - Documentation or developer experience
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or examples
+      description: Link research or describe representative scenarios without sharing private media.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Boundary confirmation
+      options:
+        - label: This proposal does not ask model confidence or commercial value to bypass hard policy rules.
+          required: true
+        - label: Any example media is owned, licensed, public-domain or described without redistribution.
+          required: true

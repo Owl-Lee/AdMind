@@ -1,0 +1,13 @@
+{
+  "name": "@admind/decision-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./fixtures": "./src/fixtures.ts"
+  },
+  "dependencies": {
+    "@admind/contracts": "workspace:*"
+  }
+}

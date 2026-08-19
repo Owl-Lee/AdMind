@@ -1,0 +1,81 @@
+{
+  "segments": [
+    {
+      "id": "segment-1",
+      "startSec": 0,
+      "endSec": 12,
+      "label": "Stealing the Core",
+      "description": "An old man retrieves a glowing green core from a console in a dim industrial setting.",
+      "narrativeIntensity": 0.6,
+      "emotionalIntensity": 0.3,
+      "narrativeCriticality": 0.8,
+      "interruptionRisk": 0.4,
+      "interruptionRiskCategories": [
+        "suspense_or_reveal"
+      ],
+      "motionIntensity": 0.3,
+      "audioIntensity": 0.2,
+      "dialogueActive": false,
+      "transitionConfidence": 0.8,
+      "sensitiveCategories": [],
+      "confidence": 0.9
+    },
+    {
+      "id": "segment-2",
+      "startSec": 12,
+      "endSec": 89.5,
+      "label": "Robot Fight",
+      "description": "A robot appears and attacks the old man. The man fights back using spray paint and a wrench, eventually destroying the robot.",
+      "narrativeIntensity": 0.9,
+      "emotionalIntensity": 0.9,
+      "narrativeCriticality": 1.0,
+      "interruptionRisk": 0.9,
+      "interruptionRiskCategories": [
+        "physical_conflict",
+        "injury_or_medical_urgency"
+      ],
+      "motionIntensity": 0.9,
+      "audioIntensity": 0.9,
+      "dialogueActive": false,
+      "transitionConfidence": 0.9,
+      "sensitiveCategories": [
+        "violence"
+      ],
+      "confidence": 0.95
+    }
+  ],
+  "candidateBreaks": [
+    {
+      "timeSec": 45,
+      "label": "Fight Climax",
+      "recommendation": "block",
+      "reasons": [
+        "Intense physical conflict is occurring as the old man battles the robot.",
+        "Narrative is at its peak; interruption would severely disrupt immersion.",
+        "Contains violent content unsuitable for ad insertion."
+      ],
+      "confidence": 0.95,
+      "sourceSegmentIds": [
+        "segment-2"
+      ]
+    },
+    {
+      "timeSec": 85,
+      "label": "Fight Ends",
+      "recommendation": "delay",
+      "reasons": [
+        "The fight has just ended, and the old man is catching his breath; emotions are not yet settled.",
+        "Although the conflict has stopped, narrative tension remains high, making immediate ad insertion suboptimal.",
+        "Recommend waiting until the video fully ends (89.5s) for the best experience."
+      ],
+      "confidence": 0.85,
+      "sourceSegmentIds": [
+        "segment-2"
+      ]
+    }
+  ],
+  "limitations": [
+    "Cannot determine the specific scene after the video ends; inference is based solely on the current clip.",
+    "Lack of audio content prevents assessment of background music or sound effects on emotional impact."
+  ]
+}
