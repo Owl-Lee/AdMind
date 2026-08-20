@@ -287,6 +287,12 @@ button { color: inherit; }
 .showcase-brand-mark { display: grid; width: 29px; height: 29px; place-items: center; border-radius: 9px; color: white; background: #6d4ef6; }
 .showcase-brand-mark svg { width: 17px; }
 .showcase-nav nav { display: flex; align-items: center; gap: 30px; }
+.showcase-nav-actions { display: flex; align-items: center; gap: 22px; }
+.language-toggle { display: flex; gap: 3px; padding: 3px; border: 1px solid rgba(86,78,157,.16); border-radius: 999px; background: rgba(255,255,255,.68); box-shadow: 0 6px 18px rgba(48,43,91,.06); }
+.language-toggle button { min-width: 35px; height: 30px; padding: 0 9px; border: 0; border-radius: 999px; color: #77738e; background: transparent; cursor: pointer; font-size: 12px; font-weight: 850; transition: color .18s ease, background .18s ease, box-shadow .18s ease; }
+.language-toggle button:hover { color: #433b9c; }
+.language-toggle button.active { color: #fff; background: #6d63cf; box-shadow: 0 5px 12px rgba(79,68,187,.24); }
+.language-toggle button:focus-visible { outline: 2px solid rgba(109,78,246,.48); outline-offset: 3px; }
 .showcase-nav nav button { position: relative; height: 64px; padding: 0; border: 0; color: #777780; background: transparent; cursor: pointer; font-size: 13px; transition: color .18s ease; }
 .showcase-nav nav button:hover, .showcase-nav nav button.active { color: #111114; }
 .showcase-nav nav button.active::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; border-radius: 2px; background: #6d4ef6; content: ""; }
@@ -784,6 +790,7 @@ button { color: inherit; }
 .method-page { max-width: 1200px; padding-top: 118px; }.method-hero { max-width: 960px; }.method-hero > p,.method-section-heading > p,.method-example-copy > p { color: var(--admind-mint-strong); }.method-hero h1 { font-size: clamp(52px,6.2vw,74px); }.method-hero > span,.method-section-heading > span { color: var(--admind-muted); }.method-flow article,.method-signal-grid article { border-color: rgba(7,124,114,.14); border-radius: 24px; box-shadow: none; }.method-flow article { background: rgba(255,255,255,.78); }.method-flow article.api { background: linear-gradient(145deg,#e6f7f2,#fbfffd); }.method-flow article.engine,.method-example { background: radial-gradient(circle at 86% 5%,rgba(93,218,195,.37),transparent 32%),#133432; }.method-flow article.output { background: linear-gradient(145deg,#f0edff,#fbfaff); }.method-flow article b,.method-signal-grid article > span { color: var(--admind-mint-strong); }.method-signal-grid article > div i { background: #14a38f; }.method-example { border-radius: 34px; }.method-timeline-card { border-color: rgba(211,255,246,.18); background: rgba(255,255,255,.07); }.method-timeline .calm { background: #c7eee3; }.method-timeline .rise { background: #d8d0ff; }.method-timeline .climax { background: #ebb0aa; }.method-timeline .recover { background: #88dbc7; }.method-stack article { border-top-color: #13a48f; background: #eaf8f4; }
 
 @media (max-width: 760px) { .showcase-nav { height: 64px; }.showcase-nav nav button { height: 64px; font-size: 12px; }.showcase-brand strong { font-size: 18px; }.showcase-hero { padding-top: 94px; }.showcase-hero::before { top: 28px; right: -30px; width: 120px; height: 120px; }.showcase-hero::after { display: none; }.showcase-hero h1 { font-size: 51px; }.showcase-section-heading { gap: 20px; }.showcase-player-card { border-radius: 22px; } }
+@media (max-width: 760px) { .showcase-nav-actions { gap: 8px; }.showcase-nav nav { gap: 12px; }.language-toggle { padding: 2px; }.language-toggle button { min-width: 30px; height: 28px; padding-inline: 7px; } }
 
 /* Product-site polish: keep LocalSend's visual rhythm, but return to AdMind's own violet-blue identity. */
 :root {

@@ -76,7 +76,7 @@ Read [Architecture](docs/ARCHITECTURE.md) for component boundaries and runtime f
 
 ## Live demo
 
-The hosted product preview may require authorized access while the public deployment policy is finalized:
+The hosted product preview is publicly accessible without a sign-in:
 
 **https://admind-decision-console.liyanbao06.chatgpt.site/**
 
@@ -275,7 +275,7 @@ flowchart LR
 
 ## 在线演示
 
-在公开部署策略最终确定前，托管的产品预览可能需要授权访问：
+托管的产品预览已经公开，无需登录即可访问：
 
 **https://admind-decision-console.liyanbao06.chatgpt.site/**
 
