@@ -1,10 +1,17 @@
 # Changelog
 
-[English](#changelog) · [中文（最新版本）](#025--2026-08-20)
+[English](#changelog) · [中文（最新版本）](#026--2026-08-20)
 
 Notable project changes are recorded here.
 
 ## Unreleased
+
+## 0.2.6 · 2026-08-20
+
+- Replaced the homepage hero preview's background video with the original blue fantasy game advertisement, so the public first screen now shows a real ad creative instead of only a decision-state mockup.
+- Preserved the safe-window, rule-decision and evidence-score context around the creative, and cache-busted the shared ad asset across homepage and scenario delivery states.
+- 中文：首页首屏右侧演示卡片改为直接展示原始蓝色奇幻游戏广告，不再只显示剧情视频和决策状态。
+- 中文：保留安全窗口、规则决定与证据评分上下文，并同步更新首页和场景投放状态所共用广告素材的缓存版本。
 
 ## 0.2.5 · 2026-08-20
 
