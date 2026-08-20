@@ -1095,7 +1095,12 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
   };
 
   return (
-    <div className="showcase-page" data-locale={locale} ref={pageRef}>
+    <div
+      className="showcase-page"
+      data-locale={locale}
+      data-locale-ready={localeReady ? "true" : "false"}
+      ref={pageRef}
+    >
       <header className="showcase-nav">
         <button className="showcase-brand" onClick={() => switchView("demo")} aria-label="AdMind 首页">
           <span className="showcase-brand-mark"><SparkIcon /></span>

@@ -66,4 +66,9 @@ describe("UI localization", () => {
     expect(restoreUiText("Decision logic · Video volume 65%"))
       .toBe("决策方式 · 视频音量 65%");
   });
+
+  it("gates the first paint until the chosen locale is ready", () => {
+    const source = readFileSync(new URL("../components/ShowcaseDemo.tsx", import.meta.url), "utf8");
+    expect(source).toContain('data-locale-ready={localeReady ? "true" : "false"}');
+  });
 });

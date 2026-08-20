@@ -269,6 +269,18 @@ button { color: inherit; }
   color: #111114;
   background: #fbfbfd;
 }
+
+/* The JSX source is Chinese and is localized after hydration. Keep the first
+   paint hidden until that pass completes so English-first visitors never see
+   a transient Chinese interface. */
+.showcase-page[data-locale-ready="false"] {
+  opacity: 0;
+}
+
+.showcase-page[data-locale-ready="true"] {
+  opacity: 1;
+  transition: opacity 140ms ease-out;
+}
 .showcase-nav {
   position: sticky;
   top: 0;
