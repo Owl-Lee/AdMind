@@ -1,6 +1,6 @@
 # Changelog
 
-[English](#changelog) · [中文（v0.2.0）](#020-中文说明)
+[English](#changelog) · [中文（最新版本）](#021--2026-08-20)
 
 Notable project changes are recorded here.
 
