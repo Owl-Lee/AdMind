@@ -409,6 +409,30 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   };
 
   useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const markReady = () => setMediaReady(true);
+    const markUnavailable = () => setMediaReady(false);
+    const readyStateCheck = window.setTimeout(() => {
+      if (video.readyState >= HTMLMediaElement.HAVE_METADATA && Number.isFinite(video.duration)) {
+        markReady();
+      }
+    }, 0);
+
+    video.addEventListener("loadedmetadata", markReady);
+    video.addEventListener("canplay", markReady);
+    video.addEventListener("error", markUnavailable);
+
+    return () => {
+      window.clearTimeout(readyStateCheck);
+      video.removeEventListener("loadedmetadata", markReady);
+      video.removeEventListener("canplay", markReady);
+      video.removeEventListener("error", markUnavailable);
+    };
+  }, [media.id]);
+
+  useEffect(() => {
     if (adRemaining === null) return;
     if (isPauseScenario && strategy === "admind") return;
     const timer = window.setTimeout(() => {
