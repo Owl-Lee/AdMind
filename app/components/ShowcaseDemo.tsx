@@ -6,6 +6,7 @@ import { ChevronIcon, PlayIcon, ShieldIcon, SparkIcon, VolumeIcon } from "./icon
 import { AdCreative } from "./AdCreative";
 import { detectFacesInPausedFrame, type FaceDetectionEvidence } from "../lib/face-detector";
 import { choosePauseAdPlacement, type PlacementDecision } from "../lib/pause-decision";
+import { observeUiLocalization, type UiLocale } from "../lib/ui-localization";
 
 export type DemoMedia = {
   id: string;
@@ -1033,6 +1034,21 @@ function NarrativeJourney({ scenarios }: { scenarios: ScenarioDemo[] }) {
 
 export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDemoProps) {
   const [view, setView] = useState<"demo" | "decision">("demo");
+  const [locale, setLocale] = useState<UiLocale>(() => {
+    if (typeof window === "undefined") return "en";
+    return window.localStorage.getItem("admind-locale") === "zh" ? "zh" : "en";
+  });
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!pageRef.current) return;
+    document.documentElement.lang = locale === "en" ? "en" : "zh-CN";
+    document.title = locale === "en"
+      ? "AdMind — Explainable AI decisions for less disruptive video ads"
+      : "AdMind — 广告必须出现，也不必毁掉剧情";
+    window.localStorage.setItem("admind-locale", locale);
+    return observeUiLocalization(pageRef.current, locale);
+  }, [locale]);
 
   useEffect(() => {
     const syncView = () => setView(window.location.hash === "#decision" ? "decision" : "demo");
@@ -1049,16 +1065,22 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
   };
 
   return (
-    <div className="showcase-page">
+    <div className="showcase-page" data-locale={locale} ref={pageRef}>
       <header className="showcase-nav">
         <button className="showcase-brand" onClick={() => switchView("demo")} aria-label="AdMind 首页">
           <span className="showcase-brand-mark"><SparkIcon /></span>
           <strong>AdMind</strong>
         </button>
-        <nav aria-label="页面切换">
-          <button aria-current={view === "demo" ? "page" : undefined} className={view === "demo" ? "active" : ""} onClick={() => switchView("demo")}>体验演示</button>
-          <button aria-current={view === "decision" ? "page" : undefined} className={view === "decision" ? "active" : ""} onClick={() => switchView("decision")}>决策方式</button>
-        </nav>
+        <div className="showcase-nav-actions">
+          <nav aria-label="页面切换">
+            <button aria-current={view === "demo" ? "page" : undefined} className={view === "demo" ? "active" : ""} onClick={() => switchView("demo")}>体验演示</button>
+            <button aria-current={view === "decision" ? "page" : undefined} className={view === "decision" ? "active" : ""} onClick={() => switchView("decision")}>决策方式</button>
+          </nav>
+          <div className="language-toggle" aria-label="Language / 语言" role="group">
+            <button aria-pressed={locale === "en"} className={locale === "en" ? "active" : ""} onClick={() => setLocale("en")}>EN</button>
+            <button aria-pressed={locale === "zh"} className={locale === "zh" ? "active" : ""} onClick={() => setLocale("zh")}>中</button>
+          </div>
+        </div>
       </header>
 
       <main id="top">

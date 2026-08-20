@@ -17,7 +17,10 @@ test("server-renders separate showcase and decision-method views", async () => {
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>AdMind — 广告必须出现，也不必毁掉剧情<\/title>/i);
+  assert.match(html, /<title>AdMind — Explainable AI decisions for less disruptive video ads<\/title>/i);
+  assert.match(html, /<html lang="en">/i);
+  assert.match(html, /data-locale="en"/i);
+  assert.match(html, /aria-label="Language \/ 语言"/i);
   assert.match(html, /广告必须出现/);
   assert.match(html, /传统投放/);
   assert.match(html, /01 · 剧情高点/);

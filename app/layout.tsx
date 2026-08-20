@@ -3,25 +3,25 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://admind-decision-console.liyanbao06.chatgpt.site"),
-  title: "AdMind｜广告需要出现，也不必毁掉剧情",
-  description: "AdMind 结合视频理解、播放状态与伦理边界，为长视频生成更少打断、可解释的广告决策。",
+  title: "AdMind — Explainable AI decisions for less disruptive video ads",
+  description: "AdMind combines video understanding, player state, and ethical boundaries to make explainable, lower-disruption advertising decisions.",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
   openGraph: {
-    title: "AdMind｜广告需要出现，也不必毁掉剧情",
-    description: "同一个商业目标，更少的用户打断。",
-    images: [{ url: "/og.png", width: 1536, height: 1024, alt: "AdMind 可解释视频广告决策体验" }],
+    title: "AdMind — Explainable AI video-ad decisions",
+    description: "The same commercial goal, with less disruption for the viewer.",
+    images: [{ url: "/og.png", width: 1536, height: 1024, alt: "AdMind explainable video-ad decision experience" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AdMind｜广告需要出现，也不必毁掉剧情",
-    description: "同一个商业目标，更少的用户打断。",
+    title: "AdMind — Explainable AI video-ad decisions",
+    description: "The same commercial goal, with less disruption for the viewer.",
     images: ["/og.png"],
   },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="en">
       <body>{children}</body>
     </html>
   );

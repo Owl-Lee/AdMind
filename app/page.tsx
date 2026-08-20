@@ -11,7 +11,7 @@ import coastGuardRun from "../analysis/runs/coast-guard-twelvelabs.json";
 import usnsMedicalRun from "../analysis/runs/usns-medical-twelvelabs.json";
 
 export const metadata: Metadata = {
-  title: "AdMind — 广告必须出现，也不必毁掉剧情",
+  title: "AdMind — Explainable AI decisions for less disruptive video ads",
 };
 
 export default function Home() {
