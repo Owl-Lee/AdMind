@@ -1,10 +1,17 @@
 # Changelog
 
-[English](#changelog) · [中文（最新版本）](#021--2026-08-20)
+[English](#changelog) · [中文（最新版本）](#022--2026-08-20)
 
 Notable project changes are recorded here.
 
 ## Unreleased
+
+## 0.2.2 · 2026-08-20
+
+- Restored the saved language only after client hydration, preventing React hydration mismatches for returning visitors who previously selected Chinese.
+- Kept English as the server-rendered public default while preserving each visitor's explicit language choice after the page becomes interactive.
+- 中文：语言偏好改为在客户端 hydration 完成后恢复，修复曾选择中文的访客再次打开页面时可能出现的 React hydration 不一致警告。
+- 中文：服务端公开默认语言仍为英文；页面进入可交互状态后，继续尊重访客上次主动选择的语言。
 
 ## 0.2.1 · 2026-08-20
 

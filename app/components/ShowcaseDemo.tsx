@@ -1034,21 +1034,27 @@ function NarrativeJourney({ scenarios }: { scenarios: ScenarioDemo[] }) {
 
 export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDemoProps) {
   const [view, setView] = useState<"demo" | "decision">("demo");
-  const [locale, setLocale] = useState<UiLocale>(() => {
-    if (typeof window === "undefined") return "en";
-    return window.localStorage.getItem("admind-locale") === "zh" ? "zh" : "en";
-  });
+  const [locale, setLocale] = useState<UiLocale>("en");
+  const [localeReady, setLocaleReady] = useState(false);
   const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!pageRef.current) return;
+    const timer = window.setTimeout(() => {
+      setLocale(window.localStorage.getItem("admind-locale") === "zh" ? "zh" : "en");
+      setLocaleReady(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!localeReady || !pageRef.current) return;
     document.documentElement.lang = locale === "en" ? "en" : "zh-CN";
     document.title = locale === "en"
       ? "AdMind — Explainable AI decisions for less disruptive video ads"
       : "AdMind — 广告必须出现，也不必毁掉剧情";
     window.localStorage.setItem("admind-locale", locale);
     return observeUiLocalization(pageRef.current, locale);
-  }, [locale]);
+  }, [locale, localeReady]);
 
   useEffect(() => {
     const syncView = () => setView(window.location.hash === "#decision" ? "decision" : "demo");
