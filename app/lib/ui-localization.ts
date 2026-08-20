@@ -1,6 +1,104 @@
 export type UiLocale = "en" | "zh";
 
 const REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
+  ["视频素材：《CHARGE》《Coffee Run》© Blender Foundation / Blender Studio（CC BY 4.0）；《Caminandes: Llamigos》© Blender（CC BY 3.0）；美国政府视觉素材为 Public Domain，其出现不构成对 AdMind 的认可。广告画面为项目自有演示素材。", "Video footage: CHARGE and Coffee Run © Blender Foundation / Blender Studio (CC BY 4.0); Caminandes: Llamigos © Blender (CC BY 3.0). U.S. government footage is Public Domain and does not imply endorsement of AdMind. The ad creative is owned by this project."],
+  ["本次已经产生展示记录；用户主动关闭后，不再进入待交付队列。", "This impression has already been recorded. After the viewer closes it, the task does not return to the pending queue."],
+  ["本次广告任务已经完成，不会因截图、失焦或继续播放而重新顺延。", "This ad task is complete and will not be deferred again after a screenshot, focus change, or playback resume."],
+  ["稳定暂停已超过 8 秒：完成一次完整曝光；恢复播放会立即关闭广告。", "The pause remained stable for more than 8 seconds, completing one full impression. Resuming playback closes the ad immediately."],
+  ["本地视觉未在当前帧检测到稳定避让目标。", "Local vision found no stable avoidance target in the current frame."],
+  ["四个候选区域都会遮挡人物或播放器保留区，本次暂停不展示广告。", "All four candidate regions would cover a subject or reserved player area, so no ad is shown during this pause."],
+  ["当前帧未检测到稳定主体，优先使用不遮挡字幕与控制条的顶部区域。", "No stable subject was detected, so prefer the top region that avoids captions and controls."],
+  ["暂停未稳定，广告任务已进入待交付队列。", "The pause was not stable; the ad task moved to the pending-delivery queue."],
+  ["当前画面没有安全位置，广告任务已顺延。", "No safe position exists in the current frame; the ad task was deferred."],
+  ["页面已隐藏，本次广告取消并顺延。", "The page was hidden; this ad attempt was canceled and deferred."],
+  ["窗口失去焦点，本次广告暂停并顺延。", "The window lost focus; this ad attempt was paused and deferred."],
+  ["暂停时间不足，广告任务已顺延到下一次稳定机会。", "The pause was too short; the ad task was deferred to the next stable opportunity."],
+  ["用户拖动了进度，本次广告取消并顺延。", "The viewer sought through the video; this ad attempt was canceled and deferred."],
+  ["用户正在拖动进度，广告任务已顺延。", "The viewer is seeking; the ad task was deferred."],
+  ["点击画面暂停，体验实时判断", "Click the video to pause and see a live decision"],
+  ["到点即播，不读取伦理信号", "Play at the fixed time without reading ethical signals"],
+  ["hidden 取消；visible + blur 暂缓", "hidden: cancel; visible + blur: defer"],
+  ["本次会话已拖动", "Seeks in this session:"],
+  ["个视觉避让目标", " visual avoidance targets"],
+  ["人脸", "Faces"],
+  ["主体", "subjects"],
+  ["本地视觉检测到", "Local vision detected"],
+  ["个脸部与", " faces and"],
+  ["个角色主体。", " character subjects."],
+  ["本地视觉模型暂不可用", "Local vision model is temporarily unavailable"],
+  ["当前帧尚未解码。", "The current frame has not been decoded yet."],
+  ["处于受保护区间；高价保量活动不得越过伦理边界。", " is within a protected interval; a guaranteed high-value campaign cannot override the ethical boundary."],
+  ["多次分析一致度", "Cross-run agreement"],
+  ["已拒绝", "rejected"],
+  ["个不合格候选", "ineligible candidates"],
+  ["检测到", "Detected"],
+  ["的画面遮挡风险最低。", " has the lowest obstruction risk."],
+  ["广告必须出现", "Ads must appear"],
+  ["也不必", "without "],
+  ["毁掉剧情。", "ruining the story."],
+  ["暂停状态投放策略", "Pause-state delivery strategy"],
+  ["敏感场景投放策略", "Sensitive-scene delivery strategy"],
+  ["高潮插播投放策略", "Narrative-peak delivery strategy"],
+  ["切换分析素材", "Switch analysis sample"],
+  ["视频进度", "Video progress"],
+  ["收起音量调节", "Close volume control"],
+  ["打开音量调节", "Open volume control"],
+  ["视频音量", "Video volume"],
+  ["暂停", "Pause"],
+  ["播放", "Play"],
+  ["核心能量被盗", "Core energy stolen"],
+  ["尚未进入商业投放窗口", "Not yet within the commercial delivery window"],
+  ["已由素材来源与视频分析共同确认；伦理规则在整段内容中保持优先，不在片内补量。", " has been confirmed by the source and video analysis. Ethical rules remain authoritative throughout the clip, with no in-clip backfill."],
+  ["AdMind — 广告必须出现，也不必毁掉剧情", "AdMind — Ads must appear without ruining the story"],
+  ["AdMind 三段决策旅程", "AdMind three-part decision journey"],
+  ["AdMind 三类决策能力", "AdMind decision capabilities"],
+  ["AdMind 产品演示", "AdMind product demo"],
+  ["AdMind 实时决策快照", "AdMind live decision snapshot"],
+  ["AdMind 系统流程", "AdMind system flow"],
+  ["AdMind 首页", "AdMind home"],
+  ["Language / 语言", "Language"],
+  ["FEMA 官员简报", "FEMA officials briefing"],
+  ["人物主体", "Person"],
+  ["动物主体", "Animal"],
+  ["角色主体", "Character"],
+  ["画面主体", "Visual subject"],
+  ["伦理保护中", "Ethical protection active"],
+  ["低打断窗口", "Low-disruption window"],
+  ["关闭广告，保留暂停画面", "Close ad and preserve the paused frame"],
+  ["跳过并关闭广告", "Skip and close ad"],
+  ["关闭广告", "Close ad"],
+  ["冰蓝色奇幻游戏广告画面", "Ice-blue fantasy game advertisement"],
+  ["危机解除与揭示", "Resolution and reveal"],
+  ["原定广告候选点", "Original ad opportunity"],
+  ["名义机会点", "Original opportunity"],
+  ["受灾山区社区", "Isolated mountain community"],
+  ["坠落与撞击", "Freefall and impact"],
+  ["幸存者讲述与灾后破坏", "Survivor testimony and destruction"],
+  ["开场铺垫", "Introduction and setup"],
+  ["战斗后恢复", "Post-fight recovery"],
+  ["战斗结束，情绪恢复", "Fight ends; tension recovers"],
+  ["战斗结束", "Fight ends"],
+  ["战斗进行中", "Mid-fight"],
+  ["机器人战斗", "Robot fight"],
+  ["激烈对抗", "Violent confrontation"],
+  ["灾情数据与航拍画面", "Damage statistics and drone footage"],
+  ["矿车追逐高潮", "Mine-cart climax"],
+  ["硬规则拦截：本片不投放", "Hard-rule block: no ad in this clip"],
+  ["窗口内不强行插播", "No forced insertion within the window"],
+  ["执行", "Execute"],
+  ["静音卡片", "Muted card"],
+  ["完整广告", "Full ad"],
+  ["拒绝原定点，等待", "Reject the original point; wait until"],
+  ["持续观察", "Continue observing"],
+  ["最终结语", "Final sign-off"],
+  ["计划", "Plan"],
+  ["记者结语", "Reporter sign-off"],
+  ["页面切换", "Page navigation"],
+  ["高潮后恢复", "Post-climax recovery"],
+  ["暂停状态", "Pause state"],
+  ["敏感场景", "Sensitive scene"],
+  ["高潮插播", "Narrative-peak insertion"],
+  ["投放策略", "delivery strategy"],
   ["视频理解负责识别救援、医疗或灾后语境；伦理硬规则负责最终阻止投放，竞价不能覆盖这条边界。", "Video understanding identifies rescue, medical, and disaster contexts; ethical hard rules make the final block, and bidding cannot override that boundary."],
   ["模型先判断原定点的内容张力，再在合同允许的延后范围中寻找恢复、转场或片尾窗口。", "The model evaluates tension at the original break, then searches the allowed deferral range for recovery, transition, or end-card windows."],
   ["AdMind 理解内容与用户动作，在商业约束下决定广告何时出现、以什么形式出现，以及何时不该出现。", "AdMind understands content and user actions, deciding when ads appear, how they appear, and when they should not."],
@@ -29,7 +127,7 @@ const REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
   ["等待下一次稳定暂停；仍无安全位置，再交给 S1 的低打断窗口。S3 保护场景绝不补量。", "Wait for the next stable pause; if no safe position exists, hand delivery to an S1 low-disruption window. S3 protected scenes are never backfilled."],
   ["广告必须出现，", "Ads must appear—"],
   ["也不必毁掉剧情。", "without ruining the story."],
-  ["一段视频，如何变成", "How does one video become"],
+  ["一段视频，如何变成", "How does one video become "],
   ["一次投放决定？", "an ad decision?"],
   ["长视频与广告任务", "Long-form video and ad task"],
   ["看懂场景与节奏", "Understand scenes and pacing"],
@@ -73,6 +171,7 @@ const REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
   ["体验演示", "Experience"],
   ["决策方式", "Decision logic"],
   ["AI 广告决策引擎", "AI AD DECISION ENGINE"],
+  ["AdMind 决策层", "AdMind decision layer"],
   ["开始体验", "Start experience"],
   ["查看决策方式", "View decision logic"],
   ["避开剧情高点", "Avoid narrative peaks"],
@@ -251,9 +350,13 @@ function localizeElement(element: Element, locale: UiLocale) {
   for (const name of names) {
     const current = element.getAttribute(name);
     if (current === null) continue;
-    const source = remembered.get(name) ?? current;
+    const previousSource = remembered.get(name);
+    const source = !previousSource || (current !== previousSource && current !== translateUiText(previousSource))
+      ? current
+      : previousSource;
     remembered.set(name, source);
-    element.setAttribute(name, locale === "en" ? translateUiText(source) : source);
+    const localized = locale === "en" ? translateUiText(source) : source;
+    if (current !== localized) element.setAttribute(name, localized);
   }
 
   if (element instanceof HTMLTrackElement) {
@@ -282,9 +385,16 @@ export function observeUiLocalization(root: HTMLElement, locale: UiLocale) {
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       if (mutation.type === "characterData") localizeTree(mutation.target, locale);
+      if (mutation.type === "attributes") localizeElement(mutation.target as Element, locale);
       mutation.addedNodes.forEach((node) => localizeTree(node, locale));
     }
   });
-  observer.observe(root, { childList: true, characterData: true, subtree: true });
+  observer.observe(root, {
+    attributeFilter: ["aria-label", "alt", "title", "placeholder"],
+    attributes: true,
+    childList: true,
+    characterData: true,
+    subtree: true,
+  });
   return () => observer.disconnect();
 }

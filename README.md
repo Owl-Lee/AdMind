@@ -11,6 +11,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Status](https://img.shields.io/badge/Status-Public%20prototype-7567E8)](#project-status)
 
+[English](#overview) · [中文](#中文说明) ·
 [Live demo](https://admind-decision-console.liyanbao06.chatgpt.site/) ·
 [Architecture](docs/ARCHITECTURE.md) ·
 [Case study](docs/CASE_STUDY.md) ·
@@ -79,6 +80,8 @@ Read [Architecture](docs/ARCHITECTURE.md) for component boundaries and runtime f
 The hosted product preview is publicly accessible without a sign-in:
 
 **https://admind-decision-console.liyanbao06.chatgpt.site/**
+
+English is the default public experience. The `EN / 中` control switches the complete interface and caption track without reloading. The same four-part experience is tested at desktop, tablet, narrow-window and phone widths; the page uses normal browser scrolling rather than forced scroll snapping.
 
 The deployment is a product demonstration, not an advertising network, auction service or production campaign-management platform.
 
@@ -278,6 +281,8 @@ flowchart LR
 托管的产品预览已经公开，无需登录即可访问：
 
 **https://admind-decision-console.liyanbao06.chatgpt.site/**
+
+公开页面默认使用英文。右上角 `EN / 中` 可在不刷新页面的情况下切换完整界面与字幕轨道。首页、S1、S2、S3 已在桌面、平板、窄窗口与手机宽度下回归；页面使用普通浏览器滚动，不再劫持滚轮或强制吸附。
 
 该部署是产品能力演示，不是广告网络、广告竞价服务或生产级广告活动管理平台。
 
