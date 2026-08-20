@@ -824,13 +824,6 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             />
           )) : null}
 
-          {isPauseScenario && strategy === "admind" && adActive && !pauseAdFullscreen && placementDecision.placement !== "none" ? (
-            <span
-              aria-hidden="true"
-              className={`pause-placement-outline ${placementClass}`}
-            />
-          ) : null}
-
           {adActive && selected ? (
             <div className={`${fullscreenAd ? "ad-overlay fullscreen real-ad" : "ad-overlay card real-ad-card"} ${isPauseScenario && strategy === "admind" && !pauseAdFullscreen ? placementClass : ""} ${pauseAdFullscreen ? "pause-fullscreen" : ""}`}>
               <AdCreative

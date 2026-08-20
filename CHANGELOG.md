@@ -1,10 +1,17 @@
 # Changelog
 
-[English](#changelog) · [中文（最新版本）](#024--2026-08-20)
+[English](#changelog) · [中文（最新版本）](#025--2026-08-20)
 
 Notable project changes are recorded here.
 
 ## Unreleased
+
+## 0.2.5 · 2026-08-20
+
+- Added the original game-ad image as a cache-busted container background as well as the foreground creative, so a delivered ad can never degrade into an empty placement box.
+- Removed the redundant dashed placement outline after an S2 ad is delivered; the creative itself now occupies the chosen position immediately.
+- 中文：把原始游戏广告图同时设为带版本标识的容器背景和前景素材；广告一旦判定为已展示，就不会再退化成空白定位框。
+- 中文：移除 S2 广告投放后的虚线定位框，判定成功后直接在选定位置展示广告原图。
 
 ## 0.2.4 · 2026-08-20
 
