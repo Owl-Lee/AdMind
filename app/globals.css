@@ -1645,7 +1645,7 @@ button { color: inherit; }
 }
 
 /* Narrow-window layout: preserve hierarchy instead of squeezing desktop rows. */
-@media (max-width: 760px) {
+@media (max-width: 1050px) {
   .attio-story { padding-top: 34px; }
 
   .attio-story-nav {
@@ -1666,6 +1666,8 @@ button { color: inherit; }
 
   .attio-story-chapter .showcase-player-meta {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-flow: row;
     min-height: 0;
     gap: 12px;
     padding: 15px;
@@ -1674,6 +1676,7 @@ button { color: inherit; }
   .attio-story-chapter .showcase-player-meta > div,
   .attio-story-chapter .showcase-status-copy,
   .attio-story-chapter .showcase-player-actions {
+    grid-column: 1 / -1;
     width: 100%;
     min-width: 0;
   }
@@ -1692,7 +1695,7 @@ button { color: inherit; }
   }
 
   .attio-story-chapter .showcase-player-actions {
-    display: grid;
+    display: grid !important;
     grid-template-columns: 1fr;
     gap: 9px;
   }
