@@ -1643,3 +1643,87 @@ button { color: inherit; }
   .attio-story-copy h3 { font-size: 30px; }
   .attio-story-copy > span { font-size: 16px; }
 }
+
+/* Narrow-window layout: preserve hierarchy instead of squeezing desktop rows. */
+@media (max-width: 760px) {
+  .attio-story { padding-top: 34px; }
+
+  .attio-story-nav {
+    position: relative;
+    top: auto;
+    margin-bottom: 26px;
+    overflow-x: auto;
+  }
+
+  .attio-story-nav button {
+    flex: 0 0 auto;
+    min-width: 154px;
+  }
+
+  .attio-story-chapter {
+    scroll-margin-top: 76px;
+  }
+
+  .attio-story-chapter .showcase-player-meta {
+    display: grid;
+    min-height: 0;
+    gap: 12px;
+    padding: 15px;
+  }
+
+  .attio-story-chapter .showcase-player-meta > div,
+  .attio-story-chapter .showcase-status-copy,
+  .attio-story-chapter .showcase-player-actions {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .attio-story-chapter .showcase-status-copy {
+    align-items: flex-start;
+  }
+
+  .attio-story-chapter .showcase-status-copy > div {
+    min-width: 0;
+  }
+
+  .attio-story-chapter .showcase-player-meta strong {
+    font-size: 15px;
+    line-height: 1.35;
+  }
+
+  .attio-story-chapter .showcase-player-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .attio-story-chapter .showcase-player-actions > button,
+  .attio-story-chapter .player-strategy-toggle {
+    width: 100%;
+  }
+
+  .attio-story-chapter .showcase-player-actions > button {
+    min-height: 42px;
+  }
+
+  .attio-story-chapter .player-strategy-toggle button {
+    min-height: 42px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 520px) {
+  .showcase-nav { padding-inline: 12px; }
+  .showcase-brand { gap: 7px; }
+  .showcase-brand strong { font-size: 16px; }
+  .showcase-nav-actions { gap: 6px; }
+  .showcase-nav nav { gap: 9px; }
+  .showcase-nav nav button { font-size: 12px; }
+
+  .attio-story-nav button {
+    min-width: 142px;
+    padding-inline: 10px;
+  }
+
+  .attio-story-nav button span { font-size: 12px; }
+}
