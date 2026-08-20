@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { translateUiText } from "./ui-localization";
+import { restoreUiText, translateUiText } from "./ui-localization";
 
 describe("UI localization", () => {
   it("translates the primary product navigation and headline", () => {
@@ -50,5 +50,20 @@ describe("UI localization", () => {
     }
 
     expect([...untranslated].sort()).toEqual([]);
+  });
+
+  it("translates accessibility labels, controls, and attribution copy", () => {
+    expect(translateUiText("AdMind 三段决策旅程")).toBe("AdMind three-part decision journey");
+    expect(translateUiText("播放 · 视频进度 · 打开音量调节")).toBe("Play · Video progress · Open volume control");
+    expect(translateUiText("点击画面暂停，体验实时判断")).toBe("Click the video to pause and inspect the live decision");
+    expect(translateUiText("美国政府视觉素材为 Public Domain，其出现不构成对 AdMind 的认可。"))
+      .toBe("U.S. government footage is Public Domain and does not imply endorsement of AdMind.");
+  });
+
+  it("restores Chinese after a translated DOM value is reused", () => {
+    expect(restoreUiText("Ads must appear—without ruining the story."))
+      .toBe("广告必须出现，也不必毁掉剧情。");
+    expect(restoreUiText("Decision logic · Video volume 65%"))
+      .toBe("决策方式 · 视频音量 65%");
   });
 });

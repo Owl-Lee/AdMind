@@ -32,12 +32,13 @@ AdMind 是一个面向长视频平台的 AI 广告决策原型。它不是广告
 
 ## 二、项目位置与入口
 
-- 本轮公开工程：`C:\Users\RebootBase\Documents\Codex\2026-08-15\new-chat-2\ad-mind-public-clean`
+- 本地工程：克隆公开仓库后，以仓库根目录为工程目录
 - 线上演示：<https://admind-decision-console.liyanbao06.chatgpt.site/#demo>
 - 决策方式：<https://admind-decision-console.liyanbao06.chatgpt.site/#decision>
+- 公开仓库：<https://github.com/Owl-Lee/AdMind>
 - Sites 项目 ID：`appgprj_6a7c0083237c819185c04e9fd932fba7`
 - 公开主分支：`main`；功能修改先进入短生命周期分支，通过 CI 后合并。
-- 配套学习文档：仓库内 `docs/AdMind项目技术亮点与讲解.md`
+- 配套学习文档：[`docs/AdMind项目技术亮点与讲解.md`](AdMind项目技术亮点与讲解.md)
 
 常用命令：
 
@@ -49,7 +50,7 @@ pnpm build
 pnpm check
 ```
 
-如果默认 Node 或 pnpm 不可用，先调用 Codex 的 workspace dependencies 获取本线程配置的运行时，不要随意重装环境。
+如果默认 Node 或 pnpm 不可用，请先按照 [`DEVELOPMENT.md`](DEVELOPMENT.md) 安装项目要求的版本，再执行验证命令。
 
 ## 三、当前真实完成情况
 

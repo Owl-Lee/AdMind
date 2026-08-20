@@ -1119,7 +1119,7 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
               <div className="showcase-hero-grid">
                 <div className="showcase-hero-copy">
                   <p className="showcase-kicker"><i /> AI 广告决策引擎</p>
-                  <h1>广告必须出现，<br />也不必<span>毁掉剧情。</span></h1>
+                  <h1>广告必须出现，<br /><span>也不必毁掉剧情。</span></h1>
                   <p className="showcase-lead">AdMind 理解内容与用户动作，在商业约束下决定广告何时出现、以什么形式出现，以及何时不该出现。</p>
                   <div className="showcase-actions">
                     <a className="showcase-primary" href={scenarios[0] ? `#story-${scenarios[0].scenario.id.toLowerCase()}` : "#demo"}>开始体验 <ChevronIcon /></a>

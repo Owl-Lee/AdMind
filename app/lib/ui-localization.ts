@@ -15,7 +15,7 @@ const REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
   ["暂停时间不足，广告任务已顺延到下一次稳定机会。", "The pause was too short; the ad task was deferred to the next stable opportunity."],
   ["用户拖动了进度，本次广告取消并顺延。", "The viewer sought through the video; this ad attempt was canceled and deferred."],
   ["用户正在拖动进度，广告任务已顺延。", "The viewer is seeking; the ad task was deferred."],
-  ["点击画面暂停，体验实时判断", "Click the video to pause and see a live decision"],
+  ["点击画面暂停，体验实时判断", "Click the video to pause and inspect the live decision"],
   ["到点即播，不读取伦理信号", "Play at the fixed time without reading ethical signals"],
   ["hidden 取消；visible + blur 暂缓", "hidden: cancel; visible + blur: defer"],
   ["本次会话已拖动", "Seeks in this session:"],
@@ -99,6 +99,9 @@ const REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
   ["敏感场景", "Sensitive scene"],
   ["高潮插播", "Narrative-peak insertion"],
   ["投放策略", "delivery strategy"],
+  ["美国政府视觉素材为 Public Domain，其出现不构成对 AdMind 的认可。", "U.S. government footage is Public Domain and does not imply endorsement of AdMind."],
+  ["00:05 到点即播，不读取伦理信号", "00:05 fixed delivery without reading ethical signals"],
+  ["AdMind 决策层", "AdMind decision layer"],
   ["视频理解负责识别救援、医疗或灾后语境；伦理硬规则负责最终阻止投放，竞价不能覆盖这条边界。", "Video understanding identifies rescue, medical, and disaster contexts; ethical hard rules make the final block, and bidding cannot override that boundary."],
   ["模型先判断原定点的内容张力，再在合同允许的延后范围中寻找恢复、转场或片尾窗口。", "The model evaluates tension at the original break, then searches the allowed deferral range for recovery, transition, or end-card windows."],
   ["AdMind 理解内容与用户动作，在商业约束下决定广告何时出现、以什么形式出现，以及何时不该出现。", "AdMind understands content and user actions, deciding when ads appear, how they appear, and when they should not."],
@@ -317,6 +320,7 @@ const REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
 ];
 
 const SORTED_REPLACEMENTS = [...REPLACEMENTS].sort((a, b) => b[0].length - a[0].length);
+const SORTED_REVERSE_REPLACEMENTS = [...REPLACEMENTS].sort((a, b) => b[1].length - a[1].length);
 const originalText = new WeakMap<Text, string>();
 const originalAttributes = new WeakMap<Element, Map<string, string>>();
 
@@ -324,11 +328,20 @@ export function translateUiText(value: string) {
   return SORTED_REPLACEMENTS.reduce((result, [zh, en]) => result.split(zh).join(en), value);
 }
 
+export function restoreUiText(value: string) {
+  return SORTED_REVERSE_REPLACEMENTS.reduce((result, [zh, en]) => result.split(en).join(zh), value);
+}
+
 function localizeText(node: Text, locale: UiLocale) {
   const remembered = originalText.get(node);
   if (locale === "zh") {
-    if (remembered && node.data === translateUiText(remembered)) node.data = remembered;
-    else if (!remembered || node.data !== translateUiText(remembered)) originalText.set(node, node.data);
+    // JSX is authored in Chinese. Once a node has been observed, its remembered
+    // value is therefore the canonical source. Never replace that source with a
+    // translated DOM value during rapid locale changes: React can reuse the same
+    // text node while an older observer is still draining its mutation queue.
+    const restored = restoreUiText(remembered ?? node.data);
+    originalText.set(node, restored);
+    if (node.data !== restored) node.data = restored;
     return;
   }
 
@@ -351,9 +364,10 @@ function localizeElement(element: Element, locale: UiLocale) {
     const current = element.getAttribute(name);
     if (current === null) continue;
     const previousSource = remembered.get(name);
-    const source = !previousSource || (current !== previousSource && current !== translateUiText(previousSource))
+    const candidate = !previousSource || (current !== previousSource && current !== translateUiText(previousSource))
       ? current
       : previousSource;
+    const source = locale === "zh" ? restoreUiText(candidate) : candidate;
     remembered.set(name, source);
     const localized = locale === "en" ? translateUiText(source) : source;
     if (current !== localized) element.setAttribute(name, localized);
@@ -381,8 +395,10 @@ function localizeTree(root: Node, locale: UiLocale) {
 }
 
 export function observeUiLocalization(root: HTMLElement, locale: UiLocale) {
+  root.dataset.uiLocale = locale;
   localizeTree(root, locale);
   const observer = new MutationObserver((mutations) => {
+    if (root.dataset.uiLocale !== locale) return;
     for (const mutation of mutations) {
       if (mutation.type === "characterData") localizeTree(mutation.target, locale);
       if (mutation.type === "attributes") localizeElement(mutation.target as Element, locale);
