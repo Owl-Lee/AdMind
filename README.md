@@ -20,7 +20,11 @@
 
 </div>
 
-![AdMind decision experience](docs/images/admind-showcase.png)
+![AdMind decision experience in English](docs/images/admind-showcase-en.png)
+
+### 中文界面 / Chinese interface
+
+![AdMind 中文决策体验](docs/images/admind-showcase.png)
 
 ## Overview
 
