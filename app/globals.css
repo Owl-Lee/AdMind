@@ -279,7 +279,6 @@ button { color: inherit; }
 
 .showcase-page[data-locale-ready="true"] {
   opacity: 1;
-  transition: opacity 140ms ease-out;
 }
 .showcase-nav {
   position: sticky;
