@@ -21,6 +21,8 @@ Notable project changes are recorded here.
 - Updated rendered-output assertions to match the current four-part product narrative.
 - Removed unverified and unused release assets from the public snapshot.
 - Added a public release tag and GitHub Release.
+- Updated the React, Vite and CI action toolchain to current patched releases.
+- Added a reviewed regression-tested patch for an unpublished `image-size` parser fix.
 
 ## Private beta · 2026-08-16
 

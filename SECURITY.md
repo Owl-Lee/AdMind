@@ -35,3 +35,12 @@ Ordinary UI defects, model-quality limitations and incorrect demo decisions can 
 - Publish only from a reviewed commit that passed the repository quality gates.
 - Treat model files, videos, analysis JSON and creative artwork as supply-chain inputs with separate provenance requirements.
 - Rotate a provider key immediately if it appears in logs, issues, commits or build artifacts.
+
+## Audited dependency patches
+
+The repository carries a reviewed `pnpm` patch for `image-size@2.0.2`, an indirect
+build-time dependency of Vinext. The patch rejects zero-length ICNS, JXL and HEIF
+records that would otherwise leave parser offsets unchanged. Regression coverage
+is included in `tests/dependency-patches.test.mjs`; the deployed production
+dependency audit remains clean. The patch can be removed after an upstream fixed
+release is published and adopted.
