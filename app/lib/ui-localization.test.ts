@@ -6,6 +6,7 @@ describe("UI localization", () => {
   it("translates the primary product navigation and headline", () => {
     expect(translateUiText("体验演示 · 决策方式")).toBe("Experience · Decision logic");
     expect(translateUiText("广告必须出现，也不必毁掉剧情。")).toBe("Ads must appear—without ruining the story.");
+    expect(`${translateUiText("也不必")}${translateUiText("毁掉剧情。")}`).toBe("without ruining the story.");
   });
 
   it("translates dynamic evidence while preserving timestamps and scores", () => {
@@ -21,6 +22,7 @@ describe("UI localization", () => {
       "本次已经产生展示记录；用户主动关闭后，不再进入待交付队列。",
       "海上救援处于受保护区间；高价保量活动不得越过伦理边界。",
       "广告必须出现，也不必毁掉剧情。",
+      "也不必",
     ];
 
     for (const sample of samples) {

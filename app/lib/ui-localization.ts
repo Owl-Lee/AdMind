@@ -34,7 +34,7 @@ const REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
   ["检测到", "Detected"],
   ["的画面遮挡风险最低。", " has the lowest obstruction risk."],
   ["广告必须出现", "Ads must appear"],
-  ["也不必", "without"],
+  ["也不必", "without "],
   ["毁掉剧情。", "ruining the story."],
   ["暂停状态投放策略", "Pause-state delivery strategy"],
   ["敏感场景投放策略", "Sensitive-scene delivery strategy"],
@@ -127,7 +127,7 @@ const REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
   ["等待下一次稳定暂停；仍无安全位置，再交给 S1 的低打断窗口。S3 保护场景绝不补量。", "Wait for the next stable pause; if no safe position exists, hand delivery to an S1 low-disruption window. S3 protected scenes are never backfilled."],
   ["广告必须出现，", "Ads must appear—"],
   ["也不必毁掉剧情。", "without ruining the story."],
-  ["一段视频，如何变成", "How does one video become"],
+  ["一段视频，如何变成", "How does one video become "],
   ["一次投放决定？", "an ad decision?"],
   ["长视频与广告任务", "Long-form video and ad task"],
   ["看懂场景与节奏", "Understand scenes and pacing"],
@@ -171,6 +171,7 @@ const REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
   ["体验演示", "Experience"],
   ["决策方式", "Decision logic"],
   ["AI 广告决策引擎", "AI AD DECISION ENGINE"],
+  ["AdMind 决策层", "AdMind decision layer"],
   ["开始体验", "Start experience"],
   ["查看决策方式", "View decision logic"],
   ["避开剧情高点", "Avoid narrative peaks"],
@@ -349,9 +350,13 @@ function localizeElement(element: Element, locale: UiLocale) {
   for (const name of names) {
     const current = element.getAttribute(name);
     if (current === null) continue;
-    const source = remembered.get(name) ?? current;
+    const previousSource = remembered.get(name);
+    const source = !previousSource || (current !== previousSource && current !== translateUiText(previousSource))
+      ? current
+      : previousSource;
     remembered.set(name, source);
-    element.setAttribute(name, locale === "en" ? translateUiText(source) : source);
+    const localized = locale === "en" ? translateUiText(source) : source;
+    if (current !== localized) element.setAttribute(name, localized);
   }
 
   if (element instanceof HTMLTrackElement) {
@@ -380,9 +385,16 @@ export function observeUiLocalization(root: HTMLElement, locale: UiLocale) {
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       if (mutation.type === "characterData") localizeTree(mutation.target, locale);
+      if (mutation.type === "attributes") localizeElement(mutation.target as Element, locale);
       mutation.addedNodes.forEach((node) => localizeTree(node, locale));
     }
   });
-  observer.observe(root, { childList: true, characterData: true, subtree: true });
+  observer.observe(root, {
+    attributeFilter: ["aria-label", "alt", "title", "placeholder"],
+    attributes: true,
+    childList: true,
+    characterData: true,
+    subtree: true,
+  });
   return () => observer.disconnect();
 }

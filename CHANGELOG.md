@@ -1,8 +1,56 @@
 # Changelog
 
+[English](#changelog) · [中文（v0.2.0）](#020-中文说明)
+
 Notable project changes are recorded here.
 
 ## Unreleased
+
+## 0.2.0 · 2026-08-20
+
+### Public experience
+
+- Added complete English and Chinese interface modes with English as the public default.
+- Kept the active language, document language and English/Chinese caption track synchronized across repeated switches.
+- Completed responsive layout coverage for desktop, tablet, narrow-window and phone widths without forced scroll snapping.
+- Stacked player status, jump actions and strategy controls before they can collapse into clipped or vertical text.
+- Preserved full-width video controls and scenario navigation at widths down to 360 CSS pixels.
+
+### Interaction reliability
+
+- Kept one accessible volume icon with a vertical volume slider and dynamic high, low and muted states.
+- Closed the volume panel on playback, outside interaction or Escape while keeping dynamic labels localized.
+- Added a visible skip action for delivered full-screen ads and kept displayed/closed ads separate from deferred tasks.
+- Completed a browser acceptance pass for scenario navigation, material and strategy switches, ad dismissal, language changes and responsive layout.
+
+### Documentation and release
+
+- Kept the English and Chinese README sections feature-complete and aligned with the public deployment.
+- Updated the engineering handoff and roadmap to reflect the public bilingual site and current quality gates.
+- Verified anonymous HTTP access to both the hosted demo and public GitHub repository.
+
+### 0.2.0 中文说明
+
+#### 公开体验
+
+- 完成英文与中文两套完整界面，并将英文设为公开页面默认语言。
+- 连续切换语言时，界面、HTML 文档语言与中英文字幕轨道始终同步。
+- 完成桌面、平板、窄窗口和手机宽度的响应式布局，不使用强制滚动吸附。
+- 在标题可能被压成竖排或控件可能被切边之前，主动把播放器状态、跳转按钮和策略开关改成纵向完整布局。
+- 在最低 360 CSS 像素宽度下仍保留完整的视频控制栏与场景导航。
+
+#### 交互可靠性
+
+- 只保留一个具有无障碍名称的音量图标，并提供竖向音量条和高、低、静音三种动态图标状态。
+- 播放、点击外部或按 Escape 都会关闭音量浮层，动态辅助文本也会跟随语言变化。
+- 已展示的全屏广告提供明确的跳过入口，并将“已展示后关闭”与“尚未展示而顺延”分开记录。
+- 完成场景导航、素材/策略切换、广告关闭、语言切换和多尺寸布局的浏览器验收。
+
+#### 文档与发布
+
+- README 的英文与中文部分保持完整对等，并与公开部署一致。
+- 更新工程交接和路线图，记录双语公开站点与当前质量门。
+- 使用未登录 HTTP 访问验证线上演示和公开 GitHub 仓库均可直接打开。
 
 ## 0.1.0 · 2026-08-19
 
