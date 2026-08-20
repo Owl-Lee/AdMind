@@ -22,6 +22,8 @@ test("server-renders separate showcase and decision-method views", async () => {
   assert.match(html, /data-locale="en"/i);
   assert.match(html, /aria-label="Language \/ 语言"/i);
   assert.match(html, /广告必须出现/);
+  assert.match(html, /game-ad-clean\.png\?v=v0\.2\.6/);
+  assert.match(html, /广告已展示，任务已完成/);
   assert.match(html, /传统投放/);
   assert.match(html, /01 · 剧情高点/);
   assert.match(html, /02 · 用户暂停/);

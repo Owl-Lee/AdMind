@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { AnalysisConsensus, DecisionResponse, Scenario, Strategy, VideoAnalysis } from "@admind/contracts";
 import { ChevronIcon, PlayIcon, ShieldIcon, SparkIcon, VolumeIcon } from "./icons";
@@ -105,9 +106,17 @@ function HeroDecisionPreview({ demo }: { demo: ScenarioDemo }) {
         <b>ADMIND · LIVE DECISION</b>
       </div>
       <div className="hero-preview-stage">
-        <video aria-hidden="true" autoPlay loop muted playsInline preload="metadata" src={demo.media.src} tabIndex={-1} />
-        <span className="hero-preview-signal"><i /> 内容信号已更新</span>
-        <span className="hero-preview-plan">{formatTime(plannedTime)}<small>安全窗口</small></span>
+        <Image
+          alt="冰蓝色奇幻游戏广告画面"
+          className="hero-preview-ad"
+          fill
+          priority
+          sizes="(max-width: 820px) min(100vw - 48px, 490px), 440px"
+          src="/game-ad-clean.png?v=v0.2.6"
+          unoptimized
+        />
+        <span className="hero-preview-signal"><i /> 广告已展示，任务已完成</span>
+        <span className="hero-preview-plan">广告 · 6s<small>安全窗口</small></span>
       </div>
       <div className="hero-preview-evidence">
         <div><span>模型观察</span><strong>{demo.media.modelFinding}</strong></div>
