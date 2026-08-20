@@ -152,13 +152,12 @@ button { color: inherit; }
 .fullscreen button { align-self: auto; }
 .ad-overlay small { position: absolute; right: 12px; bottom: 10px; color: rgba(255,255,255,.55); font-size: 7px; }
 .real-ad { background: #050506 !important; }
-.ad-overlay.fullscreen.real-ad { z-index: 6; }
-.real-ad > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.ad-overlay.fullscreen.real-ad { z-index: 7; overflow: hidden; }
+.ad-creative-image { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .real-countdown { z-index: 2; top: 12px; right: 14px; padding: 5px 8px; border: 1px solid rgba(255,255,255,.26); background: rgba(8,8,10,.72); backdrop-filter: blur(6px); font-weight: 800; }
 .ad-overlay .fullscreen-ad-skip { position: absolute; z-index: 3; top: 12px; left: 14px; min-width: 78px; min-height: 32px; padding: 0 12px; border: 1px solid rgba(255,255,255,.3); border-radius: 999px; color: #fff; background: rgba(8,8,10,.72); box-shadow: 0 8px 22px rgba(0,0,0,.24); backdrop-filter: blur(8px); cursor: pointer; font-size: 11px; font-weight: 800; }
 .ad-overlay .fullscreen-ad-skip:hover { background: rgba(25,24,38,.9); }
 .ad-overlay.real-ad-card { top: 16px; right: 16px; width: 270px; min-height: 0; aspect-ratio: 16 / 9; padding: 0; overflow: hidden; border-color: rgba(255,255,255,.4); background: #090d17; box-shadow: 0 16px 40px rgba(0,0,0,.48); }
-.real-ad-card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .native-ad-label, .native-muted { position: absolute; z-index: 2; padding: 4px 7px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; background: rgba(5,8,16,.72); backdrop-filter: blur(6px); color: rgba(255,255,255,.94); font-size: 7px; font-weight: 800; line-height: 1; }
 .native-ad-label { top: 8px; right: 8px; }
 .native-muted { right: 8px; bottom: 8px; color: rgba(255,255,255,.76); }
@@ -846,9 +845,8 @@ button { color: inherit; }
 .pause-face-box { animation: pause-face-evidence 1.65s ease both; }.pause-face-box::after { content: "脸部候选"; }
 .pause-subject-box { position: absolute; z-index: 2; border: 2px solid #8d82ff; border-radius: 12px; box-shadow: 0 0 0 2px rgba(141,130,255,.16), inset 0 0 0 1px rgba(20,18,48,.16); animation: pause-face-evidence 1.65s ease both; pointer-events: none; }
 .pause-subject-box::after { position: absolute; top: -22px; left: -2px; padding: 3px 6px; border-radius: 5px 5px 5px 0; content: attr(data-label); color: #fff; background: #7065dc; font-size: 8px; font-weight: 900; letter-spacing: .05em; white-space: nowrap; }
-.showcase-player-card .ad-overlay.pause-fullscreen { inset: 0; width: 100%; height: 100%; border-radius: 0; animation: pause-fullscreen-in .26s ease both; }
+.showcase-player-card .ad-overlay.pause-fullscreen { inset: 0; width: 100%; height: 100%; border-radius: 0; opacity: 1; transform: none; }
 @keyframes pause-face-evidence { 0% { opacity: 0; transform: scale(.97); } 16%,72% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.015); } }
-@keyframes pause-fullscreen-in { from { opacity: .45; transform: scale(.965); } to { opacity: 1; transform: scale(1); } }
 
 @media (max-width: 980px) { .signal-player-card.signal-detail-open { grid-template-columns: 1fr; }.pause-detail-open .pause-evidence { grid-column: 1; border-top: 1px solid var(--admind-line); border-left: 0; }.pause-interaction-hint { max-width: 245px; white-space: normal; text-align: center; }.pause-compact-note { align-items: flex-start; flex-direction: column; gap: 6px; }.pause-compact-note span { text-align: left; } }
 

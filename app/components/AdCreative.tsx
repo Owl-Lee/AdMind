@@ -14,10 +14,12 @@ export function AdCreative({ scenarioId, fullscreen, remaining, onDismiss }: AdC
     <>
       <Image
         alt="冰蓝色奇幻游戏广告画面"
+        className="ad-creative-image"
         fill
         priority
         sizes={fullscreen ? "(max-width: 900px) 100vw, 1000px" : "310px"}
         src="/game-ad-clean.png"
+        unoptimized
       />
       {fullscreen ? (
         <>

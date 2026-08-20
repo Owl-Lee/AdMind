@@ -1,10 +1,19 @@
 # Changelog
 
-[English](#changelog) · [中文（最新版本）](#023--2026-08-20)
+[English](#changelog) · [中文（最新版本）](#024--2026-08-20)
 
 Notable project changes are recorded here.
 
 ## Unreleased
+
+## 0.2.4 · 2026-08-20
+
+- Made every ad creative load directly from the public static asset, avoiding deployment-specific image optimization behavior.
+- Removed the fragile opacity animation from S2's card-to-full-screen promotion, fixed its stacking level, and removed the stale placement outline after promotion.
+- Rechecked S1 traditional full-screen delivery, S1 AdMind muted-card delivery, S2 card and full-screen states, S3 traditional delivery, and S3 AdMind ethical blocking in a real browser.
+- 中文：所有广告素材改为直接读取公开静态资源，避免部署环境图片优化链导致素材节点存在但画面不可见。
+- 中文：移除 S2 小卡片升级全屏时可能冻结透明度的动画，固定广告层级，并在升级后清除残留的虚线定位框。
+- 中文：已在真实浏览器中复核 S1 传统全屏、S1 AdMind 静音卡片、S2 小卡片与全屏、S3 传统广告，以及 S3 AdMind 伦理禁投。
 
 ## 0.2.3 · 2026-08-20
 
