@@ -201,8 +201,8 @@ function DecisionMethod({ analysisRuns, consensus }: { analysisRuns: VideoAnalys
             <i className="mark-recover"><b>01:25</b><small>可以考虑</small></i>
           </div>
           <div className="method-api-reading">
-            <p><span>00:45</span><strong>{climax?.label ?? "战斗高潮"}</strong><b>继续等待</b></p>
-            <p><span>01:25</span><strong>{recovery?.label ?? "战斗结束，情绪恢复"}</strong><b>进入计划</b></p>
+            <p><span>00:45</span><strong>{localizeAnalysisLabel(climax?.label ?? "战斗高潮")}</strong><b>继续等待</b></p>
+            <p><span>01:25</span><strong>{localizeAnalysisLabel(recovery?.label ?? "战斗结束，情绪恢复")}</strong><b>进入计划</b></p>
           </div>
         </div>
       </section>
