@@ -1,10 +1,17 @@
 # Changelog
 
-[English](#changelog) · [中文（最新版本）](#022--2026-08-20)
+[English](#changelog) · [中文（最新版本）](#023--2026-08-20)
 
 Notable project changes are recorded here.
 
 ## Unreleased
+
+## 0.2.3 · 2026-08-20
+
+- Reconciled each video element's actual `readyState` after mount, so cached media cannot remain stuck behind a disabled “Loading video…” state when metadata events fire before React attaches its handlers.
+- Preserved event-driven readiness updates for fresh network loads and errors, and rechecked the decision jump, progress slider, ad trigger and skip flow.
+- 中文：组件挂载后会主动读取每个视频真实的 `readyState`，避免缓存命中太快、媒体事件早于 React 绑定时，界面仍错误停留在“正在加载视频…”且禁用进度条。
+- 中文：保留首次网络加载与错误事件的状态同步，并重新验证决策点跳转、进度条、广告触发和跳过关闭流程。
 
 ## 0.2.2 · 2026-08-20
 
