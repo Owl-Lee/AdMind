@@ -1,10 +1,15 @@
 # Changelog
 
-[English](#changelog) · [中文（v0.2.0）](#020-中文说明)
+[English](#changelog) · [中文（最新版本）](#021--2026-08-20)
 
 Notable project changes are recorded here.
 
 ## Unreleased
+
+## 0.2.1 · 2026-08-20
+
+- Localized the final two consensus evidence labels on the Decision logic page, removing `Mid-Fight` and `Post-Fight Recovery` from Chinese mode while preserving their English translations.
+- 中文：补齐“决策方式”页面最后两个共识证据标签的本地化；中文模式显示“战斗进行中 / 战斗后恢复”，英文模式继续显示对应英文。
 
 ## 0.2.0 · 2026-08-20
 
