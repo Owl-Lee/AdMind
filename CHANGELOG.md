@@ -1,10 +1,17 @@
 # Changelog
 
-[English](#changelog) · [中文（最新版本）](#026--2026-08-20)
+[English](#changelog) · [中文（最新版本）](#027--2026-08-20)
 
 Notable project changes are recorded here.
 
 ## Unreleased
+
+## 0.2.7 · 2026-08-20
+
+- Made S2's delivered state the source of truth for ad visibility: while the panel says a muted card is safely displayed, the creative remains mounted even if the countdown state is interrupted or temporarily desynchronized.
+- Added an explicit visible-state marker and stacking/display invariant for delivered S2 cards, while preserving skip, resume, seek and eight-second full-screen transitions.
+- 中文：把 S2 的“已安全展示”状态设为广告可见性的事实来源；只要右侧仍显示静音小卡片已投放，广告素材就不会因倒计时状态短暂不同步而消失。
+- 中文：为已投放的小卡片增加明确的可见状态和层级兜底，同时保留关闭、恢复播放、拖动与八秒后升级全屏的原有逻辑。
 
 ## 0.2.6 · 2026-08-20
 

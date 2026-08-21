@@ -112,7 +112,7 @@ function HeroDecisionPreview({ demo }: { demo: ScenarioDemo }) {
           fill
           priority
           sizes="(max-width: 820px) min(100vw - 48px, 490px), 440px"
-          src="/game-ad-clean.png?v=v0.2.6"
+          src="/game-ad-clean.png?v=v0.2.7"
           unoptimized
         />
         <span className="hero-preview-signal"><i /> 广告已展示，任务已完成</span>
@@ -352,6 +352,11 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const decision = strategy === "baseline" ? baseline : admind;
   const selected = decision.selected;
   const adActive = adRemaining !== null;
+  const deliveredPauseAdActive = isPauseScenario
+    && strategy === "admind"
+    && pausePhase === "delivered"
+    && adResult === "shown";
+  const adVisible = adActive || deliveredPauseAdActive;
   const decisionTime = selected?.timeSec ?? scenario.nominalOpportunitySec;
   const blockedNoticeActive = strategy === "admind"
     && decision.outcome === "blocked"
@@ -614,7 +619,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     const video = videoRef.current;
     if (!video || !mediaReady || (adActive && selected?.format === "fullscreen")) return;
     if (video.paused) {
-      if (isPauseScenario && adActive && pausePhase === "delivered") finishDeliveredAd("completed");
+      if (isPauseScenario && adVisible && pausePhase === "delivered") finishDeliveredAd("completed");
       else if (isPauseScenario && pausePending) stopPauseObservation("暂停时间不足，广告任务已顺延到下一次稳定机会。");
       else stopPauseObservation();
       void video.play();
@@ -631,7 +636,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     setTime(boundedTime);
     if (isPauseScenario && pausePending) {
       stopPauseObservation("用户拖动了进度，本次广告取消并顺延。");
-    } else if (isPauseScenario && adActive && pausePhase === "delivered") {
+    } else if (isPauseScenario && adVisible && pausePhase === "delivered") {
       finishDeliveredAd("completed");
     } else {
       setAdRemaining(null);
@@ -670,7 +675,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const handlePlay = () => {
     setPlaying(true);
     if (isPauseScenario && pausePending) stopPauseObservation("暂停时间不足，广告任务已顺延到下一次稳定机会。");
-    else if (isPauseScenario && adActive && pausePhase === "delivered") finishDeliveredAd("completed");
+    else if (isPauseScenario && adVisible && pausePhase === "delivered") finishDeliveredAd("completed");
   };
 
   const beginScrub = () => {
@@ -833,12 +838,15 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             />
           )) : null}
 
-          {adActive && selected ? (
-            <div className={`${fullscreenAd ? "ad-overlay fullscreen real-ad" : "ad-overlay card real-ad-card"} ${isPauseScenario && strategy === "admind" && !pauseAdFullscreen ? placementClass : ""} ${pauseAdFullscreen ? "pause-fullscreen" : ""}`}>
+          {adVisible && selected ? (
+            <div
+              className={`${fullscreenAd ? "ad-overlay fullscreen real-ad" : "ad-overlay card real-ad-card"} ${isPauseScenario && strategy === "admind" && !pauseAdFullscreen ? placementClass : ""} ${pauseAdFullscreen ? "pause-fullscreen" : ""}`}
+              data-ad-state="visible"
+            >
               <AdCreative
                 fullscreen={fullscreenAd}
                 onDismiss={dismissAd}
-                remaining={adRemaining}
+                remaining={adRemaining ?? selected.durationSec}
                 scenarioId={scenario.id}
               />
             </div>
