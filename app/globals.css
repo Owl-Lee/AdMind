@@ -151,13 +151,14 @@ button { color: inherit; }
 .ad-overlay button { align-self: flex-start; padding: 6px 9px; border: 0; border-radius: 5px; color: #392387; background: white; font-size: 8px; font-weight: 800; }
 .fullscreen button { align-self: auto; }
 .ad-overlay small { position: absolute; right: 12px; bottom: 10px; color: rgba(255,255,255,.55); font-size: 7px; }
-.real-ad, .real-ad-card { background: #050506 url("/game-ad-clean.png?v=v0.2.6") center / cover no-repeat !important; }
+.real-ad, .real-ad-card { background: #050506 url("/game-ad-clean.png?v=v0.2.7") center / cover no-repeat !important; }
 .ad-overlay.fullscreen.real-ad { z-index: 7; overflow: hidden; }
 .ad-creative-image { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .real-countdown { z-index: 2; top: 12px; right: 14px; padding: 5px 8px; border: 1px solid rgba(255,255,255,.26); background: rgba(8,8,10,.72); backdrop-filter: blur(6px); font-weight: 800; }
 .ad-overlay .fullscreen-ad-skip { position: absolute; z-index: 3; top: 12px; left: 14px; min-width: 78px; min-height: 32px; padding: 0 12px; border: 1px solid rgba(255,255,255,.3); border-radius: 999px; color: #fff; background: rgba(8,8,10,.72); box-shadow: 0 8px 22px rgba(0,0,0,.24); backdrop-filter: blur(8px); cursor: pointer; font-size: 11px; font-weight: 800; }
 .ad-overlay .fullscreen-ad-skip:hover { background: rgba(25,24,38,.9); }
 .ad-overlay.real-ad-card { top: 16px; right: 16px; width: 270px; min-height: 0; aspect-ratio: 16 / 9; padding: 0; overflow: hidden; border-color: rgba(255,255,255,.4); background: #090d17; box-shadow: 0 16px 40px rgba(0,0,0,.48); }
+.showcase-video-stage > .ad-overlay.real-ad-card { z-index: 6; display: block; visibility: visible; opacity: 1; transform: none; }
 .native-ad-label, .native-muted { position: absolute; z-index: 2; padding: 4px 7px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; background: rgba(5,8,16,.72); backdrop-filter: blur(6px); color: rgba(255,255,255,.94); font-size: 7px; font-weight: 800; line-height: 1; }
 .native-ad-label { top: 8px; right: 8px; }
 .native-muted { right: 8px; bottom: 8px; color: rgba(255,255,255,.76); }
