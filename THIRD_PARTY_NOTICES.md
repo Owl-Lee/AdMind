@@ -28,8 +28,8 @@ The files under `public/mediapipe/wasm/` and `public/models/` are redistributed 
 - Blender Studio / Blender Foundation clips are credited in the product UI and [asset manifest](docs/ASSET_MANIFEST.md) under their applicable Creative Commons Attribution licenses.
 - The distributed U.S. Coast Guard and U.S. Navy clips link to exact DVIDS source pages that mark them Public Domain. The appearance of U.S. Department of War (DoW) visual information does not imply or constitute DoW endorsement. Publicity, privacy, trademark and third-party rights may still apply.
 - The fictional game-ad artwork is a project-owned asset that the project owner has confirmed may remain in the public portfolio release.
-- The optional Sprite Fright S2 clip used in the hosted private build is not distributed in Git.
-- An earlier FEMA news excerpt is excluded because its source and downstream rights were not documented to the release standard.
+- The optional Sprite Fright S2 clip is absent from the current tree and release UI, but remains retrievable from earlier public commits and tags. Its exact source and redistribution record have not yet been brought up to the current release standard.
+- An earlier FEMA news excerpt is absent from the current tree and release UI because its source and downstream rights were not documented to the release standard, but its historical blob likewise remains retrievable from earlier public commits and tags.
 
 ## Asset record
 
@@ -65,8 +65,8 @@ AdMind 组合开源软件、浏览器端模型资源和已经标注来源的演�
 - Blender Studio / Blender Foundation 片段在产品界面和[素材清单](docs/ASSET_MANIFEST.md)中按对应 Creative Commons Attribution 条款标注来源。
 - 仓库中的美国海岸警卫队和美国海军片段链接到明确标为 Public Domain 的 DVIDS 来源页。美国国防部视觉信息的出现不代表国防部背书；公开权、隐私、商标和第三方权利仍可能适用。
 - 虚构游戏广告图为项目自有素材，项目所有者已经确认可以保留在公开作品集版本中。
-- 早期托管私有版本使用的可选 Sprite Fright S2 片段没有进入 Git 仓库。
-- 早期 FEMA 新闻节选因来源与后续使用权未达到发布记录标准而被排除。
+- 可选的 Sprite Fright S2 片段已从当前代码树与发布界面移除，但仍能从早期公开提交与标签中取回；其准确来源与再分发记录尚未达到当前发布标准。
+- 早期 FEMA 新闻节选因来源与后续使用权未达到发布记录标准，已从当前代码树与发布界面移除，但其历史 blob 同样仍能从早期公开提交与标签中取回。
 
 ## 素材记录
 

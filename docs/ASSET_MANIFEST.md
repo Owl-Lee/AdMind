@@ -60,8 +60,8 @@ AdMind vendors the exact `@mediapipe/tasks-vision` `1.0.1` browser runtime below
 ## Intentionally excluded
 
 - The previous raw game-ad screenshot is not used or distributed in the public release.
-- The earlier FEMA news excerpt is excluded because its exact source and downstream rights were not documented to the same standard as the DVIDS assets.
-- The optional Sprite Fright pause-demo excerpt used in the private hosted build is not distributed in Git.
+- The earlier FEMA news excerpt is absent from the current tree and release UI because its exact source and downstream rights were not documented to the same standard as the DVIDS assets. A historical blob remains retrievable from earlier public commits and tags; redistribution rights or an authorized history rewrite must be resolved before calling the repository history rights-clean.
+- The optional Sprite Fright pause-demo excerpt is absent from the current tree and release UI. A historical blob remains retrievable from earlier public commits and tags, but the exact excerpt's source, license, modification record and checksum were not preserved to the current release standard. Its rights record or an authorized history rewrite remains a release-governance decision.
 
 ## Adding an asset
 

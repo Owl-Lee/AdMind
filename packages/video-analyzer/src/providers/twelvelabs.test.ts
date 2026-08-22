@@ -28,6 +28,7 @@ const input = {
 
 describe("analyzeWithTwelveLabs asset lifecycle", () => {
   beforeEach(() => {
+    vi.useRealTimers();
     vi.clearAllMocks();
     mocks.create.mockResolvedValue({ id: "asset-1" });
     mocks.delete.mockResolvedValue(undefined);
@@ -54,5 +55,31 @@ describe("analyzeWithTwelveLabs asset lifecycle", () => {
 
     await expect(analyzeWithTwelveLabs(input)).rejects.toThrow("provider unavailable");
     expect(mocks.delete).toHaveBeenCalledExactlyOnceWith("asset-1");
+  });
+
+  it("times out a stuck processing asset and still deletes it", async () => {
+    vi.useFakeTimers();
+    mocks.retrieve.mockResolvedValue({ status: "processing" });
+
+    const analysis = analyzeWithTwelveLabs({ ...input, processingTimeoutMs: 10 }).catch((error) => error);
+    await vi.advanceTimersByTimeAsync(10);
+
+    await expect(analysis).resolves.toMatchObject({ message: "TwelveLabs processing timed out after 10 ms." });
+    expect(mocks.delete).toHaveBeenCalledExactlyOnceWith("asset-1");
+  });
+
+  it("warns without discarding a successful result when cleanup fails", async () => {
+    const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    mocks.retrieve.mockResolvedValue({ status: "ready" });
+    mocks.analyze.mockResolvedValue({ data: '{"segments":[],"candidateBreaks":[],"limitations":[]}' });
+    mocks.delete.mockRejectedValue(new Error("provider cleanup unavailable"));
+
+    await expect(analyzeWithTwelveLabs(input)).resolves.toMatchObject({ model: "pegasus1.5" });
+    expect(warning).toHaveBeenCalledWith(
+      expect.stringContaining("Remove the retained asset manually"),
+      "provider cleanup unavailable",
+    );
+
+    warning.mockRestore();
   });
 });

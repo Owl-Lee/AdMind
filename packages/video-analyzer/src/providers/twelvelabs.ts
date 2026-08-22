@@ -5,14 +5,21 @@ import { ANALYSIS_PROMPT } from "../prompt";
 import { parseJsonPayload } from "../normalize";
 
 const wait = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+const DEFAULT_PROCESSING_TIMEOUT_MS = 10 * 60_000;
+const PROCESSING_POLL_INTERVAL_MS = 2_000;
 
 export async function analyzeWithTwelveLabs(input: {
   apiKey: string;
   filePath: string;
   model?: "pegasus1.2" | "pegasus1.5";
   prompt?: string;
+  processingTimeoutMs?: number;
 }) {
   const model = input.model ?? "pegasus1.5";
+  const processingTimeoutMs = input.processingTimeoutMs ?? DEFAULT_PROCESSING_TIMEOUT_MS;
+  if (!Number.isFinite(processingTimeoutMs) || processingTimeoutMs <= 0) {
+    throw new Error("TwelveLabs processing timeout must be a positive number of milliseconds.");
+  }
   const client = new TwelveLabs({ apiKey: input.apiKey });
   const asset = await client.assets.create({
     method: "direct",
@@ -23,9 +30,14 @@ export async function analyzeWithTwelveLabs(input: {
   const assetId = asset.id;
 
   try {
+    const processingDeadline = Date.now() + processingTimeoutMs;
     let current = await client.assets.retrieve(assetId);
     while (current.status === "processing") {
-      await wait(2_000);
+      const remainingMs = processingDeadline - Date.now();
+      if (remainingMs <= 0) {
+        throw new Error(`TwelveLabs processing timed out after ${processingTimeoutMs} ms.`);
+      }
+      await wait(Math.min(PROCESSING_POLL_INTERVAL_MS, remainingMs));
       current = await client.assets.retrieve(assetId);
     }
     if (current.status !== "ready") {
@@ -42,6 +54,13 @@ export async function analyzeWithTwelveLabs(input: {
     if (!response.data) throw new Error("TwelveLabs returned an empty analysis.");
     return { model, payload: parseJsonPayload(response.data), rawText: response.data };
   } finally {
-    await client.assets.delete(assetId).catch(() => undefined);
+    try {
+      await client.assets.delete(assetId);
+    } catch (cleanupError) {
+      console.warn(
+        "TwelveLabs temporary asset cleanup failed. Remove the retained asset manually from the provider account.",
+        cleanupError instanceof Error ? cleanupError.message : cleanupError,
+      );
+    }
   }
 }
