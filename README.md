@@ -86,7 +86,9 @@ English is the default public experience. The `EN / 中` control switches the co
 
 The deployment is a product demonstration, not an advertising network, auction service or production campaign-management platform.
 
-The public [S2 Vision Regression Lab](https://admind-decision-console.liyanbao06.chatgpt.site/regression) replays 20 fixed 1280×720 frames and reports the current project-local baseline. The labels were drafted by the project agent from explicit placement rules: 13 rule-confirmed samples enter the blocking metrics, while seven subjective frames remain diagnostic until the product owner reviews them.
+The public [S2 Vision Regression Lab](https://admind-decision-console.liyanbao06.chatgpt.site/regression) replays 20 fixed 1280×720 frames. Every target and placement label is an agent-authored draft, not human ground truth: 13 currently enter blocking metrics and seven remain diagnostic. The pending v0.4.0 deployment defaults to a 13-frame priority-review queue made from the original seven subjective drafts plus `charge-002/005/008/013/016/018`; the other seven frames remain unreviewed agent-rule drafts. Green boxes are agent-drafted target references, purple dashed boxes are hidden-by-default model output, and blue placement choices are prefilled from the agent draft and stay dashed until confirmed. Answers stay in browser `localStorage`; exported review JSON must be validated and committed separately by a maintainer. Nothing is uploaded, written back to the manifest or used to train the model automatically.
+
+The pending main-site **Decision** view also links directly to `/regression`, so the product explanation and its evidence lab remain connected.
 
 ## Quick start
 
@@ -198,7 +200,10 @@ AdMind is a **public, portfolio-grade product prototype**. The complete demonstr
 Current boundaries:
 
 - S1 and S3 prove the pipeline on a fixed set of licensed or public-domain demo clips; they are not broad benchmark results.
-- S2 now has a 20-frame 1280×720 fixed regression set and a measured pre-tuning baseline. Across 13 rule-confirmed samples, safe-placement agreement is 6/13 (46.2%), unsafe placement is 4/13 (30.8%) and over-deferral is 3/13 (23.1%); protected-target precision is 4/25 (16.0%), recall is 4/11 (36.4%), F1 is 22.2%, and latency is 318 ms p50 / 335 ms p95. The v0.3.0 harness at `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` captured this run while preserving the detector configuration behavior referenced to v0.2.7 at `bdf66d1db7511f97feba49713f9995ea6ef13711`. These are fixed-set results, not a general accuracy claim; seven subjective labels still await product-owner review and Stage 1B calibration remains open.
+- The historical pre-tuning result remains tracked: the v0.3.0 harness at `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` replayed the v0.2.7 configuration behavior referenced at `bdf66d1db7511f97feba49713f9995ea6ef13711`. On 13 rule-confirmed drafts it measured 6/13 (46.2%) safe-placement agreement, 4/13 (30.8%) unsafe placement, 3/13 (23.1%) over-deferral, 4/25 (16.0%) protected-target precision, 4/11 (36.4%) recall, 22.2% F1 and 318 ms p50 / 335 ms p95 latency.
+- The v0.4.0 Stage 1B candidate is tracked at `evaluation/s2/candidates/v0.4.0.json` and is pending public deployment; the live site remains v0.3.0. The final browser run used `s2-vision-v4` at runner/config commit `e0a033194ea04a9c926a822e4330355f41ddd152` and was generated at `2026-08-22T03:42:41.155Z`. All 20/20 frames were available. On the same fixed set it measured 7/13 (53.8%) safe placement, 3/13 (23.1%) unsafe placement, 3/13 (23.1%) over-deferral, TP 5 / FP 16 / FN 6, 23.8% precision, 45.5% recall, 31.3% F1 and 277 ms p50 / 307 ms p95 latency. The target P/R/F1 values are exploratory, class-agnostic raw-box matches at IoU ≥ 0.25—not calibrated semantic detector accuracy. It genuinely fixes `charge-012`; the remaining over-deferrals are `charge-002/008/016` and the remaining unsafe placements are `charge-005/013/018`. Label audit found five of those drafts (`002/005/008/013/018`) disputable, so further tuning is paused until product review.
+- Both result sets describe this exact 20-frame project fixture, not general model accuracy or a production SLA. None of the 20 labels is human ground truth: 13 are in the priority-review queue and the other seven remain unreviewed agent-rule drafts.
+- The v0.4.0 implementation aligns scorer and rendered-card geometry at 0.30×0.30 on a 16:9 S2 stage. Its weak crop suppression applies only to low-confidence crop-only `人物主体` candidates without a corroborating face; strong crop, direct, animal and faceless character candidates remain. A back-facing, low-confidence person can still be suppressed, so holdout coverage is required before claiming generalization. Detection is fail-closed: both the face and object detectors are required; if either is unavailable, the frame returns no placement and counts as a blocking miss rather than silently using partial evidence.
 - Pause thresholds and risk weights are product hypotheses, not industry-optimal constants.
 - Deferred delivery is represented within the current session; cross-page and cross-device campaign orchestration is not implemented.
 - The public release intentionally omits an earlier optional Sprite Fright sample that did not ship with a reproducible asset workflow.
@@ -293,7 +298,9 @@ flowchart LR
 
 该部署是产品能力演示，不是广告网络、广告竞价服务或生产级广告活动管理平台。
 
-公开的 [S2 视觉回归实验室](https://admind-decision-console.liyanbao06.chatgpt.site/regression) 会重复运行 20 张 1280×720 固定帧，并展示当前项目内部基线。标准答案由项目代理依据明确位置规则起草：13 张 `rule-confirmed` 规则明确初标进入阻断指标，另外 7 张主观样本保持诊断状态，等待产品负责人复核。
+公开的 [S2 视觉回归实验室](https://admind-decision-console.liyanbao06.chatgpt.site/regression) 会重复运行 20 张 1280×720 固定帧。全部保护目标与位置标签都是代理起草的初标，不是人工标准答案：其中 13 张当前进入阻断指标，7 张保持诊断状态。待部署的 v0.4.0 默认进入 13 张优先复核队列，由原有 7 张主观初标与 `charge-002/005/008/013/016/018` 组成；另外 7 张仍是尚未人工审核的代理规则初标。绿色框是代理保护目标参考，紫色虚线框是默认隐藏的模型输出，蓝色位置选择由代理初标预填，确认前保持虚线。答案只保存在浏览器 `localStorage`；导出的审核 JSON 必须由维护者另行校验并提交。页面不会上传、直接修改 manifest，也不会因为确认而自动训练模型。
+
+待部署的主站 **Decision / 决策方式** 页面也会直接链接 `/regression`，让产品讲解与证据实验室保持连接。
 
 ## 快速开始
 
@@ -405,7 +412,10 @@ AdMind 是一个**公开、达到作品集展示标准的产品原型**。完整
 当前边界包括：
 
 - S1 和 S3 使用一组固定的授权素材或公共领域 Demo 视频证明链路，不代表广泛基准测试结果。
-- S2 已建立 20 张 1280×720 固定回归集并保存调参前基线。13 张 `rule-confirmed` 规则明确初标中的安全位置一致率为 `6/13 = 46.2%`，危险位置误投为 `4/13 = 30.8%`，过度顺延为 `3/13 = 23.1%`；保护目标精确率为 `4/25 = 16.0%`，召回率为 `4/11 = 36.4%`，F1 为 `22.2%`，推理耗时为 P50 `318 ms` / P95 `335 ms`。本次结果由 v0.3.0 harness 提交 `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` 运行，检测配置行为参考 v0.2.7 提交 `bdf66d1db7511f97feba49713f9995ea6ef13711`，并不表示旧提交直接运行了新 harness。这些只是固定集结果，不是通用准确率；7 张主观样本仍待产品负责人复核，阶段 1B 校准仍待完成。
+- 调参前历史结果继续保留：v0.3.0 harness 提交 `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` 重放了 v0.2.7 提交 `bdf66d1db7511f97feba49713f9995ea6ef13711` 所参考的配置行为。13 张规则确认初标上的安全位置一致率为 `6/13 = 46.2%`，危险误投为 `4/13 = 30.8%`，过度顺延为 `3/13 = 23.1%`；保护目标精确率 `4/25 = 16.0%`、召回率 `4/11 = 36.4%`、F1 `22.2%`，推理耗时为 P50 `318 ms` / P95 `335 ms`。
+- v0.4.0 阶段 1B 候选结果保存于 `evaluation/s2/candidates/v0.4.0.json`，公开部署仍待完成，线上站点仍是 v0.3.0。最终浏览器复跑使用 `s2-vision-v4`，运行器与配置提交均为 `e0a033194ea04a9c926a822e4330355f41ddd152`，生成时间为 `2026-08-22T03:42:41.155Z`；20/20 张均可用。同一固定集上的安全位置一致率为 `7/13 = 53.8%`，危险误投 `3/13 = 23.1%`，过度顺延 `3/13 = 23.1%`；TP 5 / FP 16 / FN 6，精确率 `23.8%`，召回率 `45.5%`，F1 `31.3%`，P50 `277 ms` / P95 `307 ms`。目标 P/R/F1 是 IoU ≥ 0.25 的类别无关原始框探索性匹配，不是经过校准的语义检测准确率。`charge-012` 得到真实修复；剩余过度顺延为 `charge-002/008/016`，剩余危险误投为 `charge-005/013/018`。标签审计认为其中 `002/005/008/013/018` 五张存在争议，下一轮必须先完成产品复核，不能继续盲调。
+- 两组数字都只描述这 20 张项目固定帧，不是通用模型准确率或生产 SLA。20 张标签都不是人工标准答案：13 张进入优先复核队列，另外 7 张仍是未人工审核的代理规则初标。
+- v0.4.0 已把评分器与线上卡片占位统一为 `0.30 × 0.30`，S2 舞台固定为 16:9。弱裁剪抑制只作用于“无脸部佐证、仅来自裁剪且置信度较低”的 `人物主体` 候选；强裁剪、直接检测、动物与无脸角色候选仍保留。背面低置信人物仍可能被抑制，必须用留出集继续验证泛化。检测链路采用 fail-closed：人脸与主体检测器必须同时可用；任一不可用时整帧返回无位置，并在阻断指标中计为失败，不会用部分证据静默继续。
 - 暂停阈值和风险权重属于当前产品假设，不是行业最优常数。
 - 广告顺延目前只在当前会话中表达，尚未实现跨页面、跨设备的广告任务编排。
 - 公开版本有意移除了一个早期可选的 Sprite Fright 样本，因为它没有形成可复现的素材发布流程。

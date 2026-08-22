@@ -19,7 +19,7 @@
   },
   "annotationPolicy": {
     "coordinateSpace": "normalized 0..1",
-    "scorerCandidateFootprint": { "width": 0.3, "height": 0.24 },
+    "scorerCandidateFootprint": { "width": 0.3, "height": 0.3 },
     "renderedCreativeFootprint": { "width": 0.3, "height": 0.3 },
     "reservedBottom": { "x": 0, "y": 0.72, "width": 1, "height": 0.28 },
     "targetMatchIou": 0.25,

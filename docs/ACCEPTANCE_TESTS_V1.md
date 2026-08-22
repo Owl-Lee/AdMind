@@ -1,6 +1,444 @@
-# AdMind Phase 1 验收测试 v1
+# AdMind Phase 1 acceptance tests v1
 
-**用途：** 产品、设计、开发和测试共同使用的完成定义  
+[English](#english) · [中文](#中文)
+
+## English
+
+- **Purpose:** a shared definition of done for product, design, engineering and QA.
+- **Rule:** a vertical slice is complete only when every P0 condition passes; a page loading is not functional completion.
+
+### 1. Test layers
+
+| Layer | Goal | Recommended implementation |
+|---|---|---|
+| Domain unit | Formulas, frequency caps, candidate generation and reason codes | TypeScript unit tests |
+| Policy unit | Hard rules can never be overridden by ranking weights | Table-driven tests |
+| API contract | Schema, errors, versions and event semantics | Integration tests |
+| Deterministic fixture | Replay the expected decisions for all three scenarios | Snapshots + explicit assertions |
+| Browser E2E | Playback, ads, dismissal, recovery and comparison | Playwright |
+| Accessibility | Keyboard, focus, labels, contrast and target size | axe + manual checks |
+
+### 2. P0 scenario acceptance
+
+#### AT-S1-01 Do not interrupt the climax immediately
+
+- **Given** S1 creates a mid-roll opportunity at 45 seconds, scene intensity is 0.94, natural-transition score is 0.05 and C1 delivery urgency is 0.92
+- **When** AdMind handles the opportunity
+- **Then** it must not choose C1's 15-second full-screen version at 45 seconds
+- **And** it keeps that plan, with its component scores, as an unselected eligible alternative
+- **And** the final decision contains `HIGH_INTERRUPTION_NOW`
+- **And** the selected plan remains within the allowed delay window.
+
+#### AT-S1-02 Keep the guaranteed campaign feasible
+
+- **Given** C1 still satisfies audience, frequency, placement and contract constraints
+- **When** a natural transition exists at 82 seconds, still inside the 40-second maximum delay
+- **Then** C1 remains the selected campaign
+- **And** the selected creative is its approved six-second version
+- **And** action is `DEFER`
+- **And** reasons contain `COMMERCIAL_DELIVERY_URGENT` and `SAFE_TRANSITION_PREFERRED`.
+
+#### AT-S1-03 Do not fabricate personalization
+
+- **Given** only T0 content context is available and its gaming relevance is weak
+- **When** the system explains the S1 decision
+- **Then** the explanation includes commercial-delivery evidence
+- **And** makes no personal claim such as “you like games” or “selected for you”
+- **And** displays evidence tier `T0_CONTEXTUAL`.
+
+#### AT-S1-04 Do not deliver beyond the delay window
+
+- **Given** the only safe transition occurs after `latestAtMs`
+- **When** delivery plans are generated
+- **Then** that plan is rejected with `OUTSIDE_DELIVERY_WINDOW`
+- **And** the system selects another eligible plan or returns `NO_ELIGIBLE_PLAN`
+- **And** creates a shortfall-risk warning for the guaranteed campaign.
+
+#### AT-S2-01 Preserve the frame during an inspection pause
+
+- **Given** S2 pauses at 27 seconds, classified as `INSPECTION` with 0.91 confidence
+- **When** AdMind handles the pause-ad opportunity
+- **Then** it does not select the frame-covering ten-second full-screen creative
+- **And** selects an approved, dismissible low-obstruction card
+- **And** keeps the original frame and playback controls visible.
+
+#### AT-S2-02 Do not cover critical regions
+
+- **Given** the upper-left, center and lower-left are critical content/control regions and the upper-right is safe
+- **When** the card renders
+- **Then** its bounds remain fully inside the allowed region
+- **And** its close control is visible and focusable
+- **And** an implicit full-card navigation target does not cover the close control.
+
+#### AT-S2-03 Defer when no safe region exists
+
+- **Given** every allowed region conflicts with captions or controls
+- **When** AdMind generates candidates
+- **Then** the card plan is rejected with `NO_SAFE_RENDER_REGION`
+- **And** the system tries the 35-second chapter boundary
+- **And** does not silently fall back to a pause takeover.
+
+#### AT-S2-04 Preserve position after dismissal
+
+- **Given** the viewer pauses at 27 seconds and dismisses the card
+- **When** playback resumes
+- **Then** content resumes at 27 seconds within the documented player tolerance
+- **And** emits `creative.dismissed` and `content.resumed`
+- **And** does not open a new page.
+
+#### AT-S2-05 Recompute the historical fixed-set baseline
+
+- **Given** `evaluation/s2/manifest.json`, the 20 fixed 1280×720 frames and saved raw predictions
+- **When** `pnpm test:s2-regression` runs
+- **Then** every frame SHA-256 matches the manifest
+- **And** the annotation contract has no duplicate ID, out-of-bounds rectangle or show/defer contradiction
+- **And** all 20 target and placement labels are identified as agent-authored drafts rather than human ground truth
+- **And** 13 agent-drafted `rule-confirmed` labels enter blocking metrics while seven agent drafts remain diagnostic
+- **And** the historical result recomputes exactly to 6/13 (46.2%) safe placement, 4/13 (30.8%) unsafe placement, 3/13 (23.1%) over-deferral, 4/25 (16.0%) precision, 4/11 (36.4%) recall, 22.2% F1, 318 ms p50 and 335 ms p95
+- **And** provenance states that v0.3.0 harness commit `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` ran configuration behavior referenced from v0.2.7 commit `bdf66d1db7511f97feba49713f9995ea6ef13711`; the old commit did not run the new harness.
+
+#### AT-S2-06 Unsafe placement must not increase silently
+
+- **Given** the 13 blocking agent drafts, seven diagnostic agent drafts and historical fixed-set result, with no claim that any is human ground truth
+- **When** detection thresholds, deduplication, target classes or creative geometry change
+- **Then** the same-set before/after comparison is produced
+- **And** no new unsafe placement is introduced
+- **And** pending-review samples stay outside the blocking denominator until confirmed
+- **And** fixed-set figures are described as project-local agreement, never general model accuracy.
+
+#### AT-S2-07 Recompute the v0.4.0 candidate
+
+- **Given** `evaluation/s2/candidates/v0.4.0.json` from the final `s2-vision-v4` browser run at runner/config commit `e0a033194ea04a9c926a822e4330355f41ddd152`, generated at `2026-08-22T03:42:41.155Z`
+- **When** the deterministic regression gate validates it
+- **Then** model availability is 20/20
+- **And** blocking results are 7/13 (53.8%) safe placement, 3/13 (23.1%) unsafe placement and 3/13 (23.1%) over-deferral
+- **And** targets are TP 5 / FP 16 / FN 6, with 23.8% precision, 45.5% recall and 31.3% F1
+- **And** target P/R/F1 is explicitly described as exploratory, class-agnostic raw-box matching at IoU ≥ 0.25, not calibrated semantic detector accuracy
+- **And** latency is 277 ms p50 / 307 ms p95
+- **And** `charge-012` is no longer a decision failure
+- **And** remaining over-deferrals are exactly `charge-002/008/016` and remaining unsafe placements are exactly `charge-005/013/018`
+- **And** `charge-002/005/008/013/018` are flagged as disputed labels rather than blind tuning targets.
+
+#### AT-S2-08 Priority review remains local, explicit and independent
+
+- **Given** a 13-frame priority queue made from the original seven `needs-user-review` drafts plus `charge-002/005/008/013/016/018`, while the other seven frames remain unreviewed agent-rule drafts
+- **When** the product owner opens `/regression`
+- **Then** Priority review is the default filter, alongside All and Unsafe placement
+- **And** the legend clearly distinguishes green agent-drafted targets, purple dashed model output and blue agent-prefilled placement choices
+- **And** model boxes are hidden by default
+- **And** a blue choice remains dashed until the frame is confirmed
+- **And** the four steps verify protection targets, select every acceptable upper-left/upper-right outcome or defer, record a note, then confirm and export
+- **And** confirmation can be undone
+- **And** answers persist only in browser `localStorage`
+- **And** confirmation does not train the model automatically
+- **And** export creates a separate review JSON that is not uploaded and does not modify the manifest or tracked results
+- **And** a maintainer must validate and commit exported JSON before it can affect labels or metrics.
+
+#### AT-S2-09 Scoring and rendering use the same footprint
+
+- **Given** S2 renders on a 16:9 stage
+- **When** the placement scorer evaluates a candidate and the muted card is displayed
+- **Then** both use a normalized 0.30×0.30 footprint
+- **And** no legacy 0.30×0.24 geometry remains in the current policy.
+
+#### AT-S2-10 Weak crop suppression stays narrow
+
+- **Given** crop-only visual-subject candidates
+- **When** weak candidate filtering runs
+- **Then** only a low-confidence `人物主体` candidate without a corroborating face center is removed
+- **And** direct detections, strong crop detections, animal candidates and faceless character candidates remain
+- **And** a back-facing low-confidence-person holdout is required before claiming the heuristic generalizes.
+
+#### AT-S2-11 Detector availability fails closed
+
+- **Given** S2 requires both the face and object detector
+- **When** either detector fails to initialize or run
+- **Then** the whole frame is reported unavailable
+- **And** no ad placement is emitted from partial detector evidence
+- **And** an unavailable blocking frame counts as a miss in regression metrics.
+
+#### AT-S3-01 Commercial weight cannot cross an ethical hard rule
+
+- **Given** S3 is manually confirmed as `PROTECTED_HEALTH_TASK` and C1 urgency and commercial value both equal 1.00
+- **When** every positive ranking weight is raised to its allowed maximum
+- **Then** full-screen, overlay, autoplay-audio and navigation plans remain rejected with `PROTECTED_CONTEXT`
+- **And** the critical flow returns `NO_ELIGIBLE_PLAN`.
+
+#### AT-S3-02 Do not target from sensitive context
+
+- **Given** a campaign tries to infer personal need from health content
+- **When** policy checks run
+- **Then** it is rejected with `SENSITIVE_TARGETING_PROHIBITED`
+- **And** the evidence does not enter `contextualUtility`
+- **And** the audit keeps the rejection reason without storing a real diagnosis.
+
+#### AT-S3-03 No plan must alert and must not count an impression
+
+- **Given** no eligible form exists
+- **When** the engine returns `NO_ELIGIBLE_PLAN`
+- **Then** it records `delivery.skipped` or `delivery.deferred`
+- **And** creates `DELIVERY_SHORTFALL_RISK`
+- **And** does not record `impression.viewable`
+- **And** leaves contract-delivery counts unchanged.
+
+#### AT-R1-01 Cross-format brand hard cap
+
+- **Given** the brand has already generated two viewable impressions through a pre-roll and a mid-roll card and its hard cap is two
+- **When** a later opportunity considers any creative or format from that brand
+- **Then** all such plans are rejected with `BRAND_FREQUENCY_CAP_REACHED`
+- **And** changing creative ID cannot bypass the brand cap.
+
+#### AT-R2-01 Seeking removes or prevents disruptive ads
+
+- **Given** the viewer presses and starts dragging the progress bar before an S2 card becomes visible
+- **When** interaction state becomes `SEEKING`
+- **Then** the card is removed without `impression.viewable`
+- **And** no new full-screen ad starts
+- **And** the opportunity is recomputed from the new position after seeking ends.
+
+#### AT-R2-02 Comments become an essential region
+
+- **Given** the viewer has opened and is reading a comments/danmaku layer
+- **When** a candidate card overlaps it
+- **Then** the plan is rejected with `ESSENTIAL_CONTROL_BLOCKED` or `NO_SAFE_RENDER_REGION`
+- **And** the system moves to a non-overlapping region or defers.
+
+#### AT-R2-03 Back navigation cannot be hijacked
+
+- **Given** the viewer invokes the app back/home action
+- **When** interaction state becomes `NAVIGATING_AWAY`
+- **Then** no new ad starts
+- **And** the back action is not recorded as an ad click
+- **And** a card below its viewability threshold is removed.
+
+#### AT-R2-04 Ad navigation requires explicit intent
+
+- **Given** an ad has an explicit CTA whose hit area does not overlap close, progress or player controls
+- **When** a landing page opens
+- **Then** the same delivery has an earlier valid `ad.navigation_intent_recorded`
+- **And** the source element is the CTA
+- **And** opening without intent emits `ad.unintended_navigation_detected` and fails the test.
+
+#### AT-R2-05 Restore task state after returning
+
+- **Given** the viewer follows an explicit CTA to an ad landing page
+- **When** the viewer returns to the player
+- **Then** the original content ID, time within tolerance, and play/pause state are restored
+- **And** recoverable comments/danmaku state is restored
+- **And** the viewable impression is not counted again.
+
+#### AT-R3-01 Consolidated preference obeys the hard limit
+
+- **Given** the viewer selects `CONSOLIDATED` and known ad debt exceeds `maxPodMs`
+- **When** a session plan is generated
+- **Then** no single pod exceeds the limit
+- **And** overflow moves to a second safe window or `remainingAdDebt`
+- **And** the UI explains why full consolidation was impossible.
+
+#### AT-R3-02 Distributed planning keeps safe intervals
+
+- **Given** the viewer selects `DISTRIBUTED_SAFE_WINDOWS`
+- **When** a session plan is generated
+- **Then** pods occupy safe windows
+- **And** adjacent pods keep the minimum content interval
+- **And** none is scheduled inside climax or protected windows.
+
+#### AT-R3-03 Preference cannot override contract or policy
+
+- **Given** consolidated or distributed preference conflicts with creative placement, competitive separation, frequency or protected-context rules
+- **When** the planner applies preference
+- **Then** hard constraints win
+- **And** a reason is recorded when `preferenceApplied` differs from the request
+- **And** unallocated debt is not hidden as satisfied.
+
+#### AT-R3-04 Seeking past a pod triggers versioned replanning
+
+- **Given** active plan revision 1 schedules a pod at 240 seconds
+- **When** the viewer seeks to 300 seconds
+- **Then** revision 1 becomes `SUPERSEDED`
+- **And** revision 2 is generated or `INFEASIBLE` is returned
+- **And** real-time decisions for revision 1 return `STALE_SESSION_PLAN`.
+
+#### AT-R3-05 Reservation is not an impression
+
+- **Given** a campaign is reserved for a future pod
+- **When** the pod has not executed or the real-time layer rejects it
+- **Then** requested/delivered/viewable counts do not increase
+- **And** debt decreases only after the defined real event occurs.
+
+### 3. P0 decision and data acceptance
+
+#### AT-D-01 Deterministic replay
+
+Replay the same normalized request and scenario/policy/ranking/analysis versions 100 times. Action, chosen plan, ordering, component scores and reason codes must match exactly; only trace IDs and write timestamps may differ.
+
+#### AT-D-02 Input order does not change the result
+
+Submitting the same candidate set in different array orders must produce the same normalized winner and ordering.
+
+#### AT-D-03 Stable tie-breaking
+
+When primary scores differ by less than 0.02, resolve by timing feasibility, time, stable format priority and ID. Database return order must not affect the result.
+
+#### AT-D-04 Scores are independently checkable
+
+Given the API's ten-part `scoreBreakdown`, a test can recompute the total using current versioned weights within the documented rounding tolerance.
+
+#### AT-D-05 Hard rules run before ranking
+
+A violating plan cannot enter eligible alternatives. It either receives no total score or is explicitly marked unranked even when its commercial score would be highest.
+
+#### AT-D-06 Unapproved creative cannot become a fallback
+
+If only a 15-second version is approved and a six-second version is `PENDING`, the system cannot select or synthesize the six-second version and returns `CREATIVE_NOT_APPROVED`.
+
+#### AT-D-07 The complete demo runs without AI keys
+
+With every AI-provider environment variable empty, precomputed analyses complete all three scenarios, the analysis source remains visible and no credential error blocks the primary flow.
+
+#### AT-D-08 Conservative low-confidence fallback
+
+When AI scene-analysis confidence is 0.42 without human confirmation, the system cannot use “low intensity” to allow a strong interruption; it uses precomputed data or `LOW_CONFIDENCE_CONSERVATIVE_FALLBACK`.
+
+#### AT-D-09 Withdrawn consent removes personal evidence
+
+When T2/T3 evidence consent is `WITHDRAWN`, that evidence does not enter relevance scoring; dependent candidates are rejected with `CONSENT_REQUIRED`, while non-personalized T0 mode still runs.
+
+#### AT-D-10 Expired evidence cannot be used
+
+When `expiresAt` precedes the fixture clock, evidence is marked `EVIDENCE_EXPIRED` and does not affect scores.
+
+### 4. P0 event and metric acceptance
+
+#### AT-E-01 Rendered is not viewable
+
+If an ad is mounted but less than 50% visible or visible for less than two continuous seconds, record only `creative.rendered`; do not record `impression.viewable` or increase viewable frequency.
+
+#### AT-E-02 Viewability increments frequency once
+
+After one delivery crosses the two-second threshold, it emits one `impression.viewable` and increments brand/campaign/creative counts once, regardless of later samples.
+
+#### AT-E-03 Background time does not count
+
+If an ad renders for one second, the page backgrounds for five seconds and returns for one second, background time is excluded and the two discontinuous seconds do not satisfy the rule.
+
+#### AT-E-04 Metric provenance labels
+
+Contract, interruption cost, observed clicks and user feedback are labelled `simulated`, `modelled`, `observed-in-demo` and `user-test`; they are never merged into an unsourced “AI effectiveness score.”
+
+#### AT-E-05 Contract progress derives from events
+
+Rebuilding projections from the event ledger reproduces the UI campaign progress; deleting or changing a cached projection cannot change event facts.
+
+### 5. P0 API acceptance
+
+#### AT-A-01 Invalid input returns a structured error
+
+For `scene.intensity = 1.4`, POST `/api/decisions` returns 4xx, `INVALID_DECISION_REQUEST` and the field path, without emitting `decision.made`.
+
+#### AT-A-02 Decision detail includes the complete audit
+
+Decision detail returns the chosen plan, eligible alternatives, rejected plans, reason codes, scores, evidence, versions and metric provenance.
+
+#### AT-A-03 Duplicate delivery events are idempotent
+
+Submitting the same event ID twice does not duplicate the event or counters and returns a consistent accepted status.
+
+#### AT-A-04 Reset restores scenario initial state
+
+After reset, a new session uses the initial fixture; old events remain auditable or are isolated as documented, and the new decision matches the initial snapshot.
+
+#### AT-A-05 A stale session plan cannot execute
+
+If a request's plan revision is not active, the API returns `STALE_SESSION_PLAN` and emits no `decision.made` or display event.
+
+### 6. P0 browser and accessibility acceptance
+
+#### AT-UI-01 Strategy comparison uses identical input
+
+Baseline and AdMind show the same scenario version, campaigns and initial session state; running one strategy first cannot contaminate the other's counters.
+
+#### AT-UI-02 Keyboard completes the core flow
+
+Keyboard alone can choose scenarios, play/pause, switch strategy, dismiss ads, open the decision inspector, inspect alternatives and return to the player; focus order follows visual order.
+
+#### AT-UI-03 Ad identity and controls are clear
+
+Every ad format has a perceivable “Ad” label; close controls have accessible names and visible focus, and state is not communicated by color alone.
+
+#### AT-UI-04 Do not reproduce the dangerous tiny close button
+
+S3 may illustrate the risky tiny-close pattern in a non-interactive replay, but every interactive demo ad uses a compliant size and hit target.
+
+#### AT-UI-05 Content recovery is verifiable
+
+S1 resumes at the expected boundary after an ad; S2 keeps the original paused position after card dismissal. Browser tests permit a small media-time tolerance but cannot skip complete dialogue or key action.
+
+#### AT-UI-06 Error and fallback states
+
+Missing video, unavailable analysis or a failed decision API produces a specific error/conservative fallback, not endless loading or an unaudited ad.
+
+#### AT-UI-07 Session plan and preference are visible
+
+The player shows planned pods, expected total ad time, requested/applied consolidation preference, remaining debt and plan revision; all values are marked simulated.
+
+#### AT-UI-08 Control hit areas do not overlap
+
+Across supported viewports, CTA, close, progress, play, back and comments/danmaku hit areas do not overlap; browser tests confirm close, seek and back never open the landing page.
+
+#### AT-UI-09 Decision evidence links to the lab
+
+The main site's Decision view exposes a working `/regression` link in English and Chinese. It does not imply that agent drafts are human labels or that a local confirmation trains the model.
+
+### 7. P1 portfolio-complete acceptance
+
+After P0 passes:
+
+- operators can create campaigns and multiple creative versions;
+- invalid contract/format combinations are rejected before save;
+- contract forecasts come from explainable simulated inventory;
+- operators can adjust soft weights within safe bounds but cannot disable hard rules;
+- scene metadata can be manually corrected into a new version;
+- experiments can batch-compare at least two policy versions;
+- metric formulas are tested and exportable as CSV/JSON;
+- replaying new policy against old scenarios detects regressions automatically; and
+- optional AI upload failure still falls back to precomputed scenarios.
+
+### 8. Phase 1 Go / No-Go checklist
+
+#### Go
+
+- [ ] AT-S1, AT-S2, AT-S3, AT-R1, AT-R2 and AT-R3 all pass;
+- [ ] deterministic decisions and hard-rule tests all pass;
+- [ ] the 20 S2 1280×720 frames, hashes, historical baseline and v0.4.0 candidate recompute offline;
+- [ ] all 20 labels remain identified as agent-authored rather than human ground truth;
+- [ ] the 13 priority-review frames and other seven unreviewed agent-rule drafts remain distinguishable; no adjustment introduces a new unsafe placement;
+- [ ] disputed `charge-002/005/008/013/018` labels are not used as blind tuning targets;
+- [ ] scorer/rendered geometry is 0.30×0.30 on the 16:9 S2 stage, and weak crop suppression passes its narrow-boundary tests;
+- [ ] S1 has an end-to-end browser recording/test;
+- [ ] the project runs without AI keys;
+- [ ] event and frequency semantics pass;
+- [ ] core keyboard paths pass;
+- [ ] the public-asset license manifest is complete; and
+- [ ] every effectiveness/commercial metric displays provenance.
+
+#### No-Go
+
+Do not call the phase complete if any condition holds:
+
+- commercial weight crosses a protected-context rule or hard frequency cap;
+- a decision cannot be replayed or its reasons disagree with its outcome;
+- rendered-but-not-viewable media counts as delivered;
+- the demo requires a paid AI key;
+- real platform private data, unauthorized video or unverified internal mechanisms are used;
+- simulated results are presented as real uplift; or
+- the primary flow is only static UI without a decision-to-event/metric loop.
+
+---
+
+## 中文
+
+**用途：** 产品、设计、开发和测试共同使用的完成定义
 **规则：** 只有通过 P0 条件才算完成纵向闭环；页面能打开不等于功能完成。
 
 ---
@@ -20,71 +458,71 @@
 
 ### AT-S1-01 高潮处不立即打断
 
-**Given** S1 在 45 秒产生中插机会，当前场景强度 0.94、自然转场 0.05，C1 履约紧急度 0.92  
-**When** AdMind 处理该机会  
-**Then** 不能在 45 秒选择 C1 的 15 秒全屏版本  
-**And** 该方案作为未入选的合格备选保留分项分数  
-**And** 最终决定包含 `HIGH_INTERRUPTION_NOW`  
+**Given** S1 在 45 秒产生中插机会，当前场景强度 0.94、自然转场 0.05，C1 履约紧急度 0.92
+**When** AdMind 处理该机会
+**Then** 不能在 45 秒选择 C1 的 15 秒全屏版本
+**And** 该方案作为未入选的合格备选保留分项分数
+**And** 最终决定包含 `HIGH_INTERRUPTION_NOW`
 **And** 入选方案位于允许延迟范围内。
 
 ### AT-S1-02 保持保证量活动可行
 
-**Given** C1 仍满足受众、频控、版位和合同条件  
-**When** 82 秒存在自然转场，且仍位于 40 秒最大延迟窗口内  
-**Then** 入选活动仍为 C1  
-**And** 入选素材是已审批 6 秒版本  
-**And** action 为 `DEFER`  
+**Given** C1 仍满足受众、频控、版位和合同条件
+**When** 82 秒存在自然转场，且仍位于 40 秒最大延迟窗口内
+**Then** 入选活动仍为 C1
+**And** 入选素材是已审批 6 秒版本
+**And** action 为 `DEFER`
 **And** 理由包含 `COMMERCIAL_DELIVERY_URGENT` 与 `SAFE_TRANSITION_PREFERRED`。
 
 ### AT-S1-03 不伪造个性化
 
-**Given** 当前只有 T0 内容上下文且与游戏语义关系弱  
-**When** 系统解释 S1 决定  
-**Then** 解释包含商业履约依据  
-**And** 不出现“你喜欢游戏/为你精准推荐”等个人断言  
+**Given** 当前只有 T0 内容上下文且与游戏语义关系弱
+**When** 系统解释 S1 决定
+**Then** 解释包含商业履约依据
+**And** 不出现“你喜欢游戏/为你精准推荐”等个人断言
 **And** 显示证据等级为 `T0_CONTEXTUAL`。
 
 ### AT-S1-04 超出延迟窗口不可投
 
-**Given** 唯一安全转场晚于 `latestAtMs`  
-**When** 生成投放方案  
-**Then** 该方案以 `OUTSIDE_DELIVERY_WINDOW` 淘汰  
-**And** 系统选择其他合格方案或返回 `NO_ELIGIBLE_PLAN`  
+**Given** 唯一安全转场晚于 `latestAtMs`
+**When** 生成投放方案
+**Then** 该方案以 `OUTSIDE_DELIVERY_WINDOW` 淘汰
+**And** 系统选择其他合格方案或返回 `NO_ELIGIBLE_PLAN`
 **And** 保证量活动产生短缺风险提醒。
 
 ### AT-S2-01 查看型暂停保留画面
 
-**Given** S2 在 27 秒暂停，分类为 `INSPECTION` 且置信度 0.91  
-**When** AdMind 处理暂停广告机会  
-**Then** 不选择覆盖画面的 10 秒全屏版本  
-**And** 选择已审批、可关闭的低遮挡卡片  
+**Given** S2 在 27 秒暂停，分类为 `INSPECTION` 且置信度 0.91
+**When** AdMind 处理暂停广告机会
+**Then** 不选择覆盖画面的 10 秒全屏版本
+**And** 选择已审批、可关闭的低遮挡卡片
 **And** 原视频帧和播放控件仍可见。
 
 ### AT-S2-02 卡片不遮挡关键区域
 
-**Given** 左上、中央和左下为关键内容/控件区域，右上为安全区域  
-**When** 卡片渲染  
-**Then** 卡片边界完全位于允许区域  
-**And** 关闭控件可见、可聚焦  
+**Given** 左上、中央和左下为关键内容/控件区域，右上为安全区域
+**When** 卡片渲染
+**Then** 卡片边界完全位于允许区域
+**And** 关闭控件可见、可聚焦
 **And** 不使用整卡隐式跳转覆盖关闭控件。
 
 ### AT-S2-03 没有安全区域时延后
 
-**Given** 所有允许区域均与字幕或控件冲突  
-**When** AdMind 生成候选  
-**Then** 卡片方案以 `NO_SAFE_RENDER_REGION` 淘汰  
-**And** 系统尝试 35 秒章节边界  
+**Given** 所有允许区域均与字幕或控件冲突
+**When** AdMind 生成候选
+**Then** 卡片方案以 `NO_SAFE_RENDER_REGION` 淘汰
+**And** 系统尝试 35 秒章节边界
 **And** 不自动退回暂停霸屏。
 
 ### AT-S2-04 关闭后位置保持
 
-**Given** 观众在 27 秒暂停并关闭卡片  
-**When** 观众继续播放  
-**Then** 内容从 27 秒（允许播放器误差范围内）恢复  
-**And** 产生 `creative.dismissed` 与 `content.resumed` 事件  
+**Given** 观众在 27 秒暂停并关闭卡片
+**When** 观众继续播放
+**Then** 内容从 27 秒（允许播放器误差范围内）恢复
+**And** 产生 `creative.dismissed` 与 `content.resumed` 事件
 **And** 不打开新页面。
 
-### AT-S2-05 固定回归集可重算
+### AT-S2-05 历史固定回归基线可重算
 
 **Given** `evaluation/s2/manifest.json`、20 张 1280×720 固定帧和已保存的原始预测
 
@@ -94,7 +532,9 @@
 
 **And** 标注合同不存在重复 ID、越界矩形或展示/顺延矛盾
 
-**And** 13 张由项目代理依据明确规则锁定的 `rule-confirmed` 初标进入阻断指标，7 张主观初标保持 `needs-user-review`，在产品负责人复核前只用于诊断
+**And** 20 张保护目标与位置标签全部明确标为代理初标，不是人工标准答案
+
+**And** 13 张 `rule-confirmed` 代理初标进入阻断指标，7 张代理初标保持诊断状态
 
 **And** 原始预测重算出的全部指标与失败案例和已提交基线完全一致：安全位置一致率 `6/13 = 46.2%`，危险误投 `4/13 = 30.8%`，过度顺延 `3/13 = 23.1%`，保护目标精确率 `4/25 = 16.0%`，召回率 `4/11 = 36.4%`，F1 `22.2%`，P50 `318 ms`，P95 `335 ms`
 
@@ -102,7 +542,7 @@
 
 ### AT-S2-06 危险误投不得静默增加
 
-**Given** 阶段 1A 的 13 张 `rule-confirmed` 规则明确初标、7 张待产品负责人复核的主观初标和调参前固定集基线
+**Given** 阶段 1A 的 13 张阻断代理初标、7 张诊断代理初标和调参前固定集基线，并且没有任何一张被称为人工标准答案
 
 **When** 检测阈值、去重、目标类别或广告占位几何发生变化
 
@@ -114,113 +554,195 @@
 
 **And** 固定集数字必须标为项目内部一致率，不得表述为通用模型准确率。
 
+### AT-S2-07 v0.4.0 候选可重算
+
+**Given** 最终 `s2-vision-v4` 浏览器复跑在运行器/配置提交 `e0a033194ea04a9c926a822e4330355f41ddd152` 上生成的 `evaluation/s2/candidates/v0.4.0.json`，生成时间为 `2026-08-22T03:42:41.155Z`
+
+**When** 确定性回归质量门校验候选结果
+
+**Then** 模型可用性为 20/20
+
+**And** 阻断集结果为安全位置一致率 `7/13 = 53.8%`、危险误投 `3/13 = 23.1%`、过度顺延 `3/13 = 23.1%`
+
+**And** 保护目标为 TP 5 / FP 16 / FN 6，精确率 `23.8%`、召回率 `45.5%`、F1 `31.3%`
+
+**And** 目标 P/R/F1 明确标为 IoU ≥ 0.25 的类别无关原始框探索性匹配，而不是经过校准的语义检测准确率
+
+**And** 推理耗时为 P50 `277 ms` / P95 `307 ms`
+
+**And** `charge-012` 不再属于决策失败
+
+**And** 剩余过度顺延恰好是 `charge-002/008/016`，剩余危险误投恰好是 `charge-005/013/018`
+
+**And** `charge-002/005/008/013/018` 被标记为标签争议，而不是继续盲调的目标。
+
+### AT-S2-08 优先复核保持本地、明确且独立
+
+**Given** 由原有 7 张 `needs-user-review` 加 `charge-002/005/008/013/016/018` 组成的 13 张优先队列，另外 7 张仍是未人工审核的代理规则初标
+
+**When** 产品负责人打开 `/regression`
+
+**Then** 默认进入“优先复核”，并同时提供“全部”和“危险误投”筛选
+
+**And** 图例清楚区分绿色代理保护目标、紫色虚线模型输出与蓝色代理预填位置选择
+
+**And** 模型框默认隐藏
+
+**And** 蓝色选择在确认前保持虚线
+
+**And** 四步流程依次检查保护目标、选择全部可接受左上/右上或顺延、填写备注、确认并导出
+
+**And** 已确认结果可以撤销
+
+**And** 答案只保存在浏览器 `localStorage`
+
+**And** 确认不会自动训练模型
+
+**And** 导出生成独立 review JSON，不上传，也不修改 manifest 或已保存结果
+
+**And** 导出 JSON 必须由维护者校验并提交，之后才可能影响标签或指标。
+
+### AT-S2-09 评分与渲染使用同一占位
+
+**Given** S2 在 16:9 舞台中渲染
+
+**When** 位置评分器评估候选且静音卡片实际展示
+
+**Then** 两者都使用标准化 `0.30 × 0.30` footprint
+
+**And** 当前策略不再包含旧的 `0.30 × 0.24` 几何。
+
+### AT-S2-10 弱裁剪抑制保持窄边界
+
+**Given** 仅来自裁剪的视觉主体候选
+
+**When** 执行弱候选过滤
+
+**Then** 只有无脸部中心佐证的低置信 `人物主体` 被移除
+
+**And** 直接检测、强裁剪、动物与无脸角色候选继续保留
+
+**And** 在宣称该启发式规则能够泛化前，必须建立背面低置信人物留出集。
+
+### AT-S2-11 检测器不可用时采用 fail-closed
+
+**Given** S2 同时需要人脸与主体检测器
+
+**When** 任一检测器初始化或运行失败
+
+**Then** 整帧标记为不可用
+
+**And** 不得使用部分检测证据输出广告位置
+
+**And** 不可用的阻断样本在回归指标中计为失败。
+
 ### AT-S3-01 商业权重不能突破敏感规则
 
-**Given** S3 场景为人工确认的 `PROTECTED_HEALTH_TASK`，C1 履约紧急度和商业价值均设为 1.00  
-**When** 任意正向排序权重提高到允许上限  
-**Then** 全屏、覆盖、自动音频和跳转方案仍全部以 `PROTECTED_CONTEXT` 淘汰  
+**Given** S3 场景为人工确认的 `PROTECTED_HEALTH_TASK`，C1 履约紧急度和商业价值均设为 1.00
+**When** 任意正向排序权重提高到允许上限
+**Then** 全屏、覆盖、自动音频和跳转方案仍全部以 `PROTECTED_CONTEXT` 淘汰
 **And** 当前关键流程返回 `NO_ELIGIBLE_PLAN`。
 
 ### AT-S3-02 禁止利用敏感语境定向
 
-**Given** 候选活动试图使用健康内容推断个人需求  
-**When** 进行政策检查  
-**Then** 以 `SENSITIVE_TARGETING_PROHIBITED` 淘汰  
-**And** 该证据不进入 `contextualUtility`  
+**Given** 候选活动试图使用健康内容推断个人需求
+**When** 进行政策检查
+**Then** 以 `SENSITIVE_TARGETING_PROHIBITED` 淘汰
+**And** 该证据不进入 `contextualUtility`
 **And** 决策审计保留淘汰原因但不存储真实病情。
 
 ### AT-S3-03 无方案必须报警且不计曝光
 
-**Given** 当前没有合格形式  
-**When** 返回 `NO_ELIGIBLE_PLAN`  
-**Then** 写入 `delivery.skipped` 或 `delivery.deferred`  
-**And** 产生 `DELIVERY_SHORTFALL_RISK`  
-**And** 不写入 `impression.viewable`  
+**Given** 当前没有合格形式
+**When** 返回 `NO_ELIGIBLE_PLAN`
+**Then** 写入 `delivery.skipped` 或 `delivery.deferred`
+**And** 产生 `DELIVERY_SHORTFALL_RISK`
+**And** 不写入 `impression.viewable`
 **And** 合同交付计数保持不变。
 
 ### AT-R1-01 跨形式品牌硬频控
 
-**Given** 同一会话中某品牌已通过片头和中插低遮挡卡产生 2 次可视曝光，品牌硬上限为 2  
-**When** 后续机会考虑该品牌任意素材和形式  
-**Then** 所有该品牌方案以 `BRAND_FREQUENCY_CAP_REACHED` 淘汰  
+**Given** 同一会话中某品牌已通过片头和中插低遮挡卡产生 2 次可视曝光，品牌硬上限为 2
+**When** 后续机会考虑该品牌任意素材和形式
+**Then** 所有该品牌方案以 `BRAND_FREQUENCY_CAP_REACHED` 淘汰
 **And** 更换素材 ID 不得绕过品牌上限。
 
 ### AT-R2-01 主动拖动时不启动或保留干扰广告
 
-**Given** S2 卡片可见前，用户按下并开始拖动进度条  
-**When** interaction state 变为 `SEEKING`  
-**Then** 卡片撤下且不产生 `impression.viewable`  
-**And** 不启动新的全屏广告  
+**Given** S2 卡片可见前，用户按下并开始拖动进度条
+**When** interaction state 变为 `SEEKING`
+**Then** 卡片撤下且不产生 `impression.viewable`
+**And** 不启动新的全屏广告
 **And** 拖动结束后基于新播放位置重新计算机会。
 
 ### AT-R2-02 弹幕/评论区域成为必要区域
 
-**Given** 用户打开并正在阅读弹幕/评论层  
-**When** 候选卡片与该区域重叠  
-**Then** 该方案以 `ESSENTIAL_CONTROL_BLOCKED` 或 `NO_SAFE_RENDER_REGION` 淘汰  
+**Given** 用户打开并正在阅读弹幕/评论层
+**When** 候选卡片与该区域重叠
+**Then** 该方案以 `ESSENTIAL_CONTROL_BLOCKED` 或 `NO_SAFE_RENDER_REGION` 淘汰
 **And** 系统移到不重叠区域或延后。
 
 ### AT-R2-03 返回操作不能被广告劫持
 
-**Given** 用户触发应用返回/主页面操作  
-**When** 交互状态变为 `NAVIGATING_AWAY`  
-**Then** 系统不启动新广告  
-**And** 返回操作不记录为广告点击  
+**Given** 用户触发应用返回/主页面操作
+**When** 交互状态变为 `NAVIGATING_AWAY`
+**Then** 系统不启动新广告
+**And** 返回操作不记录为广告点击
 **And** 未达可视阈值的卡片撤下。
 
 ### AT-R2-04 广告跳转必须有明确意图
 
-**Given** 广告有一个明确 CTA，关闭控件、进度条和播放器区域与 CTA 热区不重叠  
-**When** 打开落地页  
-**Then** 同一 delivery 必须存在更早且有效的 `ad.navigation_intent_recorded`  
-**And** source element 是 CTA  
+**Given** 广告有一个明确 CTA，关闭控件、进度条和播放器区域与 CTA 热区不重叠
+**When** 打开落地页
+**Then** 同一 delivery 必须存在更早且有效的 `ad.navigation_intent_recorded`
+**And** source element 是 CTA
 **And** 没有意图记录的打开产生 `ad.unintended_navigation_detected` 并使测试失败。
 
 ### AT-R2-05 返回后恢复任务状态
 
-**Given** 用户从明确 CTA 进入广告落地页  
-**When** 返回播放器  
-**Then** 恢复原 content ID、允许误差内的时间位置和播放/暂停状态  
-**And** 恢复可恢复的弹幕/评论状态  
+**Given** 用户从明确 CTA 进入广告落地页
+**When** 返回播放器
+**Then** 恢复原 content ID、允许误差内的时间位置和播放/暂停状态
+**And** 恢复可恢复的弹幕/评论状态
 **And** 不重复计可视曝光。
 
 ### AT-R3-01 集中偏好受硬上限约束
 
-**Given** 用户选择 `CONSOLIDATED` 且已知广告债务超过 `maxPodMs`  
-**When** 生成会话计划  
-**Then** 单广告段不超过上限  
-**And** 超出部分进入第二安全窗口或 `remainingAdDebt`  
+**Given** 用户选择 `CONSOLIDATED` 且已知广告债务超过 `maxPodMs`
+**When** 生成会话计划
+**Then** 单广告段不超过上限
+**And** 超出部分进入第二安全窗口或 `remainingAdDebt`
 **And** UI 显示无法完全集中的原因。
 
 ### AT-R3-02 分散计划保持安全间隔
 
-**Given** 用户选择 `DISTRIBUTED_SAFE_WINDOWS`  
-**When** 生成会话计划  
-**Then** 广告段位于安全窗口  
-**And** 相邻广告段满足最小内容间隔  
+**Given** 用户选择 `DISTRIBUTED_SAFE_WINDOWS`
+**When** 生成会话计划
+**Then** 广告段位于安全窗口
+**And** 相邻广告段满足最小内容间隔
 **And** 不安排在高潮/受保护窗口。
 
 ### AT-R3-03 偏好不能突破合同与政策
 
-**Given** 集中或分散偏好与素材版位、竞争品牌分隔、频控或受保护规则冲突  
-**When** 规划器应用偏好  
-**Then** 硬约束优先  
-**And** `preferenceApplied` 与请求不一致时记录理由  
+**Given** 集中或分散偏好与素材版位、竞争品牌分隔、频控或受保护规则冲突
+**When** 规划器应用偏好
+**Then** 硬约束优先
+**And** `preferenceApplied` 与请求不一致时记录理由
 **And** 不把无法安全分配的债务隐藏为已满足。
 
 ### AT-R3-04 快进越过广告段触发版本化重规划
 
-**Given** active plan revision 1 在 240 秒有计划广告段  
-**When** 用户快进到 300 秒  
-**Then** revision 1 标记 `SUPERSEDED`  
-**And** 生成 revision 2 或返回 `INFEASIBLE`  
+**Given** active plan revision 1 在 240 秒有计划广告段
+**When** 用户快进到 300 秒
+**Then** revision 1 标记 `SUPERSEDED`
+**And** 生成 revision 2 或返回 `INFEASIBLE`
 **And** 旧 revision 的实时决定返回 `STALE_SESSION_PLAN`。
 
 ### AT-R3-05 计划预留不等于曝光
 
-**Given** 活动被预留到未来广告段  
-**When** 广告段尚未执行或实时层否决该方案  
-**Then** 不增加 requested/delivered/viewable 计数  
+**Given** 活动被预留到未来广告段
+**When** 广告段尚未执行或实时层否决该方案
+**Then** 不增加 requested/delivered/viewable 计数
 **And** 债务只在满足定义的真实事件后扣减。
 
 ## 3. P0 决策与数据验收
@@ -343,6 +865,10 @@ S1 完成广告后在预期边界恢复；S2 关闭暂停卡后保持原暂停�
 
 在支持的 viewport 中，广告 CTA、关闭控件、进度条、播放、返回和弹幕/评论控制的交互边界不重叠；浏览器测试验证关闭、拖动和返回均不会打开落地页。
 
+### AT-UI-09 决策证据链接实验室
+
+主站 Decision / 决策方式页面在中英文模式下都提供可用的 `/regression` 入口；入口不能暗示代理初标已经人工确认，也不能暗示本地确认会训练模型。
+
 ## 7. P1（完整作品集）验收
 
 P1 在 P0 通过后实施：
@@ -363,8 +889,11 @@ P1 在 P0 通过后实施：
 
 - [ ] AT-S1、AT-S2、AT-S3、AT-R1、AT-R2 和 AT-R3 全部通过；
 - [ ] 决策确定性与硬规则测试全部通过；
-- [ ] S2 的 20 张 1280×720 固定帧清单、图片哈希和已保存基线可以离线重算；
-- [ ] S2 的 13 张 `rule-confirmed` 初标与 7 张待产品负责人复核的诊断初标保持分离；调整没有新增危险位置误投；
+- [ ] S2 的 20 张 1280×720 固定帧清单、图片哈希、历史基线与 v0.4.0 候选可以离线重算；
+- [ ] 20 张标签全部继续明确为代理初标，而不是人工标准答案；
+- [ ] 13 张优先复核样本与另外 7 张未人工审核代理规则初标可明确区分；调整没有新增危险位置误投；
+- [ ] `charge-002/005/008/013/018` 的标签争议没有被当作盲调目标；
+- [ ] 评分器/渲染几何在 16:9 S2 舞台上统一为 `0.30 × 0.30`，弱裁剪抑制通过窄边界测试；
 - [ ] S1 具备端到端浏览器录像/测试；
 - [ ] 无 AI 密钥可运行；
 - [ ] 事件与频控语义通过；

@@ -1,10 +1,42 @@
 # Changelog
 
-[English](#changelog) · [中文（最新版本）](#030--2026-08-21)
+[English](#changelog) · [中文（最新版本）](#040-中文说明)
 
 Notable project changes are recorded here.
 
 ## Unreleased
+
+## 0.4.0 · 2026-08-21
+
+Public deployment pending.
+
+### Stage 1B fixed-set candidate
+
+- Added `evaluation/s2/candidates/v0.4.0.json`, generated at `2026-08-22T03:42:41.155Z` by the final `s2-vision-v4` browser run at runner/config commit `e0a033194ea04a9c926a822e4330355f41ddd152`, as a reproducible comparison against the historical v0.2.7-configuration baseline. All 20/20 fixed frames were available. Public deployment is pending; the live site remains v0.3.0.
+- On the same 13 rule-confirmed drafts, safe-placement agreement changed from 6/13 (46.2%) to 7/13 (53.8%), unsafe placement from 4/13 (30.8%) to 3/13 (23.1%), and over-deferral remained 3/13 (23.1%). Protected-target results changed from TP 4 / FP 21 / FN 7, 16.0% precision, 36.4% recall and 22.2% F1 to TP 5 / FP 16 / FN 6, 23.8% precision, 45.5% recall and 31.3% F1. These target P/R/F1 figures use exploratory, class-agnostic raw-box matching at IoU ≥ 0.25; they are not calibrated semantic detector accuracy. Recorded latency changed from 318/335 ms p50/p95 to 277/307 ms.
+- Confirmed one genuine behavior correction: `charge-012` no longer over-defers. Remaining over-deferrals are `charge-002/008/016`; remaining unsafe placements are `charge-005/013/018`.
+- Audited the remaining labels before further tuning. The accepted placement drafts for `charge-002/005/008/013/018` are disputable, so the project will not optimize against them blindly; `charge-016` remains the clear unresolved over-deferral case.
+- Expanded product review to a default 13-frame priority queue: the original seven `needs-user-review` drafts plus `charge-002/005/008/013/016/018`. The other seven frames remain unreviewed agent-rule drafts; none of the 20 labels is human ground truth. Green boxes are agent-drafted targets, purple dashed boxes are hidden-by-default model output, and blue placement choices are prefilled from the agent draft and remain dashed until confirmed.
+- Added a four-step confirmation guide: verify green protection targets, select every acceptable upper corner or defer, explain the decision/adjustment, then confirm and export. Choices stay in browser `localStorage`; confirmation does not train the model. Exported JSON must be validated and committed separately by a maintainer before it can affect the manifest or baseline.
+- Unified scorer and rendered-card footprints at 0.30×0.30 and fixed the S2 stage at 16:9. Narrowed weak crop suppression to low-confidence crop-only `人物主体` candidates without face corroboration; direct, strong crop, animal and faceless character candidates remain. Back-facing low-confidence people remain a holdout limitation.
+- Made the vision gate fail closed: face and object detectors are both required. If either detector is unavailable, the entire frame is reported unavailable, no placement is emitted and a blocking sample counts as a miss.
+- Added a direct `/regression` entry from the main site's Decision view.
+- These results apply only to the fixed project set. The historical v0.3.0 baseline remains preserved below.
+- Traceability: an intermediate `s2-vision-v2` candidate at `c006c647a07ff047065199b22b554f14e450aa40` had the same decision/target counts and 247/293 ms p50/p95. It is superseded by the final `s2-vision-v4` artifact above and is not the current candidate.
+
+### 0.4.0 中文说明
+
+- 新增 `evaluation/s2/candidates/v0.4.0.json`，它由最终 `s2-vision-v4` 浏览器复跑于 `2026-08-22T03:42:41.155Z` 生成，运行器/配置提交均为 `e0a033194ea04a9c926a822e4330355f41ddd152`，用于与历史 v0.2.7 配置参考基线做可重算对比；20/20 张固定帧均可用。公开部署仍待完成，线上站点仍是 v0.3.0。
+- 同一组 13 张规则确认初标中，安全位置一致率由 `6/13 = 46.2%` 提升到 `7/13 = 53.8%`，危险误投由 `4/13 = 30.8%` 降至 `3/13 = 23.1%`，过度顺延保持 `3/13 = 23.1%`。保护目标从 TP 4 / FP 21 / FN 7、精确率 `16.0%`、召回率 `36.4%`、F1 `22.2%`，变为 TP 5 / FP 16 / FN 6、精确率 `23.8%`、召回率 `45.5%`、F1 `31.3%`。这些目标 P/R/F1 使用 IoU ≥ 0.25 的类别无关原始框探索性匹配，不是经过校准的语义检测准确率；已记录耗时由 P50/P95 `318/335 ms` 变为 `277/307 ms`。
+- 确认一项真实行为修复：`charge-012` 不再过度顺延。剩余过度顺延为 `charge-002/008/016`，剩余危险误投为 `charge-005/013/018`。
+- 在继续调参前审计了剩余标签。`charge-002/005/008/013/018` 的可接受位置初标存在争议，项目不会继续针对这些标签盲调；`charge-016` 仍是明确未解决的过度顺延案例。
+- 产品复核扩展为默认 13 张优先队列：原有 7 张 `needs-user-review` 加 `charge-002/005/008/013/016/018`。另外 7 张仍是未经人工审核的代理规则初标；20 张标签都不是人工标准答案。绿色框是代理保护目标，紫色虚线框是默认隐藏的模型输出，蓝色位置选择由代理初标预填，确认前保持虚线。
+- 新增四步人工确认说明：检查绿色保护目标、选择所有可接受上角或顺延、解释决定/调整、确认并导出。选择只存于浏览器 `localStorage`；确认不会自动训练模型。导出的 JSON 必须由维护者另行校验并提交，之后才可能影响 manifest 或基线。
+- 评分器与线上卡片 footprint 已统一为 `0.30 × 0.30`，S2 舞台固定为 16:9。弱裁剪抑制收窄到无脸部佐证的低置信裁剪 `人物主体`；直接、强裁剪、动物和无脸角色候选仍保留。背面低置信人物仍是需要留出集验证的泛化限制。
+- 视觉门改为 fail-closed：人脸与主体检测器必须同时可用；任一不可用时整帧标记为不可用、不输出位置，并将阻断样本计为失败。
+- 主站 Decision / 决策方式页面新增 `/regression` 直接入口。
+- 以上结果只适用于项目固定集；历史 v0.3.0 基线继续完整保留在下方。
+- 可追溯说明：中间的 `s2-vision-v2` 候选提交 `c006c647a07ff047065199b22b554f14e450aa40` 得到相同决策/目标计数与 P50/P95 `247/293 ms`；它已被上方最终 `s2-vision-v4` 产物取代，不是当前候选。
 
 ## 0.3.0 · 2026-08-21
 

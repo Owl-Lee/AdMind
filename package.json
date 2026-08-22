@@ -1,6 +1,6 @@
 {
   "name": "ad-mind",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "An explainable AI decision layer for less disruptive long-form video advertising.",
   "repository": {

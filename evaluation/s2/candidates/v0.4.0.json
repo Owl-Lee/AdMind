@@ -1,0 +1,1773 @@
+{
+  "schemaVersion": 2,
+  "datasetId": "s2-charge-fixed-v1",
+  "generatedAt": "2026-08-22T03:42:41.155Z",
+  "provenance": {
+    "runner": {
+      "appVersion": "0.4.0",
+      "gitCommit": "e0a033194ea04a9c926a822e4330355f41ddd152",
+      "platform": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36"
+    },
+    "configurationReference": {
+      "appVersion": "0.4.0",
+      "gitCommit": "e0a033194ea04a9c926a822e4330355f41ddd152"
+    },
+    "input": {
+      "kind": "fixed-jpeg",
+      "width": 1280,
+      "height": 720
+    },
+    "vision": {
+      "configVersion": "s2-vision-v4",
+      "mediapipeTasksVision": "1.0.1",
+      "wasmRoot": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm",
+      "faceModel": {
+        "path": "/models/blaze_face_full_range.tflite",
+        "sha256": "3698b18f063835bc609069ef052228fbe86d9c9a6dc8dcb7c7c2d69aed2b181b"
+      },
+      "objectModel": {
+        "path": "/models/efficientdet_lite0.tflite",
+        "sha256": "0720bf247bd76e6594ea28fa9c6f7c5242be774818997dbbeffc4da460c723bb"
+      },
+      "thresholds": {
+        "facePrimary": 0.34,
+        "faceMirrored": 0.46,
+        "faceCrop": 0.48,
+        "subjectPrimary": 0.34,
+        "subjectCrop": 0.34,
+        "subjectCropStandalone": 0.48
+      },
+      "filters": {
+        "weakCropRequiresFaceForLabels": [
+          "人物主体"
+        ]
+      },
+      "availability": {
+        "requiredDetectors": [
+          "face",
+          "object"
+        ]
+      }
+    }
+  },
+  "metrics": {
+    "datasetId": "s2-charge-fixed-v1",
+    "sampleCount": 20,
+    "blockingSampleCount": 13,
+    "diagnosticSampleCount": 7,
+    "availableSampleCount": 20,
+    "availableBlockingSampleCount": 13,
+    "unavailableCount": 0,
+    "safePlacementHits": 7,
+    "safePlacementHitRate": 0.5384615384615384,
+    "unsafePlacementCount": 3,
+    "unsafePlacementRate": 0.23076923076923078,
+    "overDeferralCount": 3,
+    "overDeferralRate": 0.23076923076923078,
+    "targetTruePositive": 5,
+    "targetFalsePositive": 16,
+    "targetFalseNegative": 6,
+    "targetPrecision": 0.23809523809523808,
+    "targetRecall": 0.45454545454545453,
+    "targetF1": 0.31249999999999994,
+    "inferenceP50Ms": 277,
+    "inferenceP95Ms": 307
+  },
+  "failures": [
+    {
+      "sampleId": "charge-001",
+      "kind": "target-miss",
+      "expected": "1 protected target(s)",
+      "actual": "0 matched target(s)"
+    },
+    {
+      "sampleId": "charge-001",
+      "kind": "false-positive",
+      "expected": "1 annotated target(s)",
+      "actual": "2 detected target(s)"
+    },
+    {
+      "sampleId": "charge-002",
+      "kind": "over-deferral",
+      "expected": "top-right",
+      "actual": "none"
+    },
+    {
+      "sampleId": "charge-002",
+      "kind": "false-positive",
+      "expected": "1 annotated target(s)",
+      "actual": "2 detected target(s)"
+    },
+    {
+      "sampleId": "charge-005",
+      "kind": "unsafe-placement",
+      "expected": "top-right",
+      "actual": "top-left"
+    },
+    {
+      "sampleId": "charge-005",
+      "kind": "target-miss",
+      "expected": "1 protected target(s)",
+      "actual": "0 matched target(s)"
+    },
+    {
+      "sampleId": "charge-005",
+      "kind": "false-positive",
+      "expected": "1 annotated target(s)",
+      "actual": "2 detected target(s)"
+    },
+    {
+      "sampleId": "charge-006",
+      "kind": "false-positive",
+      "expected": "1 annotated target(s)",
+      "actual": "2 detected target(s)"
+    },
+    {
+      "sampleId": "charge-007",
+      "kind": "target-miss",
+      "expected": "1 protected target(s)",
+      "actual": "0 matched target(s)"
+    },
+    {
+      "sampleId": "charge-008",
+      "kind": "over-deferral",
+      "expected": "top-left",
+      "actual": "none"
+    },
+    {
+      "sampleId": "charge-012",
+      "kind": "false-positive",
+      "expected": "1 annotated target(s)",
+      "actual": "2 detected target(s)"
+    },
+    {
+      "sampleId": "charge-013",
+      "kind": "unsafe-placement",
+      "expected": "top-right",
+      "actual": "top-left"
+    },
+    {
+      "sampleId": "charge-013",
+      "kind": "target-miss",
+      "expected": "1 protected target(s)",
+      "actual": "0 matched target(s)"
+    },
+    {
+      "sampleId": "charge-013",
+      "kind": "false-positive",
+      "expected": "1 annotated target(s)",
+      "actual": "4 detected target(s)"
+    },
+    {
+      "sampleId": "charge-016",
+      "kind": "over-deferral",
+      "expected": "top-left",
+      "actual": "none"
+    },
+    {
+      "sampleId": "charge-016",
+      "kind": "false-positive",
+      "expected": "1 annotated target(s)",
+      "actual": "2 detected target(s)"
+    },
+    {
+      "sampleId": "charge-017",
+      "kind": "target-miss",
+      "expected": "1 protected target(s)",
+      "actual": "0 matched target(s)"
+    },
+    {
+      "sampleId": "charge-017",
+      "kind": "false-positive",
+      "expected": "1 annotated target(s)",
+      "actual": "2 detected target(s)"
+    },
+    {
+      "sampleId": "charge-018",
+      "kind": "unsafe-placement",
+      "expected": "top-left",
+      "actual": "top-right"
+    },
+    {
+      "sampleId": "charge-018",
+      "kind": "target-miss",
+      "expected": "1 protected target(s)",
+      "actual": "0 matched target(s)"
+    },
+    {
+      "sampleId": "charge-018",
+      "kind": "false-positive",
+      "expected": "1 annotated target(s)",
+      "actual": "2 detected target(s)"
+    }
+  ],
+  "predictions": [
+    {
+      "sampleId": "charge-001",
+      "status": "ready",
+      "placement": "top-right",
+      "targets": [
+        {
+          "x": 0.33906250000000004,
+          "y": 0.325,
+          "width": 0.14453125,
+          "height": 0.2569444444444444,
+          "confidence": 0.7415115833282471,
+          "source": "face-mirrored",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.1844375,
+          "y": 0.17977777777777776,
+          "width": 0.40425000000000005,
+          "height": 0.6648888888888889,
+          "confidence": 0.85546875,
+          "label": "人物主体",
+          "source": "subject-crop-3",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0.2559010416666667
+        },
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.5486742283950617,
+          "reservedAreaOverlap": 0,
+          "risk": 0.6750454444444445
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.6979010416666669
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.6730268518518517,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        }
+      ],
+      "inferenceMs": 291,
+      "message": "本地视觉检测到 1 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-002",
+      "status": "ready",
+      "placement": "none",
+      "targets": [
+        {
+          "x": 0.439078125,
+          "y": 0.35555555555555557,
+          "width": 0.048484374999999996,
+          "height": 0.1486111111111111,
+          "confidence": 0.61885666847229,
+          "source": "face-crop-1",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.17,
+          "y": 0.16633333333333333,
+          "width": 0.548625,
+          "height": 0.6648888888888889,
+          "confidence": 0.84375,
+          "label": "人物主体",
+          "source": "subject-crop-3",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.30616157407407396,
+          "reservedAreaOverlap": 0,
+          "risk": 0.5004363333333333
+        },
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.6200740740740741,
+          "reservedAreaOverlap": 0,
+          "risk": 0.7264533333333334
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.33941959876543204,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.9663821111111113
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.6874320987654322,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        }
+      ],
+      "inferenceMs": 269,
+      "message": "本地视觉检测到 1 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-003",
+      "status": "ready",
+      "placement": "top-right",
+      "targets": [
+        {
+          "x": 0.30078125,
+          "y": 0.38333333333333336,
+          "width": 0.0671875,
+          "height": 0.11944444444444445,
+          "confidence": 0.5986347794532776,
+          "source": "face-mirrored",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.170515625,
+          "y": 0.2971111111111111,
+          "width": 0.470765625,
+          "height": 0.5817777777777777,
+          "confidence": 0.88671875,
+          "label": "人物主体",
+          "source": "subject-crop-3",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.042712422839506076,
+          "reservedAreaOverlap": 0,
+          "risk": 0.3107529444444444
+        },
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.2996910108024691,
+          "reservedAreaOverlap": 0,
+          "risk": 0.4957775277777778
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.1042708333333331,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.797075
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.7316145833333335,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        }
+      ],
+      "inferenceMs": 300,
+      "message": "本地视觉检测到 1 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-004",
+      "status": "ready",
+      "placement": "top-left",
+      "targets": [],
+      "assessments": [
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0
+        },
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.44200000000000017
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.44200000000000017
+        }
+      ],
+      "inferenceMs": 279,
+      "message": "本地视觉未在当前帧检测到稳定避让目标。"
+    },
+    {
+      "sampleId": "charge-005",
+      "status": "ready",
+      "placement": "top-left",
+      "targets": [
+        {
+          "x": 0.4421875,
+          "y": 0.3402777777777778,
+          "width": 0.12890625,
+          "height": 0.22916666666666666,
+          "confidence": 0.8311269879341125,
+          "source": "face-direct",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.42,
+          "y": 0.225,
+          "width": 0.28048437499999995,
+          "height": 0.6722222222222223,
+          "confidence": 0.90234375,
+          "label": "人物主体",
+          "source": "subject-crop-2",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0.25083333333333335
+        },
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.19604947916666654,
+          "reservedAreaOverlap": 0,
+          "risk": 0.4211556249999999
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.6928333333333335
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.30161458333333324,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.9391625000000001
+        }
+      ],
+      "inferenceMs": 259,
+      "message": "本地视觉检测到 1 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-006",
+      "status": "ready",
+      "placement": "top-left",
+      "targets": [
+        {
+          "x": 0.69375,
+          "y": 0.3486111111111111,
+          "width": 0.06484375,
+          "height": 0.11527777777777778,
+          "confidence": 0.5032456517219543,
+          "source": "face-mirrored",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.516515625,
+          "y": 0.25972222222222224,
+          "width": 0.3280625,
+          "height": 0.5236111111111111,
+          "confidence": 0.71875,
+          "label": "人物主体",
+          "source": "subject-crop-2",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0.1945325520833333
+        },
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.41775178433641946,
+          "reservedAreaOverlap": 0,
+          "risk": 0.580781284722222
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.6365325520833335
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.6081655092592592,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        }
+      ],
+      "inferenceMs": 226,
+      "message": "本地视觉检测到 1 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-007",
+      "status": "ready",
+      "placement": "top-left",
+      "targets": [],
+      "assessments": [
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0
+        },
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.44200000000000017
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.44200000000000017
+        }
+      ],
+      "inferenceMs": 298,
+      "message": "本地视觉未在当前帧检测到稳定避让目标。"
+    },
+    {
+      "sampleId": "charge-008",
+      "status": "ready",
+      "placement": "none",
+      "targets": [
+        {
+          "x": 0.18671875,
+          "y": 0.2111111111111111,
+          "width": 0.5125,
+          "height": 0.6236111111111111,
+          "confidence": 0.36328125,
+          "label": "人物主体",
+          "source": "subject-direct",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.2070756172839504,
+          "reservedAreaOverlap": 0,
+          "risk": 0.42909444444444433
+        },
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.47181327160493836,
+          "reservedAreaOverlap": 0,
+          "risk": 0.6197055555555556
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.2822506751543208,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.9252204861111112
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.6430965470679016,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        }
+      ],
+      "inferenceMs": 271,
+      "message": "本地视觉检测到 0 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-009",
+      "status": "ready",
+      "placement": "top-left",
+      "targets": [
+        {
+          "x": 0.60828125,
+          "y": 0.24944444444444444,
+          "width": 0.02990625,
+          "height": 0.07088888888888889,
+          "confidence": 0.6554980874061584,
+          "source": "face-crop-3",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.5473281249999999,
+          "y": 0.22916666666666666,
+          "width": 0.18034374999999997,
+          "height": 0.44027777777777777,
+          "confidence": 0.76953125,
+          "label": "人物主体",
+          "source": "subject-crop-2",
+          "kind": "subject"
+        },
+        {
+          "x": 0.1595,
+          "y": 0.4597222222222222,
+          "width": 0.22339062499999998,
+          "height": 0.4152777777777778,
+          "confidence": 0.71875,
+          "label": "人物主体",
+          "source": "subject-crop-1",
+          "kind": "subject"
+        },
+        {
+          "x": 0.49209374999999994,
+          "y": 0.32916666666666666,
+          "width": 0.05890624999999999,
+          "height": 0.17083333333333334,
+          "confidence": 0.5,
+          "label": "人物主体",
+          "source": "subject-crop-1",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0.24516203703703707
+        },
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.2495079571759256,
+          "reservedAreaOverlap": 0,
+          "risk": 0.45964572916666646
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.15616946373456778,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.8344420138888891
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.7683333333333335,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        }
+      ],
+      "inferenceMs": 254,
+      "message": "本地视觉检测到 1 个脸部与 3 个角色主体。"
+    },
+    {
+      "sampleId": "charge-010",
+      "status": "ready",
+      "placement": "none",
+      "targets": [
+        {
+          "x": 0.80625,
+          "y": 0.24861111111111112,
+          "width": 0.05625,
+          "height": 0.1,
+          "confidence": 0.4630180895328522,
+          "source": "face-mirrored",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.83671875,
+          "y": 0.475,
+          "width": 0.1171875,
+          "height": 0.20833333333333334,
+          "confidence": 0.35779014229774475,
+          "source": "face-direct",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.78359375,
+          "y": 0.3375,
+          "width": 0.09921875,
+          "height": 0.1763888888888889,
+          "confidence": 0.34109050035476685,
+          "source": "face-direct",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.42996875,
+          "y": 0.1875,
+          "width": 0.5120312499999999,
+          "height": 0.6847222222222222,
+          "confidence": 0.63671875,
+          "label": "人物主体",
+          "source": "subject-crop-2",
+          "kind": "subject"
+        },
+        {
+          "x": 0.23125,
+          "y": 0.14166666666666666,
+          "width": 0.28828125,
+          "height": 0.7125,
+          "confidence": 0.4765625,
+          "label": "人物主体",
+          "source": "subject-direct",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.49094907407407407,
+          "reservedAreaOverlap": 0,
+          "risk": 0.6334833333333334
+        },
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.7750000000000001,
+          "reservedAreaOverlap": 0,
+          "risk": 0.8380000000000001
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.5291666666666668,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 1,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        }
+      ],
+      "inferenceMs": 256,
+      "message": "本地视觉检测到 3 个脸部与 2 个角色主体。"
+    },
+    {
+      "sampleId": "charge-011",
+      "status": "ready",
+      "placement": "top-right",
+      "targets": [
+        {
+          "x": 0.45078125,
+          "y": 0.32083333333333336,
+          "width": 0.0765625,
+          "height": 0.1361111111111111,
+          "confidence": 0.6441823244094849,
+          "source": "face-direct",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.0625,
+          "y": 0.2125,
+          "width": 0.48359375,
+          "height": 0.6722222222222223,
+          "confidence": 0.65625,
+          "label": "人物主体",
+          "source": "subject-direct",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0.23105468750000005
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.6730546875000002
+        },
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.6916666666666667,
+          "reservedAreaOverlap": 0,
+          "risk": 0.778
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 1,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        }
+      ],
+      "inferenceMs": 265,
+      "message": "本地视觉检测到 1 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-012",
+      "status": "ready",
+      "placement": "top-left",
+      "targets": [
+        {
+          "x": 0.8880781249999999,
+          "y": 0.39166666666666666,
+          "width": 0.050296875,
+          "height": 0.15416666666666667,
+          "confidence": 0.5038236379623413,
+          "source": "face-crop-2",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.71171875,
+          "y": 0.1361111111111111,
+          "width": 0.28828125,
+          "height": 0.7541666666666667,
+          "confidence": 0.5703125,
+          "label": "人物主体",
+          "source": "subject-direct",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0.08066406250000006
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.5226640625000002
+        },
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.9462962962962963,
+          "reservedAreaOverlap": 0,
+          "risk": 0.9613333333333334
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 1,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        }
+      ],
+      "inferenceMs": 284,
+      "message": "本地视觉检测到 1 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-013",
+      "status": "ready",
+      "placement": "top-left",
+      "targets": [
+        {
+          "x": 0.47343749999999996,
+          "y": 0.2777777777777778,
+          "width": 0.059375,
+          "height": 0.10555555555555556,
+          "confidence": 0.7494085431098938,
+          "source": "face-mirrored",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.55259375,
+          "y": 0.4474444444444444,
+          "width": 0.02990625,
+          "height": 0.07088888888888889,
+          "confidence": 0.508197009563446,
+          "source": "face-crop-3",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.3640625,
+          "y": 0.4444444444444444,
+          "width": 0.06015625,
+          "height": 0.10694444444444444,
+          "confidence": 0.3664012849330902,
+          "source": "face-direct",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.424078125,
+          "y": 0.21805555555555556,
+          "width": 0.236078125,
+          "height": 0.6347222222222222,
+          "confidence": 0.71875,
+          "label": "人物主体",
+          "source": "subject-crop-2",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0.2540740740740741
+        },
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.1125419560185183,
+          "reservedAreaOverlap": 0,
+          "risk": 0.3610302083333332
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.0004002700617283937,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.7114317129629631
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.1671874999999997,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.842375
+        }
+      ],
+      "inferenceMs": 277,
+      "message": "本地视觉检测到 3 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-014",
+      "status": "ready",
+      "placement": "top-left",
+      "targets": [
+        {
+          "x": 0.5421875,
+          "y": 0.33194444444444443,
+          "width": 0.10078125,
+          "height": 0.17916666666666667,
+          "confidence": 0.846102237701416,
+          "source": "face-mirrored",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.3515625,
+          "y": 0.18472222222222223,
+          "width": 0.534375,
+          "height": 0.6986111111111111,
+          "confidence": 0.83203125,
+          "label": "人物主体",
+          "source": "subject-direct",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.10048321759259261,
+          "reservedAreaOverlap": 0,
+          "risk": 0.3523479166666667
+        },
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.7213551311728393,
+          "reservedAreaOverlap": 0,
+          "risk": 0.7993756944444443
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.12812500000000007,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.8142500000000003
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.9197916666666667,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        }
+      ],
+      "inferenceMs": 300,
+      "message": "本地视觉检测到 1 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-015",
+      "status": "ready",
+      "placement": "none",
+      "targets": [
+        {
+          "x": 0.49296874999999996,
+          "y": 0.3611111111111111,
+          "width": 0.10078125,
+          "height": 0.17916666666666667,
+          "confidence": 0.8244929909706116,
+          "source": "face-mirrored",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.17618750000000002,
+          "y": 0.17977777777777776,
+          "width": 0.57028125,
+          "height": 0.6905555555555556,
+          "confidence": 0.88671875,
+          "label": "人物主体",
+          "source": "subject-crop-3",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.36425362654320964,
+          "reservedAreaOverlap": 0,
+          "risk": 0.542262611111111
+        },
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.570694598765432,
+          "reservedAreaOverlap": 0,
+          "risk": 0.690900111111111
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.7127083333333334,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.4548958333333331,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        }
+      ],
+      "inferenceMs": 306,
+      "message": "本地视觉检测到 1 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-016",
+      "status": "ready",
+      "placement": "none",
+      "targets": [
+        {
+          "x": 0.4046875,
+          "y": 0.3263888888888889,
+          "width": 0.26015625,
+          "height": 0.4625,
+          "confidence": 0.8036038875579834,
+          "source": "face-mirrored",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.046875,
+          "y": 0.14305555555555555,
+          "width": 0.84765625,
+          "height": 0.7402777777777778,
+          "confidence": 0.85546875,
+          "label": "人物主体",
+          "source": "subject-direct",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.875548321759259,
+          "reservedAreaOverlap": 0,
+          "risk": 0.9103947916666665
+        },
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.9231481481481482,
+          "reservedAreaOverlap": 0,
+          "risk": 0.9446666666666667
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 1,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.9484374999999999,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 1
+        }
+      ],
+      "inferenceMs": 310,
+      "message": "本地视觉检测到 1 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-017",
+      "status": "ready",
+      "placement": "top-right",
+      "targets": [
+        {
+          "x": 0.47346875,
+          "y": 0.29583333333333334,
+          "width": 0.08745312499999999,
+          "height": 0.26805555555555555,
+          "confidence": 0.5071116089820862,
+          "source": "face-crop-2",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.37971874999999994,
+          "y": 0.17916666666666667,
+          "width": 0.18396875,
+          "height": 0.6347222222222222,
+          "confidence": 0.34375,
+          "label": "动物主体",
+          "source": "subject-crop-1",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0.2413177083333333
+        },
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.02751186342592613,
+          "reservedAreaOverlap": 0,
+          "risk": 0.2941392708333335
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.6833177083333335
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.03014564043209898,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.7380355902777782
+        }
+      ],
+      "inferenceMs": 304,
+      "message": "本地视觉检测到 1 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-018",
+      "status": "ready",
+      "placement": "top-right",
+      "targets": [
+        {
+          "x": 0.4265625,
+          "y": 0.30972222222222223,
+          "width": 0.04609375,
+          "height": 0.08194444444444444,
+          "confidence": 0.6486990451812744,
+          "source": "face-direct",
+          "kind": "face",
+          "label": "face"
+        },
+        {
+          "x": 0.37728125,
+          "y": 0.2518888888888889,
+          "width": 0.18665625000000002,
+          "height": 0.627,
+          "confidence": 0.92578125,
+          "label": "人物主体",
+          "source": "subject-crop-3",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0.24146354166666667
+        },
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.023757368827160494,
+          "reservedAreaOverlap": 0,
+          "risk": 0.29285790972222225
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.6834635416666668
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0.04239583333333335,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.7482776041666669
+        }
+      ],
+      "inferenceMs": 307,
+      "message": "本地视觉检测到 1 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-019",
+      "status": "ready",
+      "placement": "top-right",
+      "targets": [
+        {
+          "x": 0.406671875,
+          "y": 0.35944444444444446,
+          "width": 0.13973437500000002,
+          "height": 0.5072222222222221,
+          "confidence": 0.91015625,
+          "label": "人物主体",
+          "source": "subject-crop-3",
+          "kind": "subject"
+        }
+      ],
+      "assessments": [
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0.2312369791666667
+        },
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0.2586080729166667
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.6732369791666668
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.7006080729166668
+        }
+      ],
+      "inferenceMs": 272,
+      "message": "本地视觉检测到 0 个脸部与 1 个角色主体。"
+    },
+    {
+      "sampleId": "charge-020",
+      "status": "ready",
+      "placement": "top-left",
+      "targets": [],
+      "assessments": [
+        {
+          "placement": "top-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0
+        },
+        {
+          "placement": "top-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.055,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0,
+          "risk": 0
+        },
+        {
+          "placement": "bottom-left",
+          "region": {
+            "x": 0.025,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.44200000000000017
+        },
+        {
+          "placement": "bottom-right",
+          "region": {
+            "x": 0.675,
+            "y": 0.615,
+            "width": 0.3,
+            "height": 0.3
+          },
+          "faceOverlap": 0,
+          "reservedAreaOverlap": 0.6500000000000002,
+          "risk": 0.44200000000000017
+        }
+      ],
+      "inferenceMs": 273,
+      "message": "本地视觉未在当前帧检测到稳定避让目标。"
+    }
+  ]
+}
