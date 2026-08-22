@@ -1,12 +1,41 @@
 # Changelog
 
-[English](#changelog) · [中文（最新版本）](#041-中文说明)
+[English](#changelog) · [中文（最新版本）](#050-中文说明)
 
 Notable project changes are recorded here.
 
 ## Unreleased
 
 No unreleased changes are documented yet.
+
+## 0.5.0 · 2026-08-22
+
+v0.5.0 packages the next public S2 evidence and browser-reproducibility release. It does not introduce a new reviewed-label metric or replace the historical v0.4.0 `s2-vision-v4` candidate.
+
+### Local review intake and reproducible browser inference
+
+- Added the bilingual `/regression/intake` page. It accepts a user-selected schema-v2 calibration JSON, records that exact file's SHA-256, validates the immutable schema-v1 SHA-256, trusted calibration seed, eight coordinate decisions and three placement resolutions locally, and builds an in-memory reviewed-manifest preview only after the complete contract passes.
+- The intake page can re-score the saved v0.4.0 raw predictions against that preview and download separate preview/rescore JSON files. This is a **label-only re-score**, not a fresh detector run. The selected file is not uploaded; the page does not train a model, commit a file or overwrite `evaluation/s2/manifest.json`.
+- Vendored all six MediaPipe Tasks Vision 1.0.1 WASM/loader assets under `/mediapipe/wasm` with tracked SHA-256 values and advanced the runtime provenance to `s2-vision-v5`. The existing v0.4.0/v4 metrics remain historical and unchanged.
+- Added a separate Playwright Chromium CI job for fresh 20-frame inference. It builds the exact revision, rejects jsDelivr requests and critical local-asset failures, and requires 20/20 model availability. `charge-005/008/013/016/018` remain diagnostic until schema-v2 intake resolves their first-pass label/box adjustments; `charge-002` was confirmed correct and stays in the stable gate. Outside that temporary exception set, a newly unsafe stable-label sample fails the job. The job uploads the JSON report and full-page screenshot; traces are retained on failure.
+- Added a sealed six-frame 1280×720 holdout with four cross-source primary samples and two same-source `CHARGE` supplemental diagnostics. Every item is `sealed-unreviewed`, `useForTuning = false` and `groundTruth = null`; categories are sampling strata, not labels. The same-host Chromium extractor reproduced identical bytes in two runs and `--verify-only` checks source/frame hashes, dimensions, split counts and no-label/no-tuning invariants. This is evaluation infrastructure, not a model metric or human truth.
+- Added a pause-session token guard. Resume, seeking, visibility/focus loss, reset, ad completion and component cleanup invalidate the active token so a late MediaPipe promise cannot display a stale box or ad.
+- Added guaranteed TwelveLabs temporary-asset cleanup to the offline analyzer. Success, processing failure and analysis failure all request deletion in `finally`; regression tests cover each path. Maintainers should still audit provider assets created by earlier CLI versions.
+- Stage 1B is still open: the product owner must complete all 8/8 replacement-coordinate decisions and 3/3 placement resolutions, then later review the other seven frames. Until a complete schema-v2 artifact is validated and a separately versioned reviewed manifest exists, none of the 20 frames may be described as complete human ground truth and no reviewed-label metric may be published.
+- Stage 1C is partially implemented in code. It becomes complete only after the first `s2-vision-v5` CI run and a fresh hosted-site run verify the local runtime, 20/20 availability and safety gate. No new model number is inferred from the implementation alone.
+
+### 0.5.0 中文说明
+
+- v0.5.0 是下一公开版本的 S2 证据接收与浏览器可复现性工程收尾，不新增基于复核标签的模型指标，也不替换历史 v0.4.0 `s2-vision-v4` 候选。
+- 新增双语 `/regression/intake` 页面。用户选择 schema v2 校准 JSON 后，页面会记录该原件的准确 SHA-256，并只在本地严格校验不可变 schema v1 SHA-256、可信 calibration seed、8 张坐标决定与 3 处位置裁决；完整合同通过后才在内存中生成复核 manifest 预览。
+- 接收页可以使用同一份 v0.4.0 已保存原始预测对预览标签做重评分，并分别下载预览 JSON 和重评分 JSON。这只是**标签变化后的重评分**，不是新的检测器运行。所选文件不会上传；页面不会训练模型、提交文件或覆盖 `evaluation/s2/manifest.json`。
+- 将 MediaPipe Tasks Vision 1.0.1 的 6 个 WASM/加载器文件固定到 `/mediapipe/wasm`，记录 SHA-256，并把运行时来源版本推进到 `s2-vision-v5`。现有 v0.4.0/v4 指标继续作为历史数字保留，不发生变化。
+- 新增独立 Playwright Chromium CI 新鲜推理任务：按准确提交构建，运行 20 张固定帧，禁止 jsDelivr 请求和关键本地资源失败，并要求 20/20 模型可用。`charge-005/008/013/016/018` 在 schema v2 接收解决第一轮标签/保护框调整前暂作诊断例外；`charge-002` 已确认正确，继续进入稳定门。除这 5 张外，稳定标签出现新的危险误投就会使任务失败。任务上传 JSON 报告和整页截图；失败时保留 trace。
+- 新增 6 张 1280×720 密封留出集：4 张跨来源主要样本，2 张同源 `CHARGE` 补充诊断。全部保持 `sealed-unreviewed`、`useForTuning = false`、`groundTruth = null`；类别只是抽样分层，不是标签。同一主机 Chromium 抽帧两次得到逐字节一致结果，`--verify-only` 会检查源/帧哈希、尺寸、分组数量和“无标签、不可调参”约束。这是评估基础设施，不是模型指标或人工真值。
+- 新增暂停会话 token 防护。恢复、拖动、页面隐藏/失焦、重置、广告完成和组件清理都会使当前 token 失效，迟到的 MediaPipe Promise 不能再展示旧框或误投广告。
+- 为离线分析器补上 TwelveLabs 临时素材清理。成功、处理失败与分析异常都会在 `finally` 中请求删除，并由回归测试覆盖；维护者仍需盘点旧版 CLI 曾经创建的历史 provider 资产。
+- 阶段 1B 仍未完成：产品负责人还需完成 8/8 张替换坐标决定与 3/3 处位置裁决，之后另行复核另外 7 张。在完整 schema v2 经校验并建立单独版本化的复核 manifest 前，不能把 20 张称为完整人工真值，也不能发布基于复核标签的新指标。
+- 阶段 1C 目前只是代码侧部分完成。只有首次 `s2-vision-v5` CI 和线上新鲜运行都验证本地 runtime、20/20 可用性与安全门后，才能标记完全完成；不能仅凭实现推导新模型数字。
 
 ## 0.4.1 · 2026-08-22
 
@@ -44,7 +73,7 @@ Released to the public site.
 - Added `evaluation/s2/candidates/v0.4.0.json`, generated at `2026-08-22T03:42:41.155Z` by the final `s2-vision-v4` browser run at runner/config commit `e0a033194ea04a9c926a822e4330355f41ddd152`, as a reproducible comparison against the historical v0.2.7-configuration baseline. All 20/20 fixed frames were available. The result and review lab ship on the public v0.4.0 site.
 - On the same 13 rule-confirmed drafts, safe-placement agreement changed from 6/13 (46.2%) to 7/13 (53.8%), unsafe placement from 4/13 (30.8%) to 3/13 (23.1%), and over-deferral remained 3/13 (23.1%). Protected-target results changed from TP 4 / FP 21 / FN 7, 16.0% precision, 36.4% recall and 22.2% F1 to TP 5 / FP 16 / FN 6, 23.8% precision, 45.5% recall and 31.3% F1. These target P/R/F1 figures use exploratory, class-agnostic raw-box matching at IoU ≥ 0.25; they are not calibrated semantic detector accuracy. Recorded latency changed from 318/335 ms p50/p95 to 277/307 ms.
 - Confirmed one genuine behavior correction: `charge-012` no longer over-defers. Remaining over-deferrals are `charge-002/008/016`; remaining unsafe placements are `charge-005/013/018`.
-- Audited the remaining labels before further tuning. The accepted placement drafts for `charge-002/005/008/013/018` are disputable, so the project will not optimize against them blindly; `charge-016` remains the clear unresolved over-deferral case.
+- Subsequent first-pass review confirmed `charge-002`'s protection target and placement. `charge-005/008/013/016/018` still require label/box resolution before they can act as stable safety-gate targets, so the project will not optimize against them blindly.
 - Expanded product review to a default 13-frame priority queue: the original seven `needs-user-review` drafts plus `charge-002/005/008/013/016/018`. The other seven frames remain unreviewed agent-rule drafts; none of the 20 labels is human ground truth. Green boxes are agent-drafted targets, purple dashed boxes are hidden-by-default model output, and blue placement choices are prefilled from the agent draft and remain dashed until confirmed.
 - Added a four-step confirmation guide: verify green protection targets, select every acceptable upper corner or defer, explain the decision/adjustment, then confirm and export. Choices stay in browser `localStorage`; confirmation does not train the model. Exported JSON must be validated and committed separately by a maintainer before it can affect the manifest or baseline.
 - Unified scorer and rendered-card footprints at 0.30×0.30 and fixed the S2 stage at 16:9. Narrowed weak crop suppression to low-confidence crop-only `人物主体` candidates without face corroboration; direct, strong crop, animal and faceless character candidates remain. Back-facing low-confidence people remain a holdout limitation.
@@ -58,7 +87,7 @@ Released to the public site.
 - 新增 `evaluation/s2/candidates/v0.4.0.json`，它由最终 `s2-vision-v4` 浏览器复跑于 `2026-08-22T03:42:41.155Z` 生成，运行器/配置提交均为 `e0a033194ea04a9c926a822e4330355f41ddd152`，用于与历史 v0.2.7 配置参考基线做可重算对比；20/20 张固定帧均可用。该结果与复核实验室已随公开站 v0.4.0 发布。
 - 同一组 13 张规则确认初标中，安全位置一致率由 `6/13 = 46.2%` 提升到 `7/13 = 53.8%`，危险误投由 `4/13 = 30.8%` 降至 `3/13 = 23.1%`，过度顺延保持 `3/13 = 23.1%`。保护目标从 TP 4 / FP 21 / FN 7、精确率 `16.0%`、召回率 `36.4%`、F1 `22.2%`，变为 TP 5 / FP 16 / FN 6、精确率 `23.8%`、召回率 `45.5%`、F1 `31.3%`。这些目标 P/R/F1 使用 IoU ≥ 0.25 的类别无关原始框探索性匹配，不是经过校准的语义检测准确率；已记录耗时由 P50/P95 `318/335 ms` 变为 `277/307 ms`。
 - 确认一项真实行为修复：`charge-012` 不再过度顺延。剩余过度顺延为 `charge-002/008/016`，剩余危险误投为 `charge-005/013/018`。
-- 在继续调参前审计了剩余标签。`charge-002/005/008/013/018` 的可接受位置初标存在争议，项目不会继续针对这些标签盲调；`charge-016` 仍是明确未解决的过度顺延案例。
+- 后续第一轮复核确认 `charge-002` 的保护目标与位置正确；`charge-005/008/013/016/018` 仍需完成标签/保护框裁决，才能成为稳定安全门目标，因此项目不会针对它们盲调。
 - 产品复核扩展为默认 13 张优先队列：原有 7 张 `needs-user-review` 加 `charge-002/005/008/013/016/018`。另外 7 张仍是未经人工审核的代理规则初标；20 张标签都不是人工标准答案。绿色框是代理保护目标，紫色虚线框是默认隐藏的模型输出，蓝色位置选择由代理初标预填，确认前保持虚线。
 - 新增四步人工确认说明：检查绿色保护目标、选择所有可接受上角或顺延、解释决定/调整、确认并导出。选择只存于浏览器 `localStorage`；确认不会自动训练模型。导出的 JSON 必须由维护者另行校验并提交，之后才可能影响 manifest 或基线。
 - 评分器与线上卡片 footprint 已统一为 `0.30 × 0.30`，S2 舞台固定为 16:9。弱裁剪抑制收窄到无脸部佐证的低置信裁剪 `人物主体`；直接、强裁剪、动物和无脸角色候选仍保留。背面低置信人物仍是需要留出集验证的泛化限制。

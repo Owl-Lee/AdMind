@@ -20,23 +20,28 @@ export async function analyzeWithTwelveLabs(input: {
     filename: basename(input.filePath),
   });
   if (!asset.id) throw new Error("TwelveLabs upload did not return an asset id.");
+  const assetId = asset.id;
 
-  let current = await client.assets.retrieve(asset.id);
-  while (current.status === "processing") {
-    await wait(2_000);
-    current = await client.assets.retrieve(asset.id);
-  }
-  if (current.status !== "ready") {
-    throw new Error(`TwelveLabs could not process the video (${current.status ?? "unknown state"}).`);
-  }
+  try {
+    let current = await client.assets.retrieve(assetId);
+    while (current.status === "processing") {
+      await wait(2_000);
+      current = await client.assets.retrieve(assetId);
+    }
+    if (current.status !== "ready") {
+      throw new Error(`TwelveLabs could not process the video (${current.status ?? "unknown state"}).`);
+    }
 
-  const response = await client.analyze({
-    modelName: model,
-    video: { type: "asset_id", assetId: asset.id },
-    prompt: input.prompt ?? ANALYSIS_PROMPT,
-    temperature: 0.1,
-    maxTokens: 4_096,
-  });
-  if (!response.data) throw new Error("TwelveLabs returned an empty analysis.");
-  return { model, payload: parseJsonPayload(response.data), rawText: response.data };
+    const response = await client.analyze({
+      modelName: model,
+      video: { type: "asset_id", assetId },
+      prompt: input.prompt ?? ANALYSIS_PROMPT,
+      temperature: 0.1,
+      maxTokens: 4_096,
+    });
+    if (!response.data) throw new Error("TwelveLabs returned an empty analysis.");
+    return { model, payload: parseJsonPayload(response.data), rawText: response.data };
+  } finally {
+    await client.assets.delete(assetId).catch(() => undefined);
+  }
 }

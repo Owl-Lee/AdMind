@@ -102,7 +102,7 @@
 - **Given** the 13 blocking agent drafts, seven diagnostic agent drafts and historical fixed-set result, with no claim that any is human ground truth
 - **When** detection thresholds, deduplication, target classes or creative geometry change
 - **Then** the same-set before/after comparison is produced
-- **And** no new unsafe placement is introduced
+- **And** `charge-005/008/013/016/018` remain diagnostic until schema-v2 intake resolves their first-pass label/box adjustments; `charge-002` is confirmed and stays in the stable gate; outside that temporary exception set, no stable-label sample becomes newly unsafe
 - **And** pending-review samples stay outside the blocking denominator until confirmed
 - **And** fixed-set figures are described as project-local agreement, never general model accuracy.
 
@@ -117,7 +117,7 @@
 - **And** latency is 277 ms p50 / 307 ms p95
 - **And** `charge-012` is no longer a decision failure
 - **And** remaining over-deferrals are exactly `charge-002/008/016` and remaining unsafe placements are exactly `charge-005/013/018`
-- **And** `charge-002/005/008/013/018` are flagged as disputed labels rather than blind tuning targets.
+- **And** the historical failure list remains traceable, while current tuning treats `charge-005/008/013/016/018` as unresolved diagnostics and keeps confirmed `charge-002` in the stable gate.
 
 #### AT-S2-08 Priority review remains local, explicit and independent
 
@@ -179,6 +179,47 @@
 - **And** schema-v2 validation requires the trusted calibration seed, derives the eight target IDs from the immutable source review, and requires exactly `charge-005/008/009` for placement resolution rather than trusting export-declared IDs
 - **And** v0.4.0 metrics remain unchanged until a maintainer validates v2, creates a separately versioned reviewed manifest and re-scores saved predictions.
 - **And** v0.4.1 is recorded as a calibration-tool release with no new detector run or model metric.
+
+#### AT-S2-14 Schema-v2 intake remains local, preview-only and label-only
+
+- **Given** `/regression/intake` has the immutable schema-v1 source review, its SHA-256, the trusted calibration seed and the saved v0.4.0 raw predictions
+- **When** a user selects a schema-v2 JSON
+- **Then** the browser records the exact selected-file SHA-256 in the preview evidence
+- **Then** incomplete, tampered, stale or source-mismatched artifacts are rejected before preview or scoring
+- **And** a ready result requires all eight replacement-coordinate decisions and exactly `charge-005/008/009` placement resolutions
+- **And** the page creates only an in-memory reviewed-manifest preview, leaving the seven other frames diagnostic
+- **And** before/after values re-score the same saved raw predictions and are explicitly described as a label-only comparison rather than fresh inference
+- **And** the selected file is not uploaded and the page cannot train a model, commit a file or overwrite `evaluation/s2/manifest.json`
+- **And** preview/rescore downloads remain separate evidence that a maintainer must validate and deliberately commit.
+
+#### AT-S2-15 Fresh v5 browser inference is local and safety-gated
+
+- **Given** the exact revision is built with MediaPipe Tasks Vision 1.0.1 and `s2-vision-v5`
+- **When** the dedicated Playwright Chromium job autoruns `/regression` over the 20 fixed frames
+- **Then** MediaPipe loads its six checksum-recorded JS/WASM assets from `/mediapipe/wasm`, and no request targets jsDelivr
+- **And** critical WASM, model or frame request failure fails the job
+- **And** all 20 frames are available, both detector requirements remain fail-closed, and the report carries v5/local-runtime provenance
+- **And** `charge-005/008/013/016/018` are temporary diagnostic exceptions pending schema-v2 label/box resolution; `charge-002` is confirmed and remains in the stable gate; every other stable-label sample is also prohibited from becoming newly unsafe
+- **And** the CI job uploads the fresh JSON report and full-page screenshot, retaining a trace on failure
+- **And** the historical v0.4.0/v4 metrics stay unchanged; v5 is not called complete until the first CI and hosted fresh runs pass.
+
+#### AT-S2-16 Late pause inference cannot deliver stale UI or ads
+
+- **Given** a MediaPipe promise is running for one active pause-session token
+- **When** playback resumes, seeking begins, the page becomes hidden or unfocused, the player resets, the ad completes, the component unmounts, or a newer pause session begins
+- **Then** the previous token is invalidated
+- **And** the late promise cannot update detection evidence, choose a placement or display an ad
+- **And** a token can complete at most once and only while it is the active session.
+
+#### AT-S2-17 The holdout remains sealed, unlabeled and unavailable for tuning
+
+- **Given** `evaluation/s2/holdout/manifest.json` contains six 1280×720 frames
+- **Then** four cross-source samples are primary and two same-source `CHARGE` samples are supplemental correlated diagnostics
+- **And** every sample remains `sealed-unreviewed`, `useForTuning = false` and `groundTruth = null`
+- **And** sampling categories are not presented as product labels or human truth
+- **And** model outcomes are not inspected, thresholds/rules are not selected, and training does not use these frames before the candidate is frozen
+- **And** the two same-source samples are never reported as independent generalization evidence
+- **And** same-host extraction with the pinned Chromium/source bytes is byte-identical, while `--verify-only` checks hashes, dimensions, split counts and no-label/no-tuning invariants without overwriting the seal.
 
 #### AT-S3-01 Commercial weight cannot cross an ethical hard rule
 
@@ -435,10 +476,15 @@ After P0 passes:
 - [ ] deterministic decisions and hard-rule tests all pass;
 - [ ] the 20 S2 1280×720 frames, hashes, historical baseline and v0.4.0 candidate recompute offline;
 - [ ] all 20 labels remain identified as agent-authored rather than human ground truth;
-- [ ] the 13 priority-review frames and other seven unreviewed agent-rule drafts remain distinguishable; no adjustment introduces a new unsafe placement;
+- [ ] the 13 priority-review frames and other seven unreviewed agent-rule drafts remain distinguishable; `charge-005/008/013/016/018` stay diagnostic until v2 intake, `charge-002` stays stable, and no other stable-label sample becomes newly unsafe;
 - [ ] the immutable 13/13 first-pass artifact remains byte-identical; `/regression/calibrate` covers only eight requested coordinate adjustments and three placement conflicts;
 - [ ] schema-v2 export binds the v1 SHA-256, remains local and cannot train a model or update the manifest automatically;
-- [ ] disputed `charge-002/005/008/013/018` labels are not used as blind tuning targets;
+- [ ] `/regression/intake` rejects incomplete or untrusted schema-v2 input, produces preview/rescore evidence without writing the tracked manifest, and clearly labels the comparison as saved-prediction label-only re-scoring;
+- [ ] the dedicated Chromium job loads six local MediaPipe assets without jsDelivr, completes 20/20 frames, applies the explicit five-sample diagnostic exception, forbids newly unsafe stable-label samples and uploads JSON/screenshot evidence;
+- [ ] the six-frame holdout preserves its 4 cross-source / 2 same-source split, byte hashes, `sealed-unreviewed`, `groundTruth = null` and `useForTuning = false` invariants;
+- [ ] resume, seek, hidden/blur, reset and a newer pause invalidate prior session tokens so stale promises cannot deliver;
+- [ ] the first v5 CI and hosted fresh runs pass before Stage 1C or any v5 model result is declared complete;
+- [ ] unresolved `charge-005/008/013/016/018` labels/boxes are not used as blind tuning targets, while confirmed `charge-002` remains in the stable gate;
 - [ ] scorer/rendered geometry is 0.30×0.30 on the 16:9 S2 stage, and weak crop suppression passes its narrow-boundary tests;
 - [ ] S1 has an end-to-end browser recording/test;
 - [ ] the project runs without AI keys;
@@ -573,7 +619,7 @@ Do not call the phase complete if any condition holds:
 
 **Then** 必须输出修改前后的同集对比
 
-**And** 不得新增危险位置误投
+**And** `charge-005/008/013/016/018` 在 schema v2 解决第一轮标签/保护框调整前保持诊断；`charge-002` 已确认并留在稳定门；除这组临时例外外，稳定标签样本不得新增危险误投
 
 **And** 待产品复核的样本只能作为诊断，确认前不得加入阻断分母
 
@@ -599,7 +645,7 @@ Do not call the phase complete if any condition holds:
 
 **And** 剩余过度顺延恰好是 `charge-002/008/016`，剩余危险误投恰好是 `charge-005/013/018`
 
-**And** `charge-002/005/008/013/018` 被标记为标签争议，而不是继续盲调的目标。
+**And** 历史失败列表继续可追溯；当前调参将 `charge-005/008/013/016/018` 作为未解决诊断，并让已确认的 `charge-002` 留在稳定门。
 
 ### AT-S2-08 优先复核保持本地、明确且独立
 
@@ -698,6 +744,72 @@ Do not call the phase complete if any condition holds:
 **And** 在维护者校验 v2、建立单独版本化的复核 manifest，并用已保存预测重新评分前，v0.4.0 指标保持不变。
 
 **And** v0.4.1 只记录为校框工具版本，没有新的检测器运行或模型指标。
+
+### AT-S2-14 schema v2 接收保持本地、仅预览、仅标签重评分
+
+**Given** `/regression/intake` 已取得不可变 schema v1 源复核、其 SHA-256、可信 calibration seed 与 v0.4.0 已保存原始预测
+
+**When** 用户选择一份 schema v2 JSON
+
+**Then** 浏览器把所选原件的准确 SHA-256 写入预览证据
+
+**Then** 不完整、被篡改、过期或来源不匹配的文件会在预览和评分前被拒绝
+
+**And** 只有完成 8 张替换坐标决定和准确的 `charge-005/008/009` 三处位置裁决，结果才可进入 ready
+
+**And** 页面只在内存中生成复核 manifest 预览，另外 7 张继续保持诊断状态
+
+**And** 前后数值重评分同一份已保存原始预测，明确标为标签变化比较而不是新推理
+
+**And** 所选文件不会上传；页面不能训练模型、提交文件或覆盖 `evaluation/s2/manifest.json`
+
+**And** 下载的预览/重评分 JSON 继续作为独立证据，必须由维护者另行校验并有意提交。
+
+### AT-S2-15 v5 新鲜浏览器推理必须本地化并通过安全门
+
+**Given** 准确提交已使用 MediaPipe Tasks Vision 1.0.1 与 `s2-vision-v5` 完成构建
+
+**When** 独立 Playwright Chromium 任务在 `/regression` 自动运行 20 张固定帧
+
+**Then** MediaPipe 从 `/mediapipe/wasm` 加载 6 个带校验值的 JS/WASM 文件，不得请求 jsDelivr
+
+**And** 任一关键 WASM、模型或固定帧请求失败都会使任务失败
+
+**And** 20 张必须全部可用，双检测器继续 fail-closed，报告记录 v5/本地 runtime 来源
+
+**And** `charge-005/008/013/016/018` 在 schema v2 完成标签/保护框裁决前暂作诊断例外；`charge-002` 已确认并继续进入稳定门；除此之外，稳定标签样本不得新增危险误投
+
+**And** CI 上传新鲜 JSON 报告和整页截图，失败时保留 trace
+
+**And** 历史 v0.4.0/v4 指标保持不变；首次 CI 和线上新鲜运行通过前不得把 v5 标为完成。
+
+### AT-S2-16 迟到的暂停推理不得投放旧界面或广告
+
+**Given** 一个 MediaPipe Promise 正在为当前暂停会话 token 运行
+
+**When** 恢复播放、开始拖动、页面隐藏或失焦、播放器重置、广告完成、组件卸载，或新的暂停会话开始
+
+**Then** 之前的 token 必须失效
+
+**And** 迟到 Promise 不得更新检测证据、选择位置或显示广告
+
+**And** 一个 token 最多完成一次，并且只有当前活动 token 可以完成。
+
+### AT-S2-17 holdout 必须保持密封、无标签且不可用于调参
+
+**Given** `evaluation/s2/holdout/manifest.json` 包含 6 张 1280×720 图片
+
+**Then** 4 张跨来源样本属于主要留出集，2 张同源 `CHARGE` 样本属于相关性补充诊断
+
+**And** 每张都保持 `sealed-unreviewed`、`useForTuning = false`、`groundTruth = null`
+
+**And** 抽样类别不得表述为产品标签或人工真值
+
+**And** 候选冻结前不得查看模型结果、据此选择阈值/规则或用于训练
+
+**And** 2 张同源样本不得包装成独立泛化证据
+
+**And** 在同一主机、固定 Chromium/源字节下重复抽帧必须逐字节一致；`--verify-only` 检查哈希、尺寸、分组和“无标签、不可调参”约束，不得覆盖密封内容。
 
 ### AT-S3-01 商业权重不能突破敏感规则
 
@@ -954,10 +1066,15 @@ P1 在 P0 通过后实施：
 - [ ] 决策确定性与硬规则测试全部通过；
 - [ ] S2 的 20 张 1280×720 固定帧清单、图片哈希、历史基线与 v0.4.0 候选可以离线重算；
 - [ ] 20 张标签全部继续明确为代理初标，而不是人工标准答案；
-- [ ] 13 张优先复核样本与另外 7 张未人工审核代理规则初标可明确区分；调整没有新增危险位置误投；
+- [ ] 13 张优先复核样本与另外 7 张未人工审核代理规则初标可明确区分；`charge-005/008/013/016/018` 在 v2 接收前保持诊断，`charge-002` 保持稳定，其余稳定标签样本不得新增危险误投；
 - [ ] 不可变的 13/13 张第一轮原件保持逐字节一致；`/regression/calibrate` 只覆盖 8 张坐标调整与 3 处位置冲突；
 - [ ] schema v2 导出绑定 v1 SHA-256，只保存在本地，不能自动训练模型或更新 manifest；
-- [ ] `charge-002/005/008/013/018` 的标签争议没有被当作盲调目标；
+- [ ] `/regression/intake` 会拒绝不完整或不可信的 schema v2 输入，在不写入受追踪 manifest 的前提下生成预览/重评分证据，并明确说明这是对已保存预测的标签重评分；
+- [ ] 独立 Chromium 任务从本地加载 6 个 MediaPipe runtime 文件且不请求 jsDelivr，完成 20/20 张、应用明确的 5 张诊断例外、阻止稳定标签新增危险误投，并上传 JSON/截图证据；
+- [ ] 6 张 holdout 保持 4 张跨来源 / 2 张同源分组、字节哈希、`sealed-unreviewed`、`groundTruth = null` 与 `useForTuning = false` 约束；
+- [ ] 恢复、拖动、隐藏/失焦、重置和新暂停会使旧 token 失效，迟到 Promise 不得继续投放；
+- [ ] 首次 v5 CI 与线上新鲜运行通过后，才能宣布阶段 1C 或任何 v5 模型结果完成；
+- [ ] 未解决的 `charge-005/008/013/016/018` 标签/保护框没有被当作盲调目标，已确认的 `charge-002` 继续进入稳定门；
 - [ ] 评分器/渲染几何在 16:9 S2 舞台上统一为 `0.30 × 0.30`，弱裁剪抑制通过窄边界测试；
 - [ ] S1 具备端到端浏览器录像/测试；
 - [ ] 无 AI 密钥可运行；

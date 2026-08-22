@@ -28,7 +28,7 @@ import {
 import styles from "./VisionRegressionLab.module.css";
 
 const manifest = manifestJson as RegressionManifest;
-const APP_VERSION = "0.4.1";
+const APP_VERSION = "0.5.0";
 const priorityReviewSamples = reviewableSamples(manifest);
 type SampleFilter = "all" | "needs-review" | "unsafe";
 
@@ -284,6 +284,7 @@ export function VisionRegressionLab() {
         baselineNotice: "Green regions are AI-assisted annotation drafts prepared by the project agent—not TwelveLabs output and not human ground truth. Exported review JSON must be validated and committed separately before it can affect the manifest or baseline.",
         exportReview: `${confirmedReviewCount === priorityReviewSamples.length ? "Export complete" : "Export partial"} review JSON (${confirmedReviewCount}/${priorityReviewSamples.length})`,
         openCalibration: "Adjust the 8 flagged boxes",
+        openIntake: "Validate a completed v2 export",
         downloaded: "Downloaded locally. Nothing was uploaded.",
         currentRun: report ? "Current browser candidate run · not saved as the accepted baseline" : "Run the fixed set to create a browser-local candidate result",
         metricNote: "* Exploratory only: nested face and body boxes can describe the same valid protected subject, but this raw-box metric still counts the extra box as a false positive.",
@@ -357,6 +358,7 @@ export function VisionRegressionLab() {
         baselineNotice: "绿色区域是项目代理制作的 AI 辅助初标，不是 TwelveLabs 输出，也不是人工标准答案。导出的审核 JSON 必须另行校验并提交，之后才可能影响 manifest 或基线。",
         exportReview: `${confirmedReviewCount === priorityReviewSamples.length ? "导出完整" : "导出部分"}审核 JSON（${confirmedReviewCount}/${priorityReviewSamples.length}）`,
         openCalibration: "调整 8 张争议保护框",
+        openIntake: "校验已完成的 v2 导出",
         downloaded: "已下载到本地，没有上传任何内容。",
         currentRun: report ? "当前浏览器候选运行 · 尚未写入已接受基线" : "运行固定集后，会生成仅存在当前浏览器的候选结果",
         metricNote: "* 仅作探索诊断：脸框和人体框可能同时描述同一个有效保护主体，但原始框指标仍会把额外框计为误检。",
@@ -454,6 +456,7 @@ export function VisionRegressionLab() {
         </div>
         <div className={styles.reviewExport}>
           <Link className={styles.calibrationLink} href="/regression/calibrate">{copy.openCalibration}</Link>
+          <Link className={styles.calibrationLink} href="/regression/intake">{copy.openIntake}</Link>
           <button disabled={confirmedReviewCount === 0} onClick={exportReview}>{copy.exportReview}</button>
           {reviewDownloaded ? <output aria-live="polite">{copy.downloaded}</output> : null}
         </div>

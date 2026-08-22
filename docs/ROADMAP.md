@@ -22,9 +22,12 @@ AdMind is moving from a stable public portfolio prototype toward a calibrated, e
 - **v0.4.1 calibration tool released:** `/regression/calibrate` focuses on the eight adjustment cases and three placement conflicts. It supports drag, resize, exact percentage entry, target add/delete/reset and local undo. Completion requires 8/8 coordinate decisions and 3/3 placement resolutions. Work stays in browser `localStorage`; the schema-v2 export binds the immutable v1 SHA-256 and neither uploads data, trains the detector nor updates the manifest automatically.
 - **1B metric gate:** v0.4.1 is an annotation-calibration release, not a new detector candidate. The v0.4.0 metrics remain tied to the original schema-v1 agent-draft manifest. A maintainer must validate the v2 evidence, create a separately versioned reviewed manifest and then re-score saved predictions before publishing any reviewed-label comparison. The remaining seven frames still require a later product-review pass.
 - **1B implementation boundary:** scorer and rendered-card footprints are aligned at 0.30×0.30 on a 16:9 S2 stage. Weak crop suppression is deliberately limited to low-confidence crop-only `人物主体` without face corroboration; animals, characters, direct detections and strong crop detections remain. A back-facing low-confidence person still needs holdout coverage. The vision gate is fail-closed: face and object detectors are both required, and either one being unavailable yields no placement and a blocking miss. The main Decision view links to `/regression`.
-- **1C:** vendor the MediaPipe WASM runtime, add a dedicated browser benchmark job and convert the agreed behavior into a stable regression gate.
+- **v0.5.0 engineering candidate:** `/regression/intake` now validates a complete schema-v2 export locally, creates an in-memory reviewed-manifest preview and re-scores the saved v0.4.0 raw predictions. It does not upload, train, commit or overwrite the tracked manifest, and the comparison is label-only rather than fresh inference. The page cannot finish Stage 1B by itself: the product owner still owes 8/8 coordinate decisions, 3/3 placement resolutions and a later review of the other seven frames.
+- **1C partially implemented:** all six MediaPipe Tasks Vision 1.0.1 runtime files are self-hosted under `/mediapipe/wasm` with checksums and `s2-vision-v5` provenance. A separate Playwright Chromium job builds the exact revision, runs all 20 fixed frames, blocks jsDelivr and critical-asset failures, requires 20/20 availability and uploads JSON plus a screenshot. `charge-005/008/013/016/018` are temporarily diagnostic until schema-v2 intake resolves their first-pass label/box adjustments; `charge-002` was confirmed correct and stays in the stable gate. Outside that exception set, stable labels may not become newly unsafe. A pause-session token prevents a late vision promise from delivering after resume, seek, focus/visibility loss or reset.
+- **Sealed holdout infrastructure added:** six immutable 1280×720 frames are split into four cross-source primary samples and two same-source `CHARGE` supplemental diagnostics. Every entry remains `sealed-unreviewed`, `useForTuning = false` and `groundTruth = null`. Same-host Chromium extraction was byte-identical in two runs. The set is infrastructure, not a metric, label set or tuning input; the two supplemental frames are not independent generalization evidence.
+- **1C completion gate:** do not mark 1C complete or publish a v5 model result until the first v5 CI run and a fresh hosted-site run verify local runtime loading, 20/20 availability and the temporary safety gate. The v0.4.0/v4 numbers remain historical. Holdout outcomes must stay sealed until the candidate is frozen and a separate product-review artifact exists.
 
-Exit criterion: S2 results are reported from repeatable samples rather than visual intuition.
+Exit criterion: a source-bound reviewed manifest exists, fresh browser inference is reproducible without a CDN, and the checked-in safety gate passes. Repeatable agent-draft samples alone are not enough to declare calibration complete.
 
 ## Phase 2 · Evidence credibility
 
@@ -89,9 +92,12 @@ AdMind 正从稳定的公开作品集原型，继续走向经过校准、以证�
 - **v0.4.1 校框工具已发布：** `/regression/calibrate` 聚焦 8 张待调整样本与 3 处位置冲突，支持拖动、缩放、精确百分比输入、目标新增/删除/重置和本地撤销。只有完成 8/8 张坐标确认与 3/3 处位置裁决才可导出完整结果。工作内容保存在浏览器 `localStorage`；schema v2 导出绑定不可变 v1 SHA-256，不会上传、不会训练检测器，也不会自动修改 manifest。
 - **1B 指标门：** v0.4.1 是标注校准版本，不是新的检测器候选。v0.4.0 指标仍绑定原始 schema v1 代理初标 manifest。维护者必须先校验 v2 证据、建立单独版本化的复核 manifest，再用已保存预测重新评分，之后才能发布基于复核标签的对比数字。另外 7 张仍需要后续产品复核。
 - **1B 实现边界：** 评分器与线上卡片 footprint 已统一为 `0.30 × 0.30`，S2 舞台为 16:9。弱裁剪抑制仅针对无脸部佐证的低置信裁剪 `人物主体`；动物、角色、直接检测和强裁剪候选继续保留。背面低置信人物仍需留出集覆盖。视觉链路采用 fail-closed：人脸与主体检测器必须同时可用，任一不可用都会返回无位置并在阻断指标中计为失败。主站 Decision / 决策方式页面直接链接 `/regression`。
-- **1C：** 把 MediaPipe WASM 固定到本地，增加独立浏览器基准任务，并把最终认可行为固化为稳定回归门。
+- **v0.5.0 工程候选：** `/regression/intake` 已能在本地校验完整 schema v2 导出、生成内存中的复核 manifest 预览，并使用 v0.4.0 已保存原始预测做重评分。页面不会上传、训练、提交或覆盖受追踪 manifest；前后对比只是标签重评分，不是新推理。该页面不能自行完成阶段 1B：产品负责人仍需完成 8/8 张坐标决定、3/3 处位置裁决，并在后续复核另外 7 张。
+- **1C 已部分实现：** MediaPipe Tasks Vision 1.0.1 的 6 个 runtime 文件已带校验值固定到 `/mediapipe/wasm`，运行来源标记为 `s2-vision-v5`。独立 Playwright Chromium 任务会按准确提交构建、运行 20 张固定帧、阻止 jsDelivr 与关键资源失败、要求 20/20 可用，并上传 JSON 和截图。`charge-005/008/013/016/018` 在 schema v2 接收解决第一轮标签/保护框调整前暂作诊断例外；`charge-002` 已确认正确，继续进入稳定门。除此之外，稳定标签不得新增危险误投。pause session token 会阻止迟到的视觉 Promise 在恢复、拖动、失焦/隐藏或重置后继续投放。
+- **密封留出集基础设施已建立：** 6 张不可变 1280×720 图片分为 4 张跨来源主要样本与 2 张同源 `CHARGE` 补充诊断。全部保持 `sealed-unreviewed`、`useForTuning = false`、`groundTruth = null`；同一主机 Chromium 两次抽帧字节一致。这是基础设施，不是指标、标签集或调参输入；2 张补充帧不能包装成独立泛化证据。
+- **1C 完成门：** 首次 v5 CI 与线上新鲜运行验证本地 runtime、20/20 可用性和临时安全门之前，不得把 1C 标为完成，也不得发布 v5 模型结果。v0.4.0/v4 数字继续保留为历史证据。候选冻结并形成单独产品复核文件前，不得查看或使用 holdout 结果。
 
-退出标准：S2 的结果来自可重复样本，而不是对单张截图的主观感觉。
+退出标准：建立绑定来源的复核 manifest；新鲜浏览器推理在无 CDN 情况下可复现；仓库内安全门通过。仅有可重复的代理初标样本不足以宣布校准完成。
 
 ### 阶段 2 · 证据可信度
 

@@ -90,6 +90,8 @@ The public [S2 Vision Regression Lab](https://admind-decision-console.liyanbao06
 
 The main-site **Decision** view links directly to `/regression`, and that lab links to `/regression/calibrate`. Calibration edits stay in browser `localStorage`. A schema-v2 export binds the immutable schema-v1 review SHA-256, but it is not uploaded, does not train the model and does not modify the manifest automatically. New model metrics may be reported only after a reviewed manifest is created and the saved predictions are re-scored against it.
 
+The v0.5.0 release candidate adds `/regression/intake`, a bilingual local intake, preview and label-only re-score workspace for that future schema-v2 export. It strictly validates the source binding and required 8/8 coordinate plus 3/3 placement decisions, reuses the saved v0.4.0 raw predictions, and never uploads or overwrites the tracked manifest. The same candidate self-hosts all six MediaPipe Tasks Vision 1.0.1 runtime files as `s2-vision-v5`, adds a fresh 20-frame Playwright Chromium CI job, and rejects late pause-analysis promises through a session token. The CI temporarily treats `charge-005/008/013/016/018` as diagnostic because first-pass review requires their labels/boxes to be resolved; `charge-002` was confirmed correct and stays in the stable gate. Every other stable-label sample is also blocked from becoming newly unsafe. These are engineering changes, not new model metrics; Stage 1C remains partial until the first v5 CI run and hosted fresh run pass.
+
 ## Quick start
 
 ### Requirements
@@ -131,6 +133,14 @@ pnpm test:unit
 pnpm test:s2-regression
 pnpm test:rendered
 pnpm build
+```
+
+The fresh S2 browser gate uses a production build and pinned Chromium:
+
+```bash
+pnpm exec playwright install chromium
+pnpm build
+pnpm test:s2-browser
 ```
 
 See [Development](docs/DEVELOPMENT.md) for environment variables, analysis commands and repository conventions.
@@ -203,6 +213,8 @@ Current boundaries:
 - The historical pre-tuning result remains tracked: the v0.3.0 harness at `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` replayed the v0.2.7 configuration behavior referenced at `bdf66d1db7511f97feba49713f9995ea6ef13711`. On 13 rule-confirmed drafts it measured 6/13 (46.2%) safe-placement agreement, 4/13 (30.8%) unsafe placement, 3/13 (23.1%) over-deferral, 4/25 (16.0%) protected-target precision, 4/11 (36.4%) recall, 22.2% F1 and 318 ms p50 / 335 ms p95 latency.
 - The public v0.4.0 Stage 1B candidate remains tracked at `evaluation/s2/candidates/v0.4.0.json`. The final browser run used `s2-vision-v4` at runner/config commit `e0a033194ea04a9c926a822e4330355f41ddd152` and was generated at `2026-08-22T03:42:41.155Z`. All 20/20 frames were available. On the original schema-v1 agent-draft manifest it measured 7/13 (53.8%) safe placement, 3/13 (23.1%) unsafe placement, 3/13 (23.1%) over-deferral, TP 5 / FP 16 / FN 6, 23.8% precision, 45.5% recall, 31.3% F1 and 277 ms p50 / 307 ms p95 latency. The target P/R/F1 values are exploratory, class-agnostic raw-box matches at IoU ≥ 0.25—not calibrated semantic detector accuracy. It genuinely fixes `charge-012` under that historical label contract.
 - Public v0.4.1 adds the exact-coordinate calibration tool, not a new detector result. The first-pass review artifact is immutable: 13 priority opinions are archived, five green drafts were accepted, eight require replacement coordinates, and seven frames remain without product review. A future schema-v2 export must reference the v1 artifact SHA and be maintainer-validated before a separately versioned manifest or any re-scored metrics exist.
+- The v0.5.0 candidate adds a local `/regression/intake` validator and preview, self-hosted MediaPipe 1.0.1 runtime provenance as `s2-vision-v5`, an independent fresh-browser CI job and stale-promise protection for pause sessions. The intake comparison re-scores the same saved v0.4.0 raw predictions; it is not new inference. No v5 metric is published until the first CI and hosted fresh runs pass, and Stage 1B still requires the product owner's 8/8 coordinate decisions, 3/3 placement resolutions and later review of the other seven frames.
+- A separate six-frame 1280×720 holdout is now sealed: four cross-source primary samples plus two same-source `CHARGE` supplemental diagnostics. All six keep `groundTruth = null`, `sealed-unreviewed` and `useForTuning = false`; they are reproducible evaluation infrastructure, not labels, training data, a model metric or independent six-frame generalization evidence.
 - The existing result sets describe this exact 20-frame project fixture, not general model accuracy or a production SLA. Their numbers remain tied to the original agent-draft manifest and must not be presented as product-reviewed metrics.
 - The v0.4.0 implementation aligns scorer and rendered-card geometry at 0.30×0.30 on a 16:9 S2 stage. Its weak crop suppression applies only to low-confidence crop-only `人物主体` candidates without a corroborating face; strong crop, direct, animal and faceless character candidates remain. A back-facing, low-confidence person can still be suppressed, so holdout coverage is required before claiming generalization. Detection is fail-closed: both the face and object detectors are required; if either is unavailable, the frame returns no placement and counts as a blocking miss rather than silently using partial evidence.
 - Pause thresholds and risk weights are product hypotheses, not industry-optimal constants.
@@ -303,6 +315,8 @@ flowchart LR
 
 主站 **Decision / 决策方式** 页面直接链接 `/regression`，回归实验室再链接 `/regression/calibrate`。校框编辑只保存在浏览器 `localStorage`。schema v2 导出会绑定不可变 schema v1 复核原件的 SHA-256，但不会上传、不会训练模型，也不会自动修改 manifest。只有建立经过复核的新 manifest，并用已保存预测重新评分后，才能发布新模型指标。
 
+v0.5.0 候选新增 `/regression/intake` 双语本地接收、预览与标签重评分工作区。它会严格验证来源绑定以及 8/8 张坐标决定、3/3 处位置裁决，复用 v0.4.0 已保存原始预测，绝不会上传或覆盖受追踪 manifest。同一候选把 MediaPipe Tasks Vision 1.0.1 的 6 个 runtime 文件固定到站内并记为 `s2-vision-v5`，新增 20 张固定帧的 Playwright Chromium 新鲜推理 CI，并用 pause session token 拒绝迟到的暂停分析 Promise。CI 会把仍需解决标签/保护框的 `charge-005/008/013/016/018` 暂作诊断例外；`charge-002` 已确认正确，继续进入稳定门。除此之外，稳定标签同样不得新增危险误投。这些是工程变化，不是新模型指标；首次 v5 CI 和线上新鲜运行通过前，阶段 1C 仍只能标记为部分完成。
+
 ## 快速开始
 
 ### 环境要求
@@ -344,6 +358,14 @@ pnpm test:unit
 pnpm test:s2-regression
 pnpm test:rendered
 pnpm build
+```
+
+新鲜 S2 浏览器质量门使用生产构建与固定 Chromium：
+
+```bash
+pnpm exec playwright install chromium
+pnpm build
+pnpm test:s2-browser
 ```
 
 环境变量、分析命令和仓库约定详见[开发文档](docs/DEVELOPMENT.md)。
@@ -416,6 +438,8 @@ AdMind 是一个**公开、达到作品集展示标准的产品原型**。完整
 - 调参前历史结果继续保留：v0.3.0 harness 提交 `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` 重放了 v0.2.7 提交 `bdf66d1db7511f97feba49713f9995ea6ef13711` 所参考的配置行为。13 张规则确认初标上的安全位置一致率为 `6/13 = 46.2%`，危险误投为 `4/13 = 30.8%`，过度顺延为 `3/13 = 23.1%`；保护目标精确率 `4/25 = 16.0%`、召回率 `4/11 = 36.4%`、F1 `22.2%`，推理耗时为 P50 `318 ms` / P95 `335 ms`。
 - 公开 v0.4.0 的阶段 1B 候选结果继续保存在 `evaluation/s2/candidates/v0.4.0.json`。最终浏览器复跑使用 `s2-vision-v4`，运行器与配置提交均为 `e0a033194ea04a9c926a822e4330355f41ddd152`，生成时间为 `2026-08-22T03:42:41.155Z`；20/20 张均可用。它在原始 schema v1 代理初标 manifest 上的安全位置一致率为 `7/13 = 53.8%`，危险误投 `3/13 = 23.1%`，过度顺延 `3/13 = 23.1%`；TP 5 / FP 16 / FN 6，精确率 `23.8%`，召回率 `45.5%`，F1 `31.3%`，P50 `277 ms` / P95 `307 ms`。目标 P/R/F1 是 IoU ≥ 0.25 的类别无关原始框探索性匹配，不是经过校准的语义检测准确率。`charge-012` 的修复结论只属于该历史标签合同。
 - 公开 v0.4.1 新增的是精确坐标校框工具，不是新的检测器结果。第一轮复核原件不可变：13 张优先意见已归档，5 张绿色初标被接受，8 张需要替换坐标，另外 7 张仍未产品审核。未来 schema v2 导出必须引用 v1 原件 SHA，经维护者校验后才能建立单独版本的 manifest 或重算指标。
+- v0.5.0 候选新增本地 `/regression/intake` 校验与预览、`s2-vision-v5` 的 MediaPipe 1.0.1 本地运行时、独立新鲜浏览器 CI，以及暂停会话的迟到 Promise 防护。接收页前后对比使用同一份 v0.4.0 已保存原始预测，只是标签重评分，不是新推理。首次 CI 与线上新鲜运行通过前不发布 v5 指标；阶段 1B 仍需产品负责人完成 8/8 张坐标决定、3/3 处位置裁决，并在后续复核另外 7 张。
+- 另有 6 张 1280×720 留出帧已经密封：4 张跨来源主要样本、2 张同源 `CHARGE` 补充诊断。6 张全部保持 `groundTruth = null`、`sealed-unreviewed`、`useForTuning = false`；它们是可复现评估基础设施，不是标签、训练数据、模型指标，也不能把 6 张整体包装成独立泛化证据。
 - 现有两组数字只描述这 20 张项目固定帧，不是通用模型准确率或生产 SLA。数字仍绑定原代理初标 manifest，不能表述为产品复核后的模型指标。
 - v0.4.0 已把评分器与线上卡片占位统一为 `0.30 × 0.30`，S2 舞台固定为 16:9。弱裁剪抑制只作用于“无脸部佐证、仅来自裁剪且置信度较低”的 `人物主体` 候选；强裁剪、直接检测、动物与无脸角色候选仍保留。背面低置信人物仍可能被抑制，必须用留出集继续验证泛化。检测链路采用 fail-closed：人脸与主体检测器必须同时可用；任一不可用时整帧返回无位置，并在阻断指标中计为失败，不会用部分证据静默继续。
 - 暂停阈值和风险权重属于当前产品假设，不是行业最优常数。

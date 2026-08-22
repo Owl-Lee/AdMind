@@ -28,7 +28,7 @@ flowchart LR
     F --> G["Deterministic decision engine"]
 ```
 
-The TwelveLabs adapter uploads the supplied clip, waits for the asset to become ready, requests Pegasus analysis and normalizes the response. Raw output is retained separately from the validated run so later changes remain auditable.
+The TwelveLabs adapter uploads the supplied clip, waits for the asset to become ready, requests Pegasus analysis and normalizes the response. The temporary provider asset is deleted in a `finally` path after success, processing failure or analysis failure; cleanup failure is non-fatal so it cannot erase the primary analysis result. Raw output is retained separately from the validated run so later changes remain auditable.
 
 The Gemini adapter remains in the provider abstraction for experimentation but is not part of the current product path.
 
@@ -73,7 +73,7 @@ pnpm analyze:video \
   --raw-output analysis/raw/example.json
 ```
 
-Only analyze media you are authorized to upload to the selected provider. Review provider retention and data-processing terms before using confidential footage.
+Only analyze media you are authorized to upload to the selected provider. Review provider retention and data-processing terms before using confidential footage. The current adapter requests automatic asset deletion, but maintainers should still audit historical TwelveLabs assets created before this cleanup behavior and follow provider-side retention controls.
 
 ## Evaluation priorities
 

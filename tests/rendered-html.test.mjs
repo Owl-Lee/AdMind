@@ -22,7 +22,7 @@ test("server-renders separate showcase and decision-method views", async () => {
   assert.match(html, /data-locale="en"/i);
   assert.match(html, /aria-label="Language \/ 语言"/i);
   assert.match(html, /广告必须出现/);
-  assert.match(html, /game-ad-clean\.png\?v=v0\.4\.0/);
+  assert.match(html, /game-ad-clean\.png\?v=v0\.5\.0/);
   assert.match(html, /广告已展示，任务已完成/);
   assert.match(html, /传统投放/);
   assert.match(html, /01 · 剧情高点/);
@@ -79,6 +79,8 @@ test("server-renders the bilingual S2 regression lab", async () => {
   assert.match(html, /MediaPipe model output/);
   assert.match(html, /href="\/regression\/calibrate"/);
   assert.match(html, /Adjust the 8 flagged boxes/);
+  assert.match(html, /href="\/regression\/intake"/);
+  assert.match(html, /Validate a completed v2 export/);
 });
 
 test("server-renders the bilingual S2 protection calibration lab", async () => {
@@ -100,4 +102,20 @@ test("server-renders the bilingual S2 protection calibration lab", async () => {
   assert.match(html, /<span>019<\/span>/);
   assert.match(html, /Resolve three placement-note conflicts/);
   assert.match(html, /Back to regression lab/);
+  assert.match(html, /href="\/regression\/intake"/);
+  assert.match(html, /Validate an export/);
+});
+
+test("server-renders the bilingual schema-v2 intake lab in a pending state", async () => {
+  const response = await render("/regression/intake");
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+  const html = await response.text();
+  assert.match(html, /<title>S2 Reviewed Label Intake · AdMind<\/title>/i);
+  assert.match(html, /Validate first\. Merge nothing automatically/);
+  assert.match(html, /Choose schema-v2 JSON/);
+  assert.match(html, /Select the final schema-v2 export/);
+  assert.match(html, /The selected file never leaves this page/);
+  assert.match(html, /href="\/regression\/calibrate"/);
+  assert.match(html, /href="\/regression"/);
 });

@@ -122,6 +122,7 @@ export type RegressionProvenance = {
     configVersion: string;
     mediapipeTasksVision: string;
     wasmRoot: string;
+    wasmAssets?: readonly { path: string; sha256: string }[];
     faceModel: { path: string; sha256: string };
     objectModel: { path: string; sha256: string };
     thresholds: {

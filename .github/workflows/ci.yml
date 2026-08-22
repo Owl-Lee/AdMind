@@ -38,3 +38,46 @@ jobs:
 
       - name: Test and build
         run: pnpm test
+
+  s2-browser-regression:
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.16.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: Build exact revision
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_GIT_COMMIT_SHA: ${{ github.sha }}
+
+      - name: Run fresh S2 browser regression
+        run: pnpm test:s2-browser
+
+      - name: Upload S2 browser evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: s2-browser-regression-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/s2-browser-regression/
+            test-results/
+          retention-days: 30

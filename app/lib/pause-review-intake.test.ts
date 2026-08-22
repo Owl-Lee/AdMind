@@ -13,7 +13,10 @@ const artifactPath = "evaluation/s2/reviews/2026-08-22-product-owner.json";
 
 describe("S2 product-review intake", () => {
   it("locks the product owner's raw download to the archived bytes", () => {
-    const digest = createHash("sha256").update(readFileSync(artifactPath)).digest("hex");
+    // Git stores this evidence as LF (`.gitattributes` enforces it). Normalize a
+    // Windows working-tree checkout before comparing the archived-byte digest.
+    const canonicalBytes = readFileSync(artifactPath, "utf8").replace(/\r\n?/g, "\n");
+    const digest = createHash("sha256").update(canonicalBytes).digest("hex");
     expect(digest).toBe("a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256");
   });
 

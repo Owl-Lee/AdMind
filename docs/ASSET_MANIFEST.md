@@ -24,6 +24,10 @@ Attribution: `(CC) Blender Foundation | studio.blender.org`. Blender names and l
 
 `public/evaluation/s2/frames/*.jpg` contains 20 fixed 1280×720 still frames extracted from `public/admind-charge-demo-720p.mp4` for the Stage 1A paused-frame regression set. They remain derivative works of `CHARGE` under CC BY 4.0 and retain the attribution above. Exact timestamps and individual SHA-256 values are recorded in `evaluation/s2/manifest.json`; the rule-drafting contact sheet is `evaluation/s2/contact-sheet.jpg` (SHA-256: `439e116628aae6c637943ad4aed18e9dc5e2b3866eb0fa340c7b99ad984fd138`). The project agent drafted every protection target and acceptable placement from explicit rules: 13 rule-clear samples are marked `rule-confirmed`, while seven subjective samples remain `needs-user-review` until the product owner reviews them. The stills are evaluation evidence, not new project-owned artwork.
 
+### Derived S2 sealed holdout frames
+
+`public/evaluation/s2/holdout/*.jpg` contains six fixed 1280×720 evaluation stills extracted from the already-listed `CHARGE`, `Caminandes: Llamigos`, Coast Guard rescue and USNS medical-evacuation assets. Their source licenses and non-endorsement boundaries remain unchanged. Exact timestamps, source hashes, frame hashes and the 4-cross-source/2-same-source split are recorded in `evaluation/s2/holdout/manifest.json`. Every ground-truth field is deliberately `null`, the set is marked `sealed-unreviewed`, and the files may not be used for tuning. `scripts/extract-s2-holdout.mjs --verify-only` checks the sealed bytes and source provenance.
+
 ## U.S. government visual information
 
 | Local file | Original work | Agency / author | Status | Local modification |
@@ -39,6 +43,19 @@ Required non-endorsement notice: **The appearance of U.S. Department of War (DoW
 | --- | --- | --- | --- | --- |
 | `public/models/blaze_face_full_range.tflite` | [MediaPipe BlazeFace full range](https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_full_range/float16/1/blaze_face_full_range.tflite) | Google MediaPipe | [Apache License 2.0](https://github.com/google-ai-edge/mediapipe/blob/master/LICENSE) and upstream model terms | `3698b18f063835bc609069ef052228fbe86d9c9a6dc8dcb7c7c2d69aed2b181b` |
 | `public/models/efficientdet_lite0.tflite` | [MediaPipe EfficientDet-Lite0 int8](https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/1/efficientdet_lite0.tflite) | Google MediaPipe | [Apache License 2.0](https://github.com/google-ai-edge/mediapipe/blob/master/LICENSE) and upstream model terms | `0720bf247bd76e6594ea28fa9c6f7c5242be774818997dbbeffc4da460c723bb` |
+
+## Browser-side MediaPipe runtime
+
+AdMind vendors the exact `@mediapipe/tasks-vision` `1.0.1` browser runtime below so S2 inference no longer depends on jsDelivr availability. The files come from the installed Google MediaPipe npm package and are distributed under [Apache License 2.0](https://github.com/google-ai-edge/mediapipe/blob/master/LICENSE). `app/lib/pause-regression.test.ts` verifies every tracked byte before release.
+
+| Local file | SHA-256 |
+| --- | --- |
+| `public/mediapipe/wasm/vision_wasm_internal.js` | `e170ee67dd4e16c1a6fcd8840a206687e5a59b22c20e4a902bc445b095454d73` |
+| `public/mediapipe/wasm/vision_wasm_internal.wasm` | `8da277a733926eacd0474b8704b36742d6ec3231c57a860c5b889dff8f1df886` |
+| `public/mediapipe/wasm/vision_wasm_module_internal.js` | `da8934057f147b622e82cfb4c0dbd85461c598e268588b5a8ba9ca963a8ff82d` |
+| `public/mediapipe/wasm/vision_wasm_module_internal.wasm` | `2dabd8e23c60984628beb7bb338764c81a08e6837145273f59578684b5d53c1b` |
+| `public/mediapipe/wasm/vision_wasm_nosimd_internal.js` | `e81d715a3d42cc3373602eb2f7aff795d164934db680e32496b65dab537f9658` |
+| `public/mediapipe/wasm/vision_wasm_nosimd_internal.wasm` | `a28483cd42e74e855bf5ebdb6b40d9b66a5b49e35e95020bc97669e6822a3192` |
 
 ## Intentionally excluded
 

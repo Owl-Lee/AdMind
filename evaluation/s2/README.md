@@ -12,6 +12,9 @@ This directory contains the machine-readable Stage 1A fixed-frame evaluation con
 - `candidates/v0.4.0.json` preserves the Stage 1B result released with public v0.4.0. Both runner and configuration provenance point to commit `e0a033194ea04a9c926a822e4330355f41ddd152`.
 - `reviews/2026-08-22-product-owner.json` preserves the product owner's completed 13-item priority-review export byte-for-byte (SHA-256 `a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256`). It is intake evidence and does not overwrite the manifest; see `reviews/README.md`.
 - The immutable frame files are served from `public/evaluation/s2/frames/` so the browser regression lab consumes the same bytes that CI verifies.
+- `/regression/intake` validates a user-selected schema-v2 export locally, builds an in-memory reviewed-manifest preview and re-scores the saved v0.4.0 raw predictions without uploading or overwriting tracked files.
+- `public/mediapipe/wasm/` contains the six checksum-recorded MediaPipe Tasks Vision 1.0.1 runtime assets used by `s2-vision-v5`; the fresh Playwright job writes JSON/screenshot evidence under `artifacts/s2-browser-regression/`.
+- `holdout/manifest.json` and `public/evaluation/s2/holdout/*.jpg` define six sealed 1280×720 frames: four cross-source primary samples and two same-source `CHARGE` supplemental diagnostics. Every `groundTruth` is `null`, status is `sealed-unreviewed`, and `useForTuning` is `false`.
 
 The current 13-sample blocking baseline is:
 
@@ -38,9 +41,15 @@ The v0.4.0 candidate completed 20/20 frames. On the same blocking set it reports
 
 Public v0.4.1 adds `/regression/calibrate` for the eight adjustment cases and three placement conflicts. It supports normalized drag/resize, exact percentage entry, target add/delete/reset and undo. Proposed upper-corner cards show the scorer's composite rule-risk percentage, explicitly combining overlap and proximity rather than representing overlap alone, and warn above the 40% threshold; confirmation requires a highlighted-boundary and composite-risk acknowledgement that resets after geometry changes. Completion requires 8/8 target decisions and 3/3 placement resolutions. Answers stay in browser `localStorage`; a schema-v2 export binds the immutable v1 SHA-256 but is not uploaded, does not train the model and does not modify `manifest.json` automatically. Validation must receive the trusted source review, SHA and calibration seed, derive the eight adjustment IDs from that source, and require seed-defined `charge-005/008/009` instead of trusting export-declared IDs. A maintainer must validate the export and create a separately versioned reviewed manifest before re-scoring saved predictions.
 
+The v0.5.0 candidate adds the local intake step that was previously manual. A complete schema-v2 file is accepted only after the source-bound 8/8 plus 3/3 contract passes. The resulting manifest is a preview in memory, and its before/after report re-scores the same saved v0.4.0 predictions; it is not fresh inference and does not create a new model metric. The selected JSON is not uploaded, no training is triggered and `manifest.json` remains unchanged. The other seven frames remain diagnostic and unreviewed.
+
+The same candidate moves MediaPipe Tasks Vision 1.0.1 from jsDelivr to six local `/mediapipe/wasm` files and records `s2-vision-v5` provenance. The independent Playwright Chromium CI job performs fresh 20-frame inference and rejects CDN requests, critical asset failures and unavailable frames. `charge-005/008/013/016/018` are temporarily diagnostic until schema-v2 intake resolves their first-pass label/box adjustments; `charge-002` was confirmed correct and remains in the stable gate. All other stable-label samples are also blocked from becoming newly unsafe. The job uploads a JSON report plus full-page screenshot. A pause-session token prevents late vision promises from delivering after user or page-state cancellation. Stage 1C remains partial until the first v5 CI and hosted fresh runs pass; the historical v0.4.0/v4 metrics below remain unchanged.
+
+The holdout extractor produced byte-identical files in two same-host runs with the same Chromium/source bytes. Categories are sampling strata rather than product labels. The holdout is evaluation infrastructure, not a metric, human truth or tuning set; its outcomes remain sealed until the candidate is frozen, and the two same-source frames are not independent generalization evidence.
+
 The candidate aligns scorer and rendered-card footprints at 0.30×0.30 on a 16:9 S2 stage. Weak crop suppression is limited to low-confidence crop-only `人物主体` without face corroboration. Direct, strong crop, animal and faceless character candidates remain; back-facing low-confidence people still require holdout validation. The main site's Decision view links to `/regression`.
 
-Run `pnpm test:s2-regression` for deterministic validation. Run the site and open `/regression` to execute fresh browser inference; open `/regression/calibrate` for exact-coordinate review. v0.4.1 contains no new detector metric: the v0.4.0 figures above remain tied to the original schema-v1 agent-draft manifest. See `docs/S2_REGRESSION_BASELINE.md` for the complete bilingual methodology, results and limitations.
+Run `pnpm test:s2-regression` for deterministic saved-prediction validation. After installing Chromium and building, run `pnpm test:s2-browser` for the independent fresh-browser gate. Open `/regression` for visual inference, `/regression/calibrate` for exact-coordinate review and `/regression/intake` for local schema-v2 validation/preview. Neither v0.4.1 nor the v0.5.0 engineering candidate contains a new detector metric: the v0.4.0 figures above remain tied to the original schema-v1 agent-draft manifest. Stage 1B still requires the product owner's 8/8 coordinate decisions, 3/3 placement resolutions and later review of the other seven frames. See `docs/S2_REGRESSION_BASELINE.md` for the complete bilingual methodology, results and limitations.
 
 ---
 
@@ -54,6 +63,9 @@ Run `pnpm test:s2-regression` for deterministic validation. Run the site and ope
 - `candidates/v0.4.0.json` 保存随公开 v0.4.0 发布的阶段 1B 候选结果；运行器与配置 provenance 均指向提交 `e0a033194ea04a9c926a822e4330355f41ddd152`。
 - `reviews/2026-08-22-product-owner.json` 逐字节保存产品负责人已完成的 13 张优先复核导出（SHA-256 `a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256`）。它是待接收证据，不会覆盖 manifest；详见 `reviews/README.md`。
 - 不可变固定帧从 `public/evaluation/s2/frames/` 提供给浏览器回归实验室，保证浏览器使用的图片字节与 CI 校验对象一致。
+- `/regression/intake` 会在本地校验用户选择的 schema v2 导出、生成内存中的复核 manifest 预览，并在不上传或覆盖受追踪文件的前提下重评分 v0.4.0 已保存原始预测。
+- `public/mediapipe/wasm/` 保存 `s2-vision-v5` 使用的 6 个带校验值 MediaPipe Tasks Vision 1.0.1 runtime 文件；新鲜 Playwright 任务把 JSON/截图证据写入 `artifacts/s2-browser-regression/`。
+- `holdout/manifest.json` 与 `public/evaluation/s2/holdout/*.jpg` 定义 6 张密封 1280×720 图片：4 张跨来源主要样本、2 张同源 `CHARGE` 补充诊断。全部 `groundTruth = null`、状态为 `sealed-unreviewed`、`useForTuning = false`。
 
 当前 13 张阻断样本的基线为：
 
@@ -80,6 +92,12 @@ v0.4.0 候选 20/20 张全部完成推理。同一阻断集结果为：
 
 公开 v0.4.1 新增 `/regression/calibrate`，用于 8 张待调整样本和 3 处位置冲突。页面支持归一化拖动/缩放、精确百分比输入、目标新增/删除/重置和撤销。待确认上角广告位会显示评分器的规则综合风险百分比，明确同时考虑重叠与邻近度而非纯重叠比例，超过 40% 阈值时警告；确认前必须勾选已检查重点边界与规则综合风险，几何变化后勾选自动失效。只有完成 8/8 张目标决定和 3/3 处位置裁决，结果才完整。答案只保存在浏览器 `localStorage`；schema v2 导出绑定不可变 v1 SHA-256，但不会上传、不会训练模型，也不会自动修改 `manifest.json`。校验必须取得可信源复核、SHA 和 calibration seed，从源复核推导 8 张调整 ID，并严格要求 seed 定义的 `charge-005/008/009`，不能信任导出自报 ID。维护者必须校验导出并建立单独版本化的复核 manifest，之后才能用已保存预测重新评分。
 
+v0.5.0 候选新增此前需要手工完成的本地接收步骤。完整 schema v2 只有通过绑定来源的 8/8 + 3/3 合同后才会被接受；得到的 manifest 只是内存预览，前后报告重评分同一份 v0.4.0 已保存预测，不是新鲜推理，也不产生新模型指标。所选 JSON 不会上传，不触发训练，`manifest.json` 保持不变。另外 7 张继续保持诊断和未产品审核状态。
+
+同一候选把 MediaPipe Tasks Vision 1.0.1 从 jsDelivr 迁移到 6 个本地 `/mediapipe/wasm` 文件，并记录 `s2-vision-v5` 来源。独立 Playwright Chromium CI 执行 20 张新鲜推理，拒绝 CDN 请求、关键资源失败和不可用帧。`charge-005/008/013/016/018` 在 schema v2 解决第一轮标签/保护框调整前暂作诊断；`charge-002` 已确认正确并继续进入稳定门，其余稳定标签样本同样不得新增危险误投。任务上传 JSON 报告和整页截图。pause session token 会阻止迟到视觉 Promise 在用户或页面状态取消后继续投放。首次 v5 CI 与线上新鲜运行通过前，阶段 1C 仍是部分完成；下方历史 v0.4.0/v4 指标保持不变。
+
+holdout 抽帧脚本在同一主机、相同 Chromium/源字节下两次生成逐字节一致文件。类别只是抽样分层，不是产品标签。该留出集是评估基础设施，不是指标、人工真值或调参集；候选冻结前结果继续密封，2 张同源帧也不是独立泛化证据。
+
 候选已把评分器与线上卡片 footprint 统一为 `0.30 × 0.30`，S2 舞台为 16:9。弱裁剪抑制仅作用于无脸部佐证的低置信裁剪 `人物主体`；直接、强裁剪、动物与无脸角色候选继续保留。背面低置信人物仍需留出集验证。主站 Decision / 决策方式页面链接 `/regression`。
 
-运行 `pnpm test:s2-regression` 可以进行确定性校验。启动网站并打开 `/regression` 可以执行新的浏览器推理；打开 `/regression/calibrate` 可以进行精确坐标复核。v0.4.1 没有新增检测器指标，上述 v0.4.0 数字仍绑定原始 schema v1 代理初标 manifest。完整的双语方法、结果和限制请参阅 `docs/S2_REGRESSION_BASELINE.md`。
+运行 `pnpm test:s2-regression` 可以确定性校验已保存预测；安装 Chromium 并完成构建后，运行 `pnpm test:s2-browser` 可执行独立新鲜浏览器门。打开 `/regression` 查看视觉推理，打开 `/regression/calibrate` 做精确坐标复核，打开 `/regression/intake` 做本地 schema v2 校验/预览。v0.4.1 与 v0.5.0 工程候选都没有新增检测器指标，上述 v0.4.0 数字仍绑定原始 schema v1 代理初标 manifest。阶段 1B 仍需产品负责人完成 8/8 张坐标决定、3/3 处位置裁决，并在后续复核另外 7 张。完整双语方法、结果和限制请参阅 `docs/S2_REGRESSION_BASELINE.md`。

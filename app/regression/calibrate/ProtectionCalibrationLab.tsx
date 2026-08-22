@@ -44,7 +44,7 @@ import styles from "./ProtectionCalibrationLab.module.css";
 
 const manifest = manifestJson as RegressionManifest;
 const sourceReview = sourceReviewJson as S2ReviewExport;
-const APP_VERSION = "0.4.1";
+const APP_VERSION = "0.5.0";
 const calibrationSeed: ProtectionCalibrationSeed = {
   suggestions: S2_CALIBRATION_DRAFTS.map((draft) => ({
     sampleId: draft.sampleId,
@@ -160,6 +160,7 @@ export function ProtectionCalibrationLab() {
     source: "Tracked evidence: first-pass priority queue 13/13 · 7 other frames remain unreviewed",
     warning: "These green boxes are second-draft suggestions—not MediaPipe output and not final human truth until you confirm them.",
     back: "Back to regression lab",
+    intake: "Validate an export",
     home: "Main site",
     boxProgress: `Boxes ${confirmedTargetCount}/8`,
     placementProgress: `Placement decisions ${confirmedPlacementCount}/3`,
@@ -210,6 +211,7 @@ export function ProtectionCalibrationLab() {
     source: "已追踪证据：第一轮优先队列 13/13 · 另外 7 张仍未人工复核",
     warning: "这里的绿色框是二次建议稿，不是 MediaPipe 输出；只有你确认后，才会成为待接收的人工标签。",
     back: "返回回归实验室",
+    intake: "校验导出文件",
     home: "返回主站",
     boxProgress: `保护框 ${confirmedTargetCount}/8`,
     placementProgress: `位置裁决 ${confirmedPlacementCount}/3`,
@@ -367,6 +369,7 @@ export function ProtectionCalibrationLab() {
         <Link className={styles.brand} href="/">AdMind</Link>
         <nav>
           <Link href="/regression">{copy.back}</Link>
+          <Link href="/regression/intake">{copy.intake}</Link>
           <Link href="/">{copy.home}</Link>
         </nav>
         <div className={styles.locale} role="group" aria-label="Language / 语言">

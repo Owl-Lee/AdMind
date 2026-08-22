@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import type { AnalysisConsensus, DecisionResponse, Scenario, Strategy, VideoAnalysis } from "@admind/contracts";
 import { ChevronIcon, PlayIcon, ShieldIcon, SparkIcon, VolumeIcon } from "./icons";
 import { AdCreative } from "./AdCreative";
 import { detectFacesInPausedFrame, type FaceDetectionEvidence } from "../lib/face-detector";
 import { choosePauseAdPlacement, choosePauseAdPlacementForEvidence, type PlacementDecision } from "../lib/pause-decision";
+import { createPauseSessionGuard, type PauseSessionToken } from "../lib/pause-session";
 import { observeUiLocalization, type UiLocale } from "../lib/ui-localization";
 
 export type DemoMedia = {
@@ -112,7 +113,7 @@ function HeroDecisionPreview({ demo }: { demo: ScenarioDemo }) {
           fill
           priority
           sizes="(max-width: 820px) min(100vw - 48px, 490px), 440px"
-          src="/game-ad-clean.png?v=v0.4.0"
+          src="/game-ad-clean.png?v=v0.5.0"
           unoptimized
         />
         <span className="hero-preview-signal"><i /> 广告已展示，任务已完成</span>
@@ -323,7 +324,8 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const resumeAfterAdRef = useRef(false);
   const seekingRef = useRef(false);
   const scrubbingRef = useRef(false);
-  const pauseObservationRef = useRef(0);
+  const [pauseSessionGuard] = useState(createPauseSessionGuard);
+  const pauseSessionTokenRef = useRef<PauseSessionToken | null>(null);
   const volumeControlRef = useRef<HTMLDivElement>(null);
   const [strategy, setStrategy] = useState<Strategy>("baseline");
   const [playing, setPlaying] = useState(false);
@@ -367,8 +369,13 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     && decision.outcome === "blocked"
     && time >= scenario.nominalOpportunitySec - 0.5;
 
-  const stopPauseObservation = (reason?: string) => {
-    pauseObservationRef.current += 1;
+  const invalidatePauseSession = useCallback(() => {
+    pauseSessionGuard.invalidate();
+    pauseSessionTokenRef.current = null;
+  }, [pauseSessionGuard]);
+
+  const stopPauseObservation = useCallback((reason?: string) => {
+    invalidatePauseSession();
     setPausePending(false);
     setPauseStartedAt(null);
     setPauseSeconds(0);
@@ -383,10 +390,12 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
       setPausePhase("idle");
       setDeferredReason("");
     }
-  };
+  }, [invalidatePauseSession]);
 
   const startPauseObservation = () => {
-    pauseObservationRef.current += 1;
+    const token = pauseSessionGuard.beginIfIdle();
+    if (token === null) return;
+    pauseSessionTokenRef.current = token;
     setPausePending(true);
     setPauseStartedAt(performance.now());
     setPauseSeconds(0);
@@ -398,6 +407,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   };
 
   const resetPlayback = () => {
+    invalidatePauseSession();
     const video = videoRef.current;
     video?.pause();
     if (video) video.currentTime = 0;
@@ -469,16 +479,24 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
 
   useEffect(() => {
     if (!isPauseScenario || !pausePending || strategy !== "admind" || !selected) return;
-    const observationId = pauseObservationRef.current;
+    const sessionToken = pauseSessionTokenRef.current;
+    if (sessionToken === null || !pauseSessionGuard.isActive(sessionToken)) return;
     const timer = window.setTimeout(() => {
       const video = videoRef.current;
+      if (!pauseSessionGuard.isActive(sessionToken)) return;
       if (!video?.paused || document.visibilityState !== "visible" || !document.hasFocus() || seekingRef.current) {
         stopPauseObservation("暂停未稳定，广告任务已进入待交付队列。");
         return;
       }
       setPausePhase("analyzing");
       void detectFacesInPausedFrame(video).then((evidence) => {
-        if (pauseObservationRef.current !== observationId || !video.paused) return;
+        if (!pauseSessionGuard.isActive(sessionToken)) return;
+        if (!video.paused || document.visibilityState !== "visible" || !document.hasFocus() || seekingRef.current) {
+          stopPauseObservation("暂停未稳定，广告任务已进入待交付队列。");
+          return;
+        }
+        if (!pauseSessionGuard.complete(sessionToken)) return;
+        pauseSessionTokenRef.current = null;
         const nextPlacement = choosePauseAdPlacementForEvidence(
           evidence.status,
           [...evidence.faces, ...evidence.subjects],
@@ -500,19 +518,19 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
       });
     }, 1500);
     return () => window.clearTimeout(timer);
-  }, [isPauseScenario, pausePending, selected, strategy]);
+  }, [isPauseScenario, pausePending, pauseSessionGuard, selected, stopPauseObservation, strategy]);
 
   useEffect(() => {
     if (!isPauseScenario) return;
     const handleVisibility = () => {
       const visible = document.visibilityState === "visible";
       setPageVisible(visible);
-      if (!visible && pausePending) stopPauseObservation("页面已隐藏，本次广告取消并顺延。");
+      if (!visible && pauseSessionGuard.hasActiveSession()) stopPauseObservation("页面已隐藏，本次广告取消并顺延。");
     };
     const handleFocus = () => setPageFocused(true);
     const handleBlur = () => {
       setPageFocused(false);
-      if (pausePending) stopPauseObservation("窗口失去焦点，本次广告暂停并顺延。");
+      if (pauseSessionGuard.hasActiveSession()) stopPauseObservation("窗口失去焦点，本次广告暂停并顺延。");
     };
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("focus", handleFocus);
@@ -522,7 +540,9 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [isPauseScenario, pausePending]);
+  }, [isPauseScenario, pauseSessionGuard, stopPauseObservation]);
+
+  useEffect(() => () => pauseSessionGuard.invalidate(), [pauseSessionGuard]);
 
   useEffect(() => {
     if (!isPauseScenario || pauseStartedAt === null) return;
@@ -562,6 +582,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   };
 
   const finishDeliveredAd = (result: "completed" | "skipped") => {
+    invalidatePauseSession();
     setAdRemaining(null);
     setPausePending(false);
     setPauseStartedAt(null);
@@ -629,7 +650,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     if (!video || !mediaReady || (adActive && selected?.format === "fullscreen")) return;
     if (video.paused) {
       if (isPauseScenario && adVisible && pausePhase === "delivered") finishDeliveredAd("completed");
-      else if (isPauseScenario && pausePending) stopPauseObservation("暂停时间不足，广告任务已顺延到下一次稳定机会。");
+      else if (isPauseScenario && pauseSessionGuard.hasActiveSession()) stopPauseObservation("暂停时间不足，广告任务已顺延到下一次稳定机会。");
       else stopPauseObservation();
       void video.play();
     }
@@ -643,7 +664,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     const boundedTime = Math.min(Math.max(0, nextTime), knownDuration);
     video.currentTime = boundedTime;
     setTime(boundedTime);
-    if (isPauseScenario && pausePending) {
+    if (isPauseScenario && pauseSessionGuard.hasActiveSession()) {
       stopPauseObservation("用户拖动了进度，本次广告取消并顺延。");
     } else if (isPauseScenario && adVisible && pausePhase === "delivered") {
       finishDeliveredAd("completed");
@@ -683,7 +704,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
 
   const handlePlay = () => {
     setPlaying(true);
-    if (isPauseScenario && pausePending) stopPauseObservation("暂停时间不足，广告任务已顺延到下一次稳定机会。");
+    if (isPauseScenario && pauseSessionGuard.hasActiveSession()) stopPauseObservation("暂停时间不足，广告任务已顺延到下一次稳定机会。");
     else if (isPauseScenario && adVisible && pausePhase === "delivered") finishDeliveredAd("completed");
   };
 
@@ -794,7 +815,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             onSeeking={() => {
               seekingRef.current = true;
               setSeeking(true);
-              if (isPauseScenario && pausePending) stopPauseObservation("用户正在拖动进度，广告任务已顺延。");
+              if (isPauseScenario && pauseSessionGuard.hasActiveSession()) stopPauseObservation("用户正在拖动进度，广告任务已顺延。");
             }}
             onSeeked={() => {
               seekingRef.current = false;

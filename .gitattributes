@@ -1,0 +1,2 @@
+evaluation/s2/**/*.json text eol=lf
+public/mediapipe/wasm/* binary

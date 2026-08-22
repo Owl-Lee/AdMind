@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "datasetId": "s2-cross-source-holdout-v1",
+  "title": "AdMind S2 sealed holdout set",
+  "titleZh": "AdMind S2 封存留出集",
+  "createdAt": "2026-08-22",
+  "status": "sealed-unreviewed",
+  "useForTuning": false,
+  "purpose": "A label-hidden evaluation set. Do not inspect outcomes, tune rules, select thresholds, or train models against these frames before the candidate system is frozen.",
+  "purposeZh": "标签隐藏的评估集。在候选系统冻结前，不得根据这些帧查看结果、调整规则、选择阈值或训练模型。",
+  "extraction": {
+    "script": "scripts/extract-s2-holdout.mjs",
+    "engine": "Playwright Chromium",
+    "chromiumVersion": "151.0.7922.34",
+    "width": 1280,
+    "height": 720,
+    "format": "image/jpeg",
+    "jpegQuality": 0.92,
+    "determinismScope": "Byte-identical when re-run on the same host with the same installed Chromium build and source bytes."
+  },
+  "sources": [
+    {
+      "id": "coast",
+      "asset": "public/coast-guard-rescue-720p.mp4",
+      "work": "Coast Guard rescues man and dog during Hurricane Helene",
+      "author": "U.S. Coast Guard PADET Jacksonville",
+      "license": "Public Domain",
+      "sha256": "015e5fcf3f9906260d11f8e3c78db4ec3c8bfe936deda9646b286fc91908e512",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 40.054
+    },
+    {
+      "id": "usns",
+      "asset": "public/usns-medical-evacuation-720p.mp4",
+      "work": "USNS Comfort Sailors conduct medical evacuation with the Sea Knights",
+      "author": "U.S. Navy",
+      "license": "Public Domain",
+      "sha256": "ed0634d484009894a4a744b36439f61059d586f5af60be343159c5020cb9c6c7",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 62.394
+    },
+    {
+      "id": "llamigos",
+      "asset": "public/llamigos-chase-720p.mp4",
+      "work": "Caminandes: Llamigos",
+      "author": "Blender Foundation",
+      "license": "CC BY 3.0",
+      "sha256": "4feb570456e8afc77af20a73f65b07733d32cdc1a8e3e2f366289c9154452831",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 75
+    },
+    {
+      "id": "charge",
+      "asset": "public/admind-charge-demo-720p.mp4",
+      "work": "CHARGE",
+      "author": "Blender Foundation / Blender Studio",
+      "license": "CC BY 4.0",
+      "sha256": "060b30c3b09c9734ac7806d940dcde7cc853e4bc73fd63a0eb9f6acb3300debe",
+      "width": 1280,
+      "height": 720,
+      "durationSec": 89.5076
+    }
+  ],
+  "sets": {
+    "primaryCrossSource": {
+      "role": "primary",
+      "independence": "cross-source",
+      "count": 4,
+      "status": "sealed-unreviewed",
+      "useForTuning": false,
+      "samples": [
+        {
+          "id": "holdout-coast-005000",
+          "sourceId": "coast",
+          "timeSec": 5,
+          "frame": "/evaluation/s2/holdout/holdout-coast-005000.jpg",
+          "frameSha256": "3bcea0af215dbd8c1b9429b5efa428b8c6c10949ed4fd2780f16bf2220cc8a25",
+          "width": 1280,
+          "height": 720,
+          "category": "faceless-partial-body",
+          "status": "sealed-unreviewed",
+          "useForTuning": false,
+          "groundTruth": null,
+          "note": "A gloved foreground arm and a distant vessel stress partial-person and no-visible-face handling."
+        },
+        {
+          "id": "holdout-usns-040000",
+          "sourceId": "usns",
+          "timeSec": 40,
+          "frame": "/evaluation/s2/holdout/holdout-usns-040000.jpg",
+          "frameSha256": "f3d838d221c5b3dde846146182e545ca897d276483986ac550d2fe137215a4ac",
+          "width": 1280,
+          "height": 720,
+          "category": "back-facing-helmeted-crowd",
+          "status": "sealed-unreviewed",
+          "useForTuning": false,
+          "groundTruth": null,
+          "note": "Several people are shown mostly from the back or side under low-light deck illumination."
+        },
+        {
+          "id": "holdout-llamigos-073000",
+          "sourceId": "llamigos",
+          "timeSec": 73,
+          "frame": "/evaluation/s2/holdout/holdout-llamigos-073000.jpg",
+          "frameSha256": "2b75cbdcf4b9db8d68c289440263d6e2a1c5e1f89e1a1d0562ef14d0e9eb8feb",
+          "width": 1280,
+          "height": 720,
+          "category": "animal-crowd",
+          "status": "sealed-unreviewed",
+          "useForTuning": false,
+          "groundTruth": null,
+          "note": "A crowded animated-animal scene stresses dense non-human subject handling."
+        },
+        {
+          "id": "holdout-llamigos-048000",
+          "sourceId": "llamigos",
+          "timeSec": 48,
+          "frame": "/evaluation/s2/holdout/holdout-llamigos-048000.jpg",
+          "frameSha256": "5cf178f382d2222099a34a512febd83106dcce384aca71006fd0525cfb232fa5",
+          "width": 1280,
+          "height": 720,
+          "category": "animal-two-species",
+          "status": "sealed-unreviewed",
+          "useForTuning": false,
+          "groundTruth": null,
+          "note": "Two animated animal species occupy a snowy scene with different apparent salience."
+        }
+      ]
+    },
+    "supplementalSameSource": {
+      "role": "supplemental",
+      "independence": "same-source-correlated",
+      "count": 2,
+      "status": "sealed-unreviewed",
+      "useForTuning": false,
+      "samples": [
+        {
+          "id": "holdout-charge-079000",
+          "sourceId": "charge",
+          "timeSec": 79,
+          "frame": "/evaluation/s2/holdout/holdout-charge-079000.jpg",
+          "frameSha256": "045afae7637dc5442fddfbd09e5a09891c774e5723a566a891652103e90d9056",
+          "width": 1280,
+          "height": 720,
+          "category": "robot-close-up",
+          "status": "sealed-unreviewed",
+          "useForTuning": false,
+          "groundTruth": null,
+          "note": "Same-source correlated diagnostic for a face-like robot close-up; not an independent holdout."
+        },
+        {
+          "id": "holdout-charge-089200",
+          "sourceId": "charge",
+          "timeSec": 89.2,
+          "frame": "/evaluation/s2/holdout/holdout-charge-089200.jpg",
+          "frameSha256": "3e1778d40e215431c49021d9fddaa8e00a9edeb5f6bd71b6d970a065e66dceb6",
+          "width": 1280,
+          "height": 720,
+          "category": "empty-aftermath",
+          "status": "sealed-unreviewed",
+          "useForTuning": false,
+          "groundTruth": null,
+          "note": "Same-source correlated diagnostic near the existing empty-scene boundary; not an independent holdout."
+        }
+      ]
+    }
+  }
+}

@@ -19,9 +19,9 @@ AdMind combines open-source software, browser-side model assets and credited dem
 
 The package lockfile is the authoritative inventory of installed JavaScript packages and versions. This summary does not replace dependency license files.
 
-## Model assets
+## MediaPipe runtime and model assets
 
-The files under `public/models/` are runtime assets used by MediaPipe Tasks Vision. Their exact upstream URLs, variants and SHA-256 checksums are recorded in [the asset manifest](docs/ASSET_MANIFEST.md). MediaPipe is distributed under Apache License 2.0; model use remains subject to the upstream notices linked in the manifest.
+The files under `public/mediapipe/wasm/` and `public/models/` are redistributed MediaPipe Tasks Vision runtime and model assets. Their exact upstream package or URLs, variants and SHA-256 checksums are recorded in [the asset manifest](docs/ASSET_MANIFEST.md). MediaPipe is distributed under Apache License 2.0; a complete copy accompanies this repository at [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt). Model use also remains subject to the upstream notices linked in the manifest.
 
 ## Demonstration media
 
@@ -56,9 +56,9 @@ AdMind 组合开源软件、浏览器端模型资源和已经标注来源的演�
 
 锁文件是已安装 JavaScript 包与版本的权威清单，本摘要不替代各依赖自己的授权文件。
 
-## 模型资源
+## MediaPipe 运行时与模型资源
 
-`public/models/` 中的文件是 MediaPipe Tasks Vision 使用的运行时资源。精确上游 URL、模型变体和 SHA-256 校验值记录在[素材清单](docs/ASSET_MANIFEST.md)中。MediaPipe 使用 Apache License 2.0；模型使用仍受清单链接的上游声明约束。
+`public/mediapipe/wasm/` 与 `public/models/` 中的文件是随仓库再分发的 MediaPipe Tasks Vision 运行时与模型资源。精确上游包或 URL、变体和 SHA-256 校验值记录在[素材清单](docs/ASSET_MANIFEST.md)中。MediaPipe 使用 Apache License 2.0；完整许可文本随仓库置于 [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt)。模型使用仍受素材清单所链接的上游声明约束。
 
 ## 演示媒体
 

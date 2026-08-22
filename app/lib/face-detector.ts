@@ -30,14 +30,22 @@ const CROP_SUBJECT_MIN_CONFIDENCE = 0.34;
 // Weak crop-only object detections are retained only when a face corroborates the same region.
 const CROP_SUBJECT_STANDALONE_MIN_CONFIDENCE = 0.48;
 const MEDIAPIPE_TASKS_VISION_VERSION = "1.0.1";
-const MEDIAPIPE_WASM_ROOT = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_TASKS_VISION_VERSION}/wasm`;
+const MEDIAPIPE_WASM_ROOT = "/mediapipe/wasm";
 const FACE_MODEL_PATH = "/models/blaze_face_full_range.tflite";
 const OBJECT_MODEL_PATH = "/models/efficientdet_lite0.tflite";
 
 export const PAUSE_VISION_CONFIG = {
-  configVersion: "s2-vision-v4",
+  configVersion: "s2-vision-v5",
   mediapipeTasksVision: MEDIAPIPE_TASKS_VISION_VERSION,
   wasmRoot: MEDIAPIPE_WASM_ROOT,
+  wasmAssets: [
+    { path: "/mediapipe/wasm/vision_wasm_internal.js", sha256: "e170ee67dd4e16c1a6fcd8840a206687e5a59b22c20e4a902bc445b095454d73" },
+    { path: "/mediapipe/wasm/vision_wasm_internal.wasm", sha256: "8da277a733926eacd0474b8704b36742d6ec3231c57a860c5b889dff8f1df886" },
+    { path: "/mediapipe/wasm/vision_wasm_module_internal.js", sha256: "da8934057f147b622e82cfb4c0dbd85461c598e268588b5a8ba9ca963a8ff82d" },
+    { path: "/mediapipe/wasm/vision_wasm_module_internal.wasm", sha256: "2dabd8e23c60984628beb7bb338764c81a08e6837145273f59578684b5d53c1b" },
+    { path: "/mediapipe/wasm/vision_wasm_nosimd_internal.js", sha256: "e81d715a3d42cc3373602eb2f7aff795d164934db680e32496b65dab537f9658" },
+    { path: "/mediapipe/wasm/vision_wasm_nosimd_internal.wasm", sha256: "a28483cd42e74e855bf5ebdb6b40d9b66a5b49e35e95020bc97669e6822a3192" },
+  ],
   faceModel: {
     path: FACE_MODEL_PATH,
     sha256: "3698b18f063835bc609069ef052228fbe86d9c9a6dc8dcb7c7c2d69aed2b181b",

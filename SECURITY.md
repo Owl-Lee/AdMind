@@ -43,9 +43,12 @@ Ordinary UI defects, model-quality limitations and incorrect demo decisions can 
 The repository carries a reviewed `pnpm` patch for `image-size@2.0.2`, an indirect
 build-time dependency of Vinext. The patch rejects zero-length ICNS, JXL and HEIF
 records that would otherwise leave parser offsets unchanged. Regression coverage
-is included in `tests/dependency-patches.test.mjs`; the deployed production
-dependency audit remains clean. The patch can be removed after an upstream fixed
-release is published and adopted.
+is included in `tests/dependency-patches.test.mjs`. `pnpm audit --prod` reports no
+known production vulnerabilities, while the full registry audit still reports
+the two upstream `image-size <= 2.0.2` advisories because registry scanners match
+the package version rather than the repository's backported patch. The dependency
+is used at build time. The patch can be removed after Vinext adopts
+`image-size >= 2.0.3`.
 
 ---
 
@@ -81,4 +84,4 @@ release is published and adopted.
 
 ## 已审计依赖补丁
 
-仓库为 vinext 的间接构建依赖 `image-size@2.0.2` 保留了经过审查的 `pnpm` 补丁。它会拒绝零长度 ICNS、JXL 和 HEIF 记录，避免解析偏移停滞。`tests/dependency-patches.test.mjs` 提供回归覆盖，线上生产依赖审计保持干净。上游固定版本发布并采用后可以移除该补丁。
+仓库为 Vinext 的间接构建依赖 `image-size@2.0.2` 保留了经过审查的 `pnpm` 补丁。它会拒绝零长度 ICNS、JXL 和 HEIF 记录，避免解析偏移停滞。`tests/dependency-patches.test.mjs` 提供回归覆盖。`pnpm audit --prod` 未报告已知生产依赖漏洞；完整 registry 审计仍会报告 `image-size <= 2.0.2` 的两项上游高危公告，因为 registry 扫描器按包版本判断，无法识别仓库回移补丁。该依赖只在构建阶段使用。Vinext 采用 `image-size >= 2.0.3` 后即可移除补丁。

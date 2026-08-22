@@ -59,8 +59,13 @@ describe("S2 fixed-frame regression scorer", () => {
     expect(manifest.samples.filter((sample) => sample.reviewStatus === "rule-confirmed")).toHaveLength(13);
   });
 
-  it("locks the source, models and every 1280x720 regression frame to tracked bytes", () => {
+  it("locks the source, local vision runtime, models and every 1280x720 regression frame to tracked bytes", () => {
     expect(createHash("sha256").update(readFileSync(manifest.source.asset)).digest("hex")).toBe(manifest.source.sha256);
+    expect(PAUSE_VISION_CONFIG.wasmRoot).toBe("/mediapipe/wasm");
+    for (const asset of PAUSE_VISION_CONFIG.wasmAssets) {
+      expect(createHash("sha256").update(readFileSync(asset.path.replace(/^\//, "public/"))).digest("hex"), asset.path)
+        .toBe(asset.sha256);
+    }
     expect(createHash("sha256").update(readFileSync(PAUSE_VISION_CONFIG.faceModel.path.replace(/^\//, "public/"))).digest("hex"))
       .toBe(PAUSE_VISION_CONFIG.faceModel.sha256);
     expect(createHash("sha256").update(readFileSync(PAUSE_VISION_CONFIG.objectModel.path.replace(/^\//, "public/"))).digest("hex"))
@@ -92,7 +97,11 @@ describe("S2 fixed-frame regression scorer", () => {
     });
     expect(recomputed.metrics).toEqual(candidate.metrics);
     expect(recomputed.failures).toEqual(candidate.failures);
-    expect(candidate.provenance.vision).toEqual(PAUSE_VISION_CONFIG);
+    // The tracked result is immutable historical evidence from the v4/CDN run.
+    // The current v5 runtime is local and requires a fresh browser artifact before it can claim new metrics.
+    expect(candidate.provenance.vision.configVersion).toBe("s2-vision-v4");
+    expect(candidate.provenance.vision.wasmRoot).toBe("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm");
+    expect(candidate.provenance.runner.gitCommit).toBe("e0a033194ea04a9c926a822e4330355f41ddd152");
     expect(candidate.metrics.unavailableCount).toBe(0);
     expect(candidate.metrics.availableSampleCount).toBe(candidate.metrics.sampleCount);
     expect(candidate.metrics.availableBlockingSampleCount).toBe(candidate.metrics.blockingSampleCount);

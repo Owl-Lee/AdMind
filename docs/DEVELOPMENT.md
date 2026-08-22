@@ -53,7 +53,9 @@ Never commit `.env.local`, provider keys or generated credentials.
 | `pnpm lint` | Run ESLint. |
 | `pnpm typecheck` | Run TypeScript without emitting files. |
 | `pnpm test:unit` | Run Vitest unit and integration tests. |
+| `pnpm test:s2-holdout` | Verify the sealed holdout hashes, dimensions, split and no-label/no-tuning invariants. |
 | `pnpm test:s2-regression` | Validate the fixed S2 manifest, frame hashes, scorer and tracked baseline. |
+| `pnpm test:s2-browser` | Run the fresh 20-frame S2 Playwright Chromium gate against a production server. |
 | `pnpm test:rendered` | Build and verify rendered HTML. |
 | `pnpm test` | Run unit tests and rendered-output verification. |
 | `pnpm check` | Run lint, typecheck and the full test command. |
@@ -80,11 +82,15 @@ Keep the raw provider response for traceability and the normalized run for appli
 - `app/lib/face-detector.test.ts` covers the narrow weak crop-only person suppression boundary and confirms that direct, strong crop and animal candidates remain eligible; the implementation's label guard also leaves faceless character candidates eligible.
 - `app/lib/pause-regression.test.ts` validates the Stage 1A fixed-frame contract and recomputes both the historical baseline and the tracked Stage 1B candidate from raw predictions. The historical baseline was run by v0.3.0 harness commit `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` with detector configuration behavior referenced to v0.2.7 commit `bdf66d1db7511f97feba49713f9995ea6ef13711`; the older commit did not run the new harness. The final v0.4.0 browser artifact uses `s2-vision-v4`, runner/config commit `e0a033194ea04a9c926a822e4330355f41ddd152` and `generatedAt` `2026-08-22T03:42:41.155Z`.
 - `app/lib/pause-review.test.ts` validates immutable schema-v1 intake and schema-v2 calibration exports, including the source SHA-256 link, normalized replacement rectangles, required eight-item coordinate queue, three placement resolutions and stale-artifact rejection.
+- `app/lib/s2-review-intake.test.ts` validates strict schema-v2 intake, reviewed-manifest preview generation and before/after re-scoring of the same saved raw predictions. The preview stays separate from the tracked manifest and the comparison is label-only.
+- `app/lib/pause-session.test.ts` verifies that only the active pause token can complete and that invalidation rejects late MediaPipe results.
+- `scripts/extract-s2-holdout.mjs --verify-only` checks the six sealed 1280×720 frames, source/frame hashes, four-primary/two-supplemental split and `groundTruth = null` / `useForTuning = false` invariants without opening outcomes for tuning.
+- `tests/s2-browser-regression.spec.ts` runs the exact 20-frame set in pinned Chromium, rejects jsDelivr and critical local-asset failures, requires 20/20 availability and writes JSON/screenshot evidence. `charge-005/008/013/016/018` are temporary diagnostics pending schema-v2 label/box resolution; `charge-002` is confirmed and remains in the stable gate. Other stable-label samples may not become newly unsafe.
 - `packages/video-analyzer/src/*.test.ts` covers provider normalization and repeated-run consensus.
 - `services/api/src/app.test.ts` verifies the Fastify adapter.
 - `tests/rendered-html.test.mjs` confirms production-rendered output.
 
-The release acceptance pass also verifies navigation, localization, media controls, ad dismissal and responsive layout in a real browser. Converting those acceptance paths into checked-in end-to-end tests remains a roadmap item.
+The dedicated S2 fixed-set path is now checked in as Playwright. The broader release acceptance pass still verifies navigation, localization, media controls, ad dismissal and responsive layout manually; converting those non-S2 paths into checked-in end-to-end tests remains a roadmap item.
 
 ### Run the S2 browser baseline
 
@@ -94,11 +100,13 @@ Open `http://localhost:3000/regression/calibrate` for the v0.4.1 second-review w
 
 The original schema-v1 file is immutable. A downloaded schema-v2 review binds its exact SHA-256 and remains separate evidence: the page does not upload it, train the detector or modify `manifest.json`. Validation must receive that source review, its SHA-256 and the trusted calibration seed; expected target IDs come from the source's eight adjustment records, while placement resolutions are fixed to the seed's `charge-005/008/009`. Never validate queue identity from IDs declared by the export itself. A maintainer must validate the export, deliberately create a separately versioned reviewed manifest and only then re-score the saved predictions. Re-scoring saved boxes is a label-only comparison, not fresh inference.
 
-The main site's **Decision** view links directly to `/regression`. The S2 player and placement scorer both use a 0.30×0.30 creative footprint on a 16:9 stage. `filterUnsupportedCropSubjects` suppresses only low-confidence crop-only `人物主体` candidates without a face center inside the box. Direct detections, strong crop detections, animal candidates and faceless character candidates remain. A back-facing low-confidence person may still be removed, so a dedicated holdout set is required before generalizing this heuristic. Detection is fail-closed: both face and object detectors must initialize and run; if either one is unavailable, the whole frame is unavailable, no placement is emitted and a blocking sample counts as a miss.
+Open `http://localhost:3000/regression/intake` for the v0.5.0 local intake and preview flow. Select the schema-v2 JSON exported by the calibration workspace. The browser computes the selected file's exact-byte SHA-256 and carries it into downloaded evidence. The page performs the same source-bound validation, creates an in-memory reviewed-manifest preview only after the full 8/8 plus 3/3 contract passes, and re-scores the saved v0.4.0 raw predictions against that preview. It can download separate preview and re-score JSON files, but it never uploads the selected file, writes the repository, trains the model or overwrites the tracked manifest. Seven samples remain diagnostic until their own product-review pass.
 
-The historical pre-tuning result is 6/13 (46.2%) safe-placement agreement, 4/13 (30.8%) unsafe placement and 3/13 (23.1%) over-deferral, with 16.0% precision, 36.4% recall, 22.2% F1 and 318/335 ms p50/p95. The public v0.4.0 candidate at `evaluation/s2/candidates/v0.4.0.json` completed 20/20 available frames and measures 7/13 (53.8%) safe placement, 3/13 (23.1%) unsafe placement, 3/13 (23.1%) over-deferral, TP 5 / FP 16 / FN 6, 23.8% precision, 45.5% recall, 31.3% F1 and 277/307 ms p50/p95. Target P/R/F1 is exploratory, class-agnostic raw-box matching at IoU ≥ 0.25, not calibrated semantic accuracy. These figures apply only to the original schema-v1 agent-draft manifest. v0.4.1 adds no new detector run or metric.
+The main site's **Decision** view links directly to `/regression`. The S2 player and placement scorer both use a 0.30×0.30 creative footprint on a 16:9 stage. `filterUnsupportedCropSubjects` suppresses only low-confidence crop-only `人物主体` candidates without a face center inside the box. Direct detections, strong crop detections, animal candidates and faceless character candidates remain. A six-frame sealed holdout now includes back-facing/faceless people, animals, a robot close-up and an empty aftermath, but every `groundTruth` remains `null` and `useForTuning` remains `false`; it cannot prove the heuristic generalizes until the candidate is frozen and a separate product review exists. Detection is fail-closed: both face and object detectors must initialize and run; if either one is unavailable, the whole frame is unavailable, no placement is emitted and a blocking sample counts as a miss.
 
-Ordinary CI deliberately replays the tracked raw predictions instead of running fresh MediaPipe inference. The current WASM runtime is fetched from jsDelivr, so making it a blocking network-dependent CI step would create false failures. Stage 1C will vendor the runtime and add a separate browser benchmark job.
+The historical pre-tuning result is 6/13 (46.2%) safe-placement agreement, 4/13 (30.8%) unsafe placement and 3/13 (23.1%) over-deferral, with 16.0% precision, 36.4% recall, 22.2% F1 and 318/335 ms p50/p95. The public v0.4.0 candidate at `evaluation/s2/candidates/v0.4.0.json` completed 20/20 available frames and measures 7/13 (53.8%) safe placement, 3/13 (23.1%) unsafe placement, 3/13 (23.1%) over-deferral, TP 5 / FP 16 / FN 6, 23.8% precision, 45.5% recall, 31.3% F1 and 277/307 ms p50/p95. Target P/R/F1 is exploratory, class-agnostic raw-box matching at IoU ≥ 0.25, not calibrated semantic accuracy. These figures apply only to the original schema-v1 agent-draft manifest. Neither v0.4.1 nor the v0.5.0 engineering candidate adds a new detector metric.
+
+MediaPipe Tasks Vision 1.0.1 now loads six checked-in runtime assets from `/mediapipe/wasm`; `PAUSE_VISION_CONFIG` records their SHA-256 values and uses `s2-vision-v5`. The ordinary quality job verifies the sealed holdout contract and replays tracked raw predictions deterministically. A separate `s2-browser-regression` CI job installs pinned Chromium, builds the exact revision and runs `pnpm test:s2-browser`; it rejects jsDelivr requests, local WASM/model/frame failures and any unavailable frame. Until schema-v2 intake resolves their first-pass label/box adjustments, `charge-005/008/013/016/018` are diagnostic exceptions; `charge-002` is confirmed and remains in the stable gate. Every other stable-label sample is also prohibited from becoming newly unsafe. The job uploads `artifacts/s2-browser-regression/current.json` and `regression-lab.png`. Locally, install Chromium and run `pnpm build` before that command. Stage 1C remains partial until the first CI and hosted fresh runs pass; do not derive a new metric from code changes alone.
 
 ## Media in local development
 
@@ -169,7 +177,9 @@ pnpm dev:api
 | `pnpm lint` | 运行 ESLint。 |
 | `pnpm typecheck` | 运行 TypeScript 检查但不生成文件。 |
 | `pnpm test:unit` | 运行 Vitest 单元与集成测试。 |
+| `pnpm test:s2-holdout` | 校验密封 holdout 的哈希、尺寸、分组和“无标签、不可调参”约束。 |
 | `pnpm test:s2-regression` | 验证 S2 固定清单、帧校验和、评分器与已保存基线。 |
+| `pnpm test:s2-browser` | 使用生产服务器运行 20 张 S2 固定帧的 Playwright Chromium 新鲜推理门。 |
 | `pnpm test:rendered` | 构建并验证渲染后的 HTML。 |
 | `pnpm test` | 运行单元测试和渲染结果验证。 |
 | `pnpm check` | 依次运行 lint、typecheck 和完整测试。 |
@@ -196,11 +206,15 @@ pnpm analyze:video \
 - `app/lib/face-detector.test.ts` 覆盖严格限定的低置信裁剪人物抑制边界，并确认直接检测、强裁剪与动物候选仍会保留；实现中的标签守卫也会保留无脸角色候选。
 - `app/lib/pause-regression.test.ts` 验证阶段 1A 固定帧合同，并使用原始预测重算历史基线与阶段 1B 候选。历史基线由 v0.3.0 harness 提交 `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` 运行，检测配置行为参考 v0.2.7 提交 `bdf66d1db7511f97feba49713f9995ea6ef13711`；旧提交本身并未运行新 harness。最终 v0.4.0 浏览器产物使用 `s2-vision-v4`，运行器/配置提交均为 `e0a033194ea04a9c926a822e4330355f41ddd152`，`generatedAt` 为 `2026-08-22T03:42:41.155Z`。
 - `app/lib/pause-review.test.ts` 验证不可变 schema v1 接收与 schema v2 校框导出，覆盖源文件 SHA-256 绑定、归一化替换矩形、8 张坐标队列、3 处位置裁决和旧文件拒绝。
+- `app/lib/s2-review-intake.test.ts` 验证严格 schema v2 接收、复核 manifest 预览，以及对同一份已保存原始预测做前后标签重评分。预览与受追踪 manifest 保持分离，比较不是新推理。
+- `app/lib/pause-session.test.ts` 验证只有当前暂停 token 可以完成，token 失效后迟到的 MediaPipe 结果会被拒绝。
+- `scripts/extract-s2-holdout.mjs --verify-only` 检查 6 张密封 1280×720 图片、源/帧哈希、4 张主要/2 张补充分组，以及 `groundTruth = null` / `useForTuning = false` 约束，不会打开结果用于调参。
+- `tests/s2-browser-regression.spec.ts` 在固定 Chromium 中运行准确的 20 张固定帧，拒绝 jsDelivr 和关键本地资源失败，要求 20/20 可用，并写出 JSON/截图证据。`charge-005/008/013/016/018` 在 schema v2 解决标签/保护框前暂作诊断；`charge-002` 已确认并继续进入稳定门，其余稳定标签样本也不得新增危险误投。
 - `packages/video-analyzer/src/*.test.ts` 覆盖服务商标准化和多次运行共识。
 - `services/api/src/app.test.ts` 验证 Fastify 适配器。
 - `tests/rendered-html.test.mjs` 验证生产渲染结果。
 
-发布验收还会在真实浏览器中验证导航、国际化、媒体控制、广告关闭和响应式布局。把这些路径转成仓库内端到端自动测试仍是后续任务。
+S2 固定集路径已经作为 Playwright 测试进入仓库。更广泛的发布验收仍会在真实浏览器中检查导航、国际化、媒体控制、广告关闭和响应式布局；把这些非 S2 路径全部转成仓库内端到端自动测试仍是后续任务。
 
 ### 运行 S2 浏览器基线
 
@@ -210,11 +224,13 @@ pnpm analyze:video \
 
 原 schema v1 文件不可变。下载的 schema v2 复核会绑定其准确 SHA-256，并作为独立证据保存；页面不会上传文件、训练检测器或修改 `manifest.json`。校验时必须同时传入源复核、其 SHA-256 与可信 calibration seed：8 张目标 ID 来自源复核中的调整记录，位置裁决严格锁定为 seed 的 `charge-005/008/009`，绝不能信任导出自报的队列 ID。维护者必须校验导出，有意建立单独版本化的复核 manifest，之后才能用已保存预测重新评分。重放已保存检测框只是标签变化对比，不是新的推理运行。
 
-主站 **Decision / 决策方式** 页面直接链接 `/regression`。S2 播放器与位置评分器统一使用 `0.30 × 0.30` 创意占位，舞台固定为 16:9。`filterUnsupportedCropSubjects` 只抑制框内没有脸部中心佐证的低置信裁剪 `人物主体`；直接检测、强裁剪、动物与无脸角色候选继续保留。背面低置信人物仍可能被移除，因此在泛化该启发式规则前必须建立专门留出集。检测采用 fail-closed：人脸与主体检测器必须都成功初始化并运行；任一不可用时整帧标记为不可用、不输出位置，并将阻断样本计为失败。
+打开 `http://localhost:3000/regression/intake` 进入 v0.5.0 本地接收与预览流程。选择校准工作区导出的 schema v2 JSON 后，浏览器会计算所选原件的准确字节 SHA-256，并把它写入下载证据。页面会执行同一套来源绑定校验；只有完整 8/8 + 3/3 合同通过后，才在内存中生成复核 manifest 预览，并用 v0.4.0 已保存原始预测重评分。页面可以分别下载预览与重评分 JSON，但不会上传所选文件、写入仓库、训练模型或覆盖受追踪 manifest。另外 7 张在完成自己的产品复核前继续保持诊断状态。
 
-调参前历史结果为：安全位置一致率 `6/13 = 46.2%`，危险误投 `4/13 = 30.8%`，过度顺延 `3/13 = 23.1%`，精确率 `16.0%`，召回率 `36.4%`，F1 `22.2%`，P50/P95 `318/335 ms`。公开 v0.4.0 候选位于 `evaluation/s2/candidates/v0.4.0.json`，20/20 张均可用，安全位置一致率 `7/13 = 53.8%`，危险误投 `3/13 = 23.1%`，过度顺延 `3/13 = 23.1%`；TP 5 / FP 16 / FN 6，精确率 `23.8%`，召回率 `45.5%`，F1 `31.3%`，P50/P95 `277/307 ms`。目标 P/R/F1 是 IoU ≥ 0.25 的类别无关原始框探索性匹配，不是经过校准的语义准确率。这些数字只适用于原始 schema v1 代理初标 manifest；v0.4.1 没有新增检测器运行或指标。
+主站 **Decision / 决策方式** 页面直接链接 `/regression`。S2 播放器与位置评分器统一使用 `0.30 × 0.30` 创意占位，舞台固定为 16:9。`filterUnsupportedCropSubjects` 只抑制框内没有脸部中心佐证的低置信裁剪 `人物主体`；直接检测、强裁剪、动物与无脸角色候选继续保留。现有 6 张密封 holdout 覆盖背面/无脸人物、动物、机器人近景和空场，但全部 `groundTruth = null`、`useForTuning = false`；候选冻结并形成单独产品复核前，它不能证明该启发式规则具备泛化能力。检测采用 fail-closed：人脸与主体检测器必须都成功初始化并运行；任一不可用时整帧标记为不可用、不输出位置，并将阻断样本计为失败。
 
-普通 CI 会重放已保存的原始预测，而不会重新执行 MediaPipe。当前 WASM 运行时仍从 jsDelivr 加载，把它作为强制联网 CI 会制造假失败。阶段 1C 会把运行时固定到仓库并增加独立浏览器基准任务。
+调参前历史结果为：安全位置一致率 `6/13 = 46.2%`，危险误投 `4/13 = 30.8%`，过度顺延 `3/13 = 23.1%`，精确率 `16.0%`，召回率 `36.4%`，F1 `22.2%`，P50/P95 `318/335 ms`。公开 v0.4.0 候选位于 `evaluation/s2/candidates/v0.4.0.json`，20/20 张均可用，安全位置一致率 `7/13 = 53.8%`，危险误投 `3/13 = 23.1%`，过度顺延 `3/13 = 23.1%`；TP 5 / FP 16 / FN 6，精确率 `23.8%`，召回率 `45.5%`，F1 `31.3%`，P50/P95 `277/307 ms`。目标 P/R/F1 是 IoU ≥ 0.25 的类别无关原始框探索性匹配，不是经过校准的语义准确率。这些数字只适用于原始 schema v1 代理初标 manifest；v0.4.1 与 v0.5.0 工程候选都没有新增检测器指标。
+
+MediaPipe Tasks Vision 1.0.1 现在从 `/mediapipe/wasm` 加载 6 个仓库内 runtime 文件；`PAUSE_VISION_CONFIG` 记录各自 SHA-256，并使用 `s2-vision-v5`。普通质量任务会校验密封 holdout 合同，并确定性重放受追踪原始预测；独立 `s2-browser-regression` CI 会安装固定 Chromium、按准确提交构建并运行 `pnpm test:s2-browser`，拒绝 jsDelivr、WASM/模型/帧资源失败和任意不可用帧。在 schema v2 解决第一轮标签/保护框调整前，`charge-005/008/013/016/018` 暂作诊断例外；`charge-002` 已确认并继续进入稳定门，其余稳定标签同样不得新增危险误投。任务上传 `artifacts/s2-browser-regression/current.json` 与 `regression-lab.png`。本地运行前需先安装 Chromium 并执行 `pnpm build`。首次 CI 与线上新鲜运行通过前，阶段 1C 仍是部分完成，不能仅凭代码变化推导新指标。
 
 ## 本地开发媒体
 
