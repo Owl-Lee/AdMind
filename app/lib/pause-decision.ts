@@ -28,6 +28,8 @@ const CANDIDATES: Record<Exclude<AdPlacement, "none">, NormalizedRect> = {
   "bottom-right": { x: 0.675, y: 0.615, width: 0.3, height: 0.3 },
 };
 
+export type PlacementEvidenceStatus = "ready" | "unavailable";
+
 // 字幕与播放器控制条属于页面已知的“保留区”，不需要 AI 猜测。
 const RESERVED_BOTTOM: NormalizedRect = { x: 0, y: 0.72, width: 1, height: 0.28 };
 
@@ -141,4 +143,15 @@ export function choosePauseAdPlacement(targets: NormalizedRect[]): PlacementDeci
       ? `检测到 ${targets.length} 个视觉避让目标，${side}的画面遮挡风险最低。`
       : "当前帧未检测到稳定主体，优先使用不遮挡字幕与控制条的顶部区域。",
   };
+}
+
+export function choosePauseAdPlacementForEvidence(
+  status: PlacementEvidenceStatus,
+  targets: NormalizedRect[],
+  unavailableReason = "本地视觉模型暂不可用，本次暂停不展示广告并进入待交付队列。",
+): PlacementDecision {
+  if (status !== "ready") {
+    return { placement: "none", assessments: [], reason: unavailableReason };
+  }
+  return choosePauseAdPlacement(targets);
 }

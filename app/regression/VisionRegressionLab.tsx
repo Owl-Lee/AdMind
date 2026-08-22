@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import manifestJson from "../../evaluation/s2/manifest.json";
 import { detectFacesInRegressionFrame, PAUSE_VISION_CONFIG } from "../lib/face-detector";
-import { choosePauseAdPlacement } from "../lib/pause-decision";
+import { choosePauseAdPlacementForEvidence } from "../lib/pause-decision";
 import {
   scoreVisionRegression,
   type RegressionManifest,
@@ -108,7 +108,7 @@ export function VisionRegressionLab() {
               })),
             ]
           : [];
-        const decision = choosePauseAdPlacement(targets);
+        const decision = choosePauseAdPlacementForEvidence(evidence.status, targets, evidence.message);
         predictions.push({
           sampleId: sample.id,
           status: evidence.status,

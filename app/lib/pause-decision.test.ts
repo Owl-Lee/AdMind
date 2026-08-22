@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { choosePauseAdPlacement } from "./pause-decision";
+import { choosePauseAdPlacement, choosePauseAdPlacementForEvidence } from "./pause-decision";
 
 describe("choosePauseAdPlacement", () => {
+  it("fails closed when local visual evidence is unavailable", () => {
+    expect(choosePauseAdPlacementForEvidence("unavailable", [], "model unavailable")).toEqual({
+      placement: "none",
+      assessments: [],
+      reason: "model unavailable",
+    });
+  });
+
   it("moves the card away from a face on the left", () => {
     const decision = choosePauseAdPlacement([{ x: 0.02, y: 0.04, width: 0.34, height: 0.3 }]);
     expect(decision.placement).toBe("top-right");

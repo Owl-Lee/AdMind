@@ -35,7 +35,7 @@ const FACE_MODEL_PATH = "/models/blaze_face_full_range.tflite";
 const OBJECT_MODEL_PATH = "/models/efficientdet_lite0.tflite";
 
 export const PAUSE_VISION_CONFIG = {
-  configVersion: "s2-vision-v3",
+  configVersion: "s2-vision-v4",
   mediapipeTasksVision: MEDIAPIPE_TASKS_VISION_VERSION,
   wasmRoot: MEDIAPIPE_WASM_ROOT,
   faceModel: {
@@ -56,6 +56,9 @@ export const PAUSE_VISION_CONFIG = {
   },
   filters: {
     weakCropRequiresFaceForLabels: ["人物主体"],
+  },
+  availability: {
+    requiredDetectors: ["face", "object"],
   },
 } as const;
 
@@ -346,7 +349,7 @@ async function detectFacesInVisualSource(
   try {
     const [detector, objectDetector] = await Promise.all([
       getDetector(),
-      getObjectDetector().catch(() => null),
+      getObjectDetector(),
     ]);
     const startedAt = performance.now();
     const result = detector.detect(visual);
@@ -382,19 +385,17 @@ async function detectFacesInVisualSource(
       index,
     ));
     const faces = deduplicateFaces([...directFaces, ...mirroredFaces, ...detailFaces]);
-    const subjects = objectDetector
-      ? deduplicateSubjects(filterUnsupportedCropSubjects([
-          ...normalizeSubjects(objectDetector.detect(visual).detections, sourceWidth, sourceHeight),
-          ...DETAIL_REGIONS.flatMap((region, index) => detectSubjectsInRegion(
-            objectDetector,
-            visual,
-            sourceWidth,
-            sourceHeight,
-            region,
-            index,
-          )),
-        ], faces))
-      : [];
+    const subjects = deduplicateSubjects(filterUnsupportedCropSubjects([
+      ...normalizeSubjects(objectDetector.detect(visual).detections, sourceWidth, sourceHeight),
+      ...DETAIL_REGIONS.flatMap((region, index) => detectSubjectsInRegion(
+        objectDetector,
+        visual,
+        sourceWidth,
+        sourceHeight,
+        region,
+        index,
+      )),
+    ], faces));
     const inferenceMs = Math.round(performance.now() - startedAt);
     return {
       status: "ready",

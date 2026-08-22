@@ -135,6 +135,9 @@ export type RegressionProvenance = {
     filters?: {
       weakCropRequiresFaceForLabels: readonly string[];
     };
+    availability?: {
+      requiredDetectors: readonly string[];
+    };
   };
 };
 

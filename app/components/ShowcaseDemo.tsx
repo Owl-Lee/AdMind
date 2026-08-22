@@ -6,7 +6,7 @@ import type { AnalysisConsensus, DecisionResponse, Scenario, Strategy, VideoAnal
 import { ChevronIcon, PlayIcon, ShieldIcon, SparkIcon, VolumeIcon } from "./icons";
 import { AdCreative } from "./AdCreative";
 import { detectFacesInPausedFrame, type FaceDetectionEvidence } from "../lib/face-detector";
-import { choosePauseAdPlacement, type PlacementDecision } from "../lib/pause-decision";
+import { choosePauseAdPlacement, choosePauseAdPlacementForEvidence, type PlacementDecision } from "../lib/pause-decision";
 import { observeUiLocalization, type UiLocale } from "../lib/ui-localization";
 
 export type DemoMedia = {
@@ -479,14 +479,18 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
       setPausePhase("analyzing");
       void detectFacesInPausedFrame(video).then((evidence) => {
         if (pauseObservationRef.current !== observationId || !video.paused) return;
-        const nextPlacement = choosePauseAdPlacement([...evidence.faces, ...evidence.subjects]);
+        const nextPlacement = choosePauseAdPlacementForEvidence(
+          evidence.status,
+          [...evidence.faces, ...evidence.subjects],
+          evidence.message,
+        );
         setFaceEvidence(evidence);
         setPlacementDecision(nextPlacement);
         setPausePending(false);
         if (nextPlacement.placement === "none") {
           setPauseStartedAt(null);
           setPausePhase("deferred");
-          setDeferredReason("当前画面没有安全位置，广告任务已顺延。");
+          setDeferredReason(evidence.status === "ready" ? "当前画面没有安全位置，广告任务已顺延。" : nextPlacement.reason);
           return;
         }
         triggeredRef.current[strategy] = true;
