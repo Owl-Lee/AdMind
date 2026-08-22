@@ -41,6 +41,7 @@
 .metrics strong { color: #292543; font-size: 25px; }
 .metrics small { color: #8b879a; font-size: 11px; }
 .runStatus { width: min(1180px,100%); margin: -15px auto 20px; color: #695f8a; font-size: 12px; font-weight: 800; text-align: center; }
+.metricNote { width: min(1180px,100%); margin: -12px auto 20px; color: #7b5960; font-size: 11px; line-height: 1.5; text-align: center; }
 
 .reviewPanel { display: flex; align-items: center; justify-content: space-between; gap: 28px; width: min(1180px,100%); margin: 0 auto 20px; padding: 24px 26px; border: 1px solid #d9d5f1; border-radius: 20px; background: linear-gradient(135deg,rgba(255,255,255,.98),rgba(241,239,255,.94)); box-shadow: 0 18px 48px rgba(47,42,91,.08); }
 .reviewPanel > div:first-child { display: grid; gap: 7px; max-width: 780px; }

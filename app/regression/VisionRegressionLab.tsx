@@ -266,7 +266,7 @@ export function VisionRegressionLab() {
         safeAgreement: "Safe-placement agreement",
         unsafePlacement: "Unsafe placement",
         targetRecall: "Target recall",
-        targetPrecision: "Target precision",
+        targetPrecision: "Raw-box precision*",
         inferenceLatency: "Inference latency",
         modelAvailability: "Model availability",
         available: "available",
@@ -285,6 +285,7 @@ export function VisionRegressionLab() {
         exportReview: `${confirmedReviewCount === priorityReviewSamples.length ? "Export complete" : "Export partial"} review JSON (${confirmedReviewCount}/${priorityReviewSamples.length})`,
         downloaded: "Downloaded locally. Nothing was uploaded.",
         currentRun: report ? "Current browser candidate run · not saved as the accepted baseline" : "Run the fixed set to create a browser-local candidate result",
+        metricNote: "* Exploratory only: nested face and body boxes can describe the same valid protected subject, but this raw-box metric still counts the extra box as a false positive.",
         filterLabel: "Filter samples",
         filterAll: `All ${manifest.samples.length}`,
         filterReview: `Priority review ${priorityReviewSamples.length}`,
@@ -337,7 +338,7 @@ export function VisionRegressionLab() {
         safeAgreement: "安全位置一致率",
         unsafePlacement: "危险位置误投",
         targetRecall: "保护目标召回率",
-        targetPrecision: "保护目标精确率",
+        targetPrecision: "原始框精确率*",
         inferenceLatency: "推理耗时",
         modelAvailability: "模型可用性",
         available: "可用",
@@ -356,6 +357,7 @@ export function VisionRegressionLab() {
         exportReview: `${confirmedReviewCount === priorityReviewSamples.length ? "导出完整" : "导出部分"}审核 JSON（${confirmedReviewCount}/${priorityReviewSamples.length}）`,
         downloaded: "已下载到本地，没有上传任何内容。",
         currentRun: report ? "当前浏览器候选运行 · 尚未写入已接受基线" : "运行固定集后，会生成仅存在当前浏览器的候选结果",
+        metricNote: "* 仅作探索诊断：脸框和人体框可能同时描述同一个有效保护主体，但原始框指标仍会把额外框计为误检。",
         filterLabel: "筛选样本",
         filterAll: `全部 ${manifest.samples.length}`,
         filterReview: `优先复核 ${priorityReviewSamples.length}`,
@@ -438,6 +440,7 @@ export function VisionRegressionLab() {
         <article><span>{copy.inferenceLatency}</span><strong>{report ? `${report.metrics.inferenceP50Ms} ms` : "—"}</strong><small>{report ? `p95 ${report.metrics.inferenceP95Ms} ms` : "—"}</small></article>
       </section>
       <p className={styles.runStatus}>{copy.currentRun}</p>
+      <p className={styles.metricNote}>{copy.metricNote}</p>
 
       <section className={styles.reviewPanel} aria-labelledby="review-heading">
         <div>
