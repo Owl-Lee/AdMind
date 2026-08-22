@@ -1,22 +1,39 @@
 # Changelog
 
-[English](#changelog) · [中文（最新版本）](#未发布中文说明)
+[English](#changelog) · [中文（最新版本）](#041-中文说明)
 
 Notable project changes are recorded here.
 
 ## Unreleased
 
-### S2 product-review intake
+No unreleased changes are documented yet.
 
-- Archived the product owner's byte-identical 13-item priority-review export at `evaluation/s2/reviews/2026-08-22-product-owner.json` (SHA-256 `a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256`). The remaining seven frames are still unreviewed agent drafts, so this is not a complete 20-frame human review.
-- Recorded five accepted protection-box drafts and eight requests for box adjustment. Because the export has no replacement coordinates and `charge-005/008/009` contain placement-note ambiguities, the original evidence remains separate and does not overwrite the manifest, baseline or public v0.4.0 metrics.
-- Added a manifest-bound import validator and regression tests for dataset, source/frame hashes, draft signatures, queue completeness and stale-artifact rejection. The lab legend now names green boxes as project-agent annotation drafts and purple boxes as MediaPipe output, explicitly separating both from TwelveLabs.
+## 0.4.1 · 2026-08-22
 
-### 未发布中文说明
+Public v0.4.1 was released as the S2 protection-calibration tool release.
 
-- 将产品负责人已完成的 13 张优先复核原件逐字节归档到 `evaluation/s2/reviews/2026-08-22-product-owner.json`（SHA-256 `a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256`）。另外 7 张仍是未人工审核的代理初标，因此这不是 20 张全量人工复核。
-- 复核中有 5 张保护框初标被确认，8 张要求调整。由于导出没有替换坐标，且 `charge-005/008/009` 的位置选择与备注存在歧义，原始证据继续独立保存，不会覆盖 manifest、基线或公开 v0.4.0 指标。
-- 新增与 manifest 绑定的导入校验器及回归测试，覆盖数据集、源素材/帧哈希、初标签名、队列完整性与旧文件拒绝。实验室图例现已明确：绿色框是项目代理标注初稿，紫色框是 MediaPipe 输出，两者都不是 TwelveLabs 生成。
+### Product review evidence and exact-coordinate calibration
+
+- Archived the product owner's byte-identical 13-item first-pass export at `evaluation/s2/reviews/2026-08-22-product-owner.json` (SHA-256 `a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256`). It records 13/13 priority opinions: five project-agent protection drafts were accepted and eight were routed to second review. The other seven frames remain unreviewed, so this is not a completed 20-frame human-ground-truth set.
+- Added the bilingual `/regression/calibrate` lab for the eight adjustment cases. Reviewers can move and resize normalized rectangles, enter exact percentages, add or delete person/face/character targets, reset a suggestion, and resolve the three placement conflicts before exporting.
+- Displayed the current scorer's composite rule-risk percentage for each proposed upper-corner ad area. The score combines overlap and proximity rather than representing overlap alone, and the page warns above the 40% rule threshold. A replacement cannot be confirmed until the reviewer checks the highlighted boundary and composite geometry risk; changing the target geometry invalidates that acknowledgement.
+- Kept the schema-v1 evidence immutable. A schema-v2 export references the exact v1 SHA-256 and stays in browser `localStorage` until downloaded. It is not uploaded, does not train the detector and does not update `evaluation/s2/manifest.json` automatically; a maintainer must validate and deliberately commit a separate reviewed manifest.
+- Clarified provenance in both labs: green boxes are AI-assisted project-agent drafts, purple dashed boxes are browser-local MediaPipe predictions, and TwelveLabs produces neither S2 box type. A green box becomes reviewed evidence only after explicit confirmation.
+- Added validation and regression coverage for dataset identity, source/frame hashes, draft signatures, v1 linkage, normalized replacement rectangles, queue completeness and stale-artifact rejection.
+- Required schema-v2 validation to receive the trusted calibration seed. The validator derives the eight adjustment IDs from the immutable source review and locks placement resolution to `charge-005/008/009`; it rejects exports that omit, add or self-report different IDs.
+- This release contains no new detector run or model metric. The v0.4.0 fixed-set numbers remain bound to the original schema-v1 agent-draft manifest; metrics may be recomputed only after a versioned reviewed manifest exists.
+
+### 0.4.1 中文说明
+
+- 公开 v0.4.1 是 S2 保护框精确校准工具版本。
+- 将产品负责人完成的 13 张第一轮优先复核原件逐字节归档到 `evaluation/s2/reviews/2026-08-22-product-owner.json`（SHA-256 `a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256`）。原件记录 13/13 张优先样本意见：5 张项目代理保护框初标被接受，8 张进入二审；另外 7 张仍未产品审核，因此这不是 20 张全量人工真值集。
+- 新增双语 `/regression/calibrate` 精确坐标校框页，覆盖 8 张待调整样本。复核者可以移动和缩放归一化矩形、输入精确百分比、新增或删除人物/人脸/角色目标、重置建议，并在导出前解决 3 处位置冲突。
+- 页面显示每个待确认上角广告位在当前评分器下的规则综合风险百分比；该分数同时考虑重叠与邻近度，不是纯重叠比例，超过 40% 规则阈值时明确警告。确认保护框前必须勾选“已检查重点边界与规则综合风险”；只要框坐标再次变化，这次勾选就会失效。
+- schema v1 证据保持不可变。schema v2 导出会引用准确的 v1 SHA-256，并在下载前只存于浏览器 `localStorage`；它不会上传、不会训练检测器，也不会自动更新 `evaluation/s2/manifest.json`。维护者必须另行校验，并有意提交独立版本的复核 manifest。
+- 两个实验室都明确框的来源：绿色框是 AI 辅助的项目代理初标，紫色虚线框是浏览器本地 MediaPipe 预测；TwelveLabs 不生成这两类 S2 框。绿色框只有经过明确确认后才成为复核证据。
+- 新增校验与回归覆盖：数据集身份、源素材/帧哈希、初标签名、v1 绑定、归一化替换矩形、队列完整性和旧文件拒绝。
+- schema v2 校验必须同时取得可信 calibration seed。验证器从不可变源复核推导 8 张调整 ID，并把位置裁决严格锁定为 `charge-005/008/009`；导出不能靠自报 ID 绕过、删减或扩张队列。
+- 本版本没有新的检测器运行或模型指标。v0.4.0 固定集数字继续绑定原始 schema v1 代理初标 manifest；只有建立版本化复核 manifest 后才可以重算指标。
 
 ## 0.4.0 · 2026-08-21
 

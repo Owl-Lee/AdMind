@@ -1,18 +1,64 @@
 import { describe, expect, it } from "vitest";
 import manifestJson from "../../evaluation/s2/manifest.json";
+import reviewJson from "../../evaluation/s2/reviews/2026-08-22-product-owner.json";
 import type { RegressionManifest } from "./pause-regression";
+import { S2_CALIBRATION_DRAFTS, S2_PLACEMENT_RESOLUTION } from "./s2-calibration-seed";
 import {
+  addReplacementProtectionTarget,
+  buildProtectionCalibrationExport,
   buildReviewExport,
+  canConfirmProtectionCalibration,
+  confirmPlacementResolution,
+  confirmProtectionCalibration,
   canConfirmReview,
   chooseReviewAction,
   confirmReview,
+  createProtectionCalibrationWorkspace,
   createReviewWorkspace,
+  deleteReplacementProtectionTarget,
+  moveReviewTargetRect,
+  protectionCalibrationStorageKey,
+  reviewStorageKey,
+  restoreProtectionCalibrationWorkspace,
   restoreReviewWorkspace,
   revokeReview,
+  setPlacementResolutionNote,
+  setProtectionCalibrationNote,
   toggleReviewPlacement,
+  updateReplacementProtectionTarget,
+  validateReviewExport,
+  type ProtectionCalibrationSeed,
+  type S2ReviewExport,
 } from "./pause-review";
 
 const manifest = manifestJson as RegressionManifest;
+const sourceReview = reviewJson as S2ReviewExport;
+const sourceReviewSha256 = "a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256";
+
+const adjustableIds = sourceReview.reviews
+  .filter((review) => review.productReview.targetAssessment === "needs-adjustment")
+  .map((review) => review.sampleId);
+
+function calibrationSeed(): ProtectionCalibrationSeed {
+  return {
+    suggestions: adjustableIds.map((sampleId) => {
+      const original = manifest.samples.find((sample) => sample.id === sampleId)?.protectionTargets ?? [];
+      return {
+        sampleId,
+        replacementProtectionTargets: sampleId === "charge-008"
+          ? []
+          : original.map((target, index) => index === 0
+            ? { ...target, rect: { ...target.rect, x: Math.min(0.97, target.rect.x + 0.01) } }
+            : structuredClone(target)),
+      };
+    }),
+    placementResolutions: {
+      "charge-005": { acceptablePlacements: ["top-left", "top-right"] },
+      "charge-008": { acceptablePlacements: ["top-left", "top-right"] },
+      "charge-009": { acceptablePlacements: ["top-left", "top-right"], preferredPlacement: "top-left" },
+    },
+  };
+}
 
 describe("S2 product review workspace", () => {
   it("creates a priority queue from pending and visually disputed agent drafts", () => {
@@ -78,6 +124,8 @@ describe("S2 product review workspace", () => {
     const staleDraft = structuredClone(workspace);
     staleDraft.items["charge-003"].draftSignature = "stale-agent-draft";
     expect(restoreReviewWorkspace(manifest, staleDraft).items["charge-003"].note).toBe("");
+    expect(restoreReviewWorkspace(manifest, { ...workspace, schemaVersion: 2 }).items["charge-003"].note).toBe("");
+    expect(reviewStorageKey(manifest)).toContain(":v3");
   });
 
   it("exports confirmed reviews separately without changing the manifest contract", () => {
@@ -107,5 +155,150 @@ describe("S2 product review workspace", () => {
     expect(exported.reviews[0].agentDraft.draftSignature).toBe(workspace.items[sampleId].draftSignature);
     expect(exported.reviews[0]).not.toHaveProperty("protectionTargets");
     expect(manifest.samples.find((sample) => sample.id === sampleId)?.reviewStatus).toBe("needs-user-review");
+  });
+});
+
+describe("S2 protection calibration data contract", () => {
+  it("builds the tracked calibration plan with exactly eight box reviews and three placement resolutions", () => {
+    const trackedSeed: ProtectionCalibrationSeed = {
+      suggestions: S2_CALIBRATION_DRAFTS.map((draft) => ({
+        sampleId: draft.sampleId,
+        replacementProtectionTargets: draft.replacementProtectionTargets,
+      })),
+      placementResolutions: S2_PLACEMENT_RESOLUTION,
+    };
+    const workspace = createProtectionCalibrationWorkspace(manifest, sourceReview, trackedSeed);
+    expect(Object.keys(workspace.items)).toHaveLength(8);
+    expect(Object.keys(workspace.placementResolutions)).toEqual(["charge-005", "charge-008", "charge-009"]);
+  });
+
+  it("limits target editing to the eight explicit needs-adjustment reviews and accepts external seeds", () => {
+    const seed = calibrationSeed();
+    const workspace = createProtectionCalibrationWorkspace(manifest, sourceReview, seed);
+    expect(Object.keys(workspace.items)).toEqual(adjustableIds);
+    expect(Object.keys(workspace.placementResolutions)).toEqual(["charge-005", "charge-008", "charge-009"]);
+    expect(workspace.items["charge-008"].replacementProtectionTargets).toEqual([]);
+    expect(workspace.items).not.toHaveProperty("charge-009");
+    expect(() => addReplacementProtectionTarget(workspace, "charge-009", {
+      kind: "person",
+      required: true,
+      rect: { x: 0, y: 0, width: 0.2, height: 0.2 },
+    })).toThrow("protection targets are not editable");
+    expect(() => createProtectionCalibrationWorkspace(manifest, sourceReview, {
+      suggestions: [{ sampleId: "charge-002", replacementProtectionTargets: [] }],
+    })).toThrow("protection targets are not editable");
+  });
+
+  it("clamps normalized rectangles and never reuses generated target ids", () => {
+    let workspace = createProtectionCalibrationWorkspace(manifest, sourceReview);
+    const first = addReplacementProtectionTarget(workspace, "charge-005", {
+      kind: " face ",
+      required: true,
+      rect: { x: 0.99, y: -4, width: 0.001, height: 4 },
+    });
+    workspace = first.workspace;
+    expect(first.targetId).toBe("charge-005-review-target-1");
+    expect(workspace.items["charge-005"].replacementProtectionTargets.at(-1)).toEqual({
+      id: first.targetId,
+      kind: "face",
+      required: true,
+      rect: { x: 0.98, y: 0, width: 0.02, height: 1 },
+    });
+    workspace = deleteReplacementProtectionTarget(workspace, "charge-005", first.targetId);
+    const second = addReplacementProtectionTarget(workspace, "charge-005", {
+      kind: "face",
+      required: true,
+      rect: { x: 0.2, y: 0.2, width: 0.2, height: 0.2 },
+    });
+    expect(second.targetId).toBe("charge-005-review-target-2");
+    workspace = updateReplacementProtectionTarget(
+      second.workspace,
+      "charge-005",
+      second.targetId,
+      { x: -1, y: 0.99, width: 2, height: 0 },
+    );
+    expect(workspace.items["charge-005"].replacementProtectionTargets.at(-1)?.id).toBe(second.targetId);
+    expect(workspace.items["charge-005"].replacementProtectionTargets.at(-1)?.rect)
+      .toEqual({ x: 0, y: 0.98, width: 1, height: 0.02 });
+  });
+
+  it("binds restoration to schema, source review, and seed provenance", () => {
+    const seed = calibrationSeed();
+    let workspace = createProtectionCalibrationWorkspace(manifest, sourceReview, seed);
+    workspace = setProtectionCalibrationNote(workspace, "charge-005", "Use the centered subject box.");
+    workspace = confirmProtectionCalibration(workspace, "charge-005", "2026-08-22T12:00:00.000Z");
+    expect(restoreProtectionCalibrationWorkspace(manifest, sourceReview, workspace, seed)
+      .items["charge-005"].confirmedAt).toBe("2026-08-22T12:00:00.000Z");
+    expect(restoreProtectionCalibrationWorkspace(manifest, sourceReview, { ...workspace, schemaVersion: 2 }, seed)
+      .items["charge-005"].confirmedAt).toBeNull();
+    expect(restoreProtectionCalibrationWorkspace(manifest, sourceReview, workspace, {})
+      .items["charge-005"].confirmedAt).toBeNull();
+    expect(protectionCalibrationStorageKey(manifest)).toContain(":v4");
+  });
+
+  it("exports and verifies a complete schema-v2 calibration without weakening schema v1", () => {
+    const seed = calibrationSeed();
+    let workspace = createProtectionCalibrationWorkspace(manifest, sourceReview, seed);
+    for (const sampleId of adjustableIds) {
+      expect(canConfirmProtectionCalibration(workspace.items[sampleId])).toBe(false);
+      workspace = setProtectionCalibrationNote(workspace, sampleId, `Confirmed replacement targets for ${sampleId}.`);
+      workspace = confirmProtectionCalibration(workspace, sampleId, "2026-08-22T12:00:00.000Z");
+    }
+    for (const sampleId of ["charge-005", "charge-008", "charge-009"]) {
+      workspace = setPlacementResolutionNote(workspace, sampleId, `Resolved placement ambiguity for ${sampleId}.`);
+      workspace = confirmPlacementResolution(workspace, sampleId, "2026-08-22T12:01:00.000Z");
+    }
+    const exported = buildProtectionCalibrationExport(manifest, sourceReview, workspace, {
+      generatedAt: "2026-08-22T12:02:00.000Z",
+      appVersion: "0.4.0",
+      gitCommit: "test",
+      seed,
+      sourceReviewSha256,
+    });
+    expect(exported.complete).toBe(true);
+    expect(exported.reviews).toHaveLength(8);
+    expect(exported.placementResolutions.map((item) => item.sampleId)).toEqual([
+      "charge-005",
+      "charge-008",
+      "charge-009",
+    ]);
+    expect(exported.reviews.every((item) => item.originalDraftSignature.length > 0)).toBe(true);
+    expect(exported.reviews.every((item) => Array.isArray(item.replacementProtectionTargets))).toBe(true);
+    expect(validateReviewExport(manifest, exported, sourceReview, sourceReviewSha256, seed)).toEqual([]);
+    expect(validateReviewExport(manifest, sourceReview)).toEqual([]);
+    expect(validateReviewExport(manifest, exported)).toEqual([
+      "schema v2 requires the source schema v1 product-review export",
+    ]);
+    expect(validateReviewExport(manifest, exported, sourceReview)).toEqual([
+      "schema v2 requires the source schema v1 SHA-256",
+    ]);
+    expect(validateReviewExport(manifest, exported, sourceReview, "0".repeat(64), seed))
+      .toContain("sourceReview provenance does not match the supplied schema v1 export");
+    expect(validateReviewExport(manifest, exported, sourceReview, sourceReviewSha256)).toEqual([
+      "schema v2 requires the trusted calibration seed",
+    ]);
+
+    const stale = structuredClone(exported);
+    stale.reviews[0].originalDraftSignature = "stale";
+    expect(validateReviewExport(manifest, stale, sourceReview, sourceReviewSha256, seed))
+      .toContain("charge-005: originalDraftSignature does not match");
+    const invalidRect = structuredClone(exported);
+    invalidRect.reviews[0].replacementProtectionTargets[0].rect.width = 0.001;
+    expect(validateReviewExport(manifest, invalidRect, sourceReview, sourceReviewSha256, seed))
+      .toContain("charge-005: replacementProtectionTargets are invalid");
+    const missingResolution = structuredClone(exported);
+    missingResolution.placementResolutionSampleIds = [];
+    missingResolution.eligibleSampleIds = [...missingResolution.targetCalibrationSampleIds];
+    missingResolution.placementResolutions = [];
+    missingResolution.pendingSampleIds = [];
+    missingResolution.complete = true;
+    expect(validateReviewExport(manifest, missingResolution, sourceReview, sourceReviewSha256, seed))
+      .toContain("placementResolutionSampleIds do not match the trusted calibration seed");
+  });
+
+  it("moves boxes to frame edges without shrinking them", () => {
+    const rect = { x: 0.3, y: 0.2, width: 0.4, height: 0.6 };
+    expect(moveReviewTargetRect(rect, 0.8, 0.8)).toEqual({ x: 0.6, y: 0.4, width: 0.4, height: 0.6 });
+    expect(moveReviewTargetRect(rect, -0.8, -0.8)).toEqual({ x: 0, y: 0, width: 0.4, height: 0.6 });
   });
 });

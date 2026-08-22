@@ -157,6 +157,29 @@
 - **And** no ad placement is emitted from partial detector evidence
 - **And** an unavailable blocking frame counts as a miss in regression metrics.
 
+#### AT-S2-12 v0.4.1 calibrates only the eight requested protection boxes
+
+- **Given** the immutable schema-v1 first-pass artifact records 13/13 priority opinions, five accepted protection drafts, eight adjustment requests and seven other unreviewed frames
+- **When** the product owner opens `/regression/calibrate`
+- **Then** exactly the eight adjustment cases enter the coordinate queue; the five accepted and seven unreviewed frames are not silently relabelled
+- **And** a reviewer can move and resize normalized boxes, enter exact percentage values, add or delete person/face/character targets and reset the current suggestion
+- **And** `charge-008` may validly contain no protected target as the pure-effect negative-control draft
+- **And** every proposed upper-corner card shows its composite rule-risk percentage, explicitly combining overlap and proximity rather than presenting an overlap percentage, and warns when risk exceeds the current 40% threshold
+- **And** confirmation is disabled until the reviewer acknowledges the highlighted boundary and composite geometry risk; changing any target geometry invalidates that acknowledgement
+- **And** export remains incomplete until all 8/8 target decisions and all 3/3 placement conflicts are resolved.
+
+#### AT-S2-13 Preserve review provenance and metric boundaries
+
+- **Given** the archived v1 review SHA-256 is `a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256`
+- **When** a schema-v2 calibration is exported
+- **Then** it references that exact immutable artifact and contains bounded normalized replacement rectangles
+- **And** drafts and undo state persist only in browser `localStorage`
+- **And** the page does not upload the export, train a model or modify `evaluation/s2/manifest.json`
+- **And** green is described as an AI-assisted project-agent draft, purple as browser-local MediaPipe output and neither as TwelveLabs output
+- **And** schema-v2 validation requires the trusted calibration seed, derives the eight target IDs from the immutable source review, and requires exactly `charge-005/008/009` for placement resolution rather than trusting export-declared IDs
+- **And** v0.4.0 metrics remain unchanged until a maintainer validates v2, creates a separately versioned reviewed manifest and re-scores saved predictions.
+- **And** v0.4.1 is recorded as a calibration-tool release with no new detector run or model metric.
+
 #### AT-S3-01 Commercial weight cannot cross an ethical hard rule
 
 - **Given** S3 is manually confirmed as `PROTECTED_HEALTH_TASK` and C1 urgency and commercial value both equal 1.00
@@ -413,6 +436,8 @@ After P0 passes:
 - [ ] the 20 S2 1280×720 frames, hashes, historical baseline and v0.4.0 candidate recompute offline;
 - [ ] all 20 labels remain identified as agent-authored rather than human ground truth;
 - [ ] the 13 priority-review frames and other seven unreviewed agent-rule drafts remain distinguishable; no adjustment introduces a new unsafe placement;
+- [ ] the immutable 13/13 first-pass artifact remains byte-identical; `/regression/calibrate` covers only eight requested coordinate adjustments and three placement conflicts;
+- [ ] schema-v2 export binds the v1 SHA-256, remains local and cannot train a model or update the manifest automatically;
 - [ ] disputed `charge-002/005/008/013/018` labels are not used as blind tuning targets;
 - [ ] scorer/rendered geometry is 0.30×0.30 on the 16:9 S2 stage, and weak crop suppression passes its narrow-boundary tests;
 - [ ] S1 has an end-to-end browser recording/test;
@@ -635,6 +660,44 @@ Do not call the phase complete if any condition holds:
 **And** 不得使用部分检测证据输出广告位置
 
 **And** 不可用的阻断样本在回归指标中计为失败。
+
+### AT-S2-12 v0.4.1 只校准八张被要求调整的保护框
+
+**Given** 不可变 schema v1 第一轮原件记录 13/13 张优先样本意见、5 张保护框接受、8 张要求调整，另有 7 张仍未产品审核
+
+**When** 产品负责人打开 `/regression/calibrate`
+
+**Then** 坐标队列只包含 8 张待调整样本；5 张已接受和 7 张未审核样本不会被静默改标
+
+**And** 复核者可以移动和缩放归一化矩形、输入精确百分比、新增或删除人物/人脸/角色目标，并重置当前建议
+
+**And** `charge-008` 作为纯特效负对照初稿，可以合法地没有保护目标
+
+**And** 每个待确认上角广告位显示规则综合风险百分比，明确同时考虑重叠与邻近度而非纯重叠比例；风险超过当前 40% 阈值时必须警告
+
+**And** 复核者勾选“已检查重点边界和规则综合风险”前不得确认；任何保护框几何变化都必须使该勾选失效
+
+**And** 只有完成 8/8 张目标决定和 3/3 处位置冲突裁决，导出才算完整。
+
+### AT-S2-13 保留复核来源与指标边界
+
+**Given** 归档 v1 复核的 SHA-256 为 `a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256`
+
+**When** 导出 schema v2 校准结果
+
+**Then** 它引用该准确的不可变原件，并包含范围合法的归一化替换矩形
+
+**And** 草稿与撤销状态只保存在浏览器 `localStorage`
+
+**And** 页面不会上传导出、训练模型或修改 `evaluation/s2/manifest.json`
+
+**And** 绿色明确表示 AI 辅助的项目代理初标，紫色表示浏览器本地 MediaPipe 输出，两者都不表示 TwelveLabs 输出
+
+**And** schema v2 校验必须传入可信 calibration seed，从不可变源复核推导 8 张目标 ID，并严格要求 `charge-005/008/009` 三处位置裁决，不能信任导出自报 ID
+
+**And** 在维护者校验 v2、建立单独版本化的复核 manifest，并用已保存预测重新评分前，v0.4.0 指标保持不变。
+
+**And** v0.4.1 只记录为校框工具版本，没有新的检测器运行或模型指标。
 
 ### AT-S3-01 商业权重不能突破敏感规则
 
@@ -892,6 +955,8 @@ P1 在 P0 通过后实施：
 - [ ] S2 的 20 张 1280×720 固定帧清单、图片哈希、历史基线与 v0.4.0 候选可以离线重算；
 - [ ] 20 张标签全部继续明确为代理初标，而不是人工标准答案；
 - [ ] 13 张优先复核样本与另外 7 张未人工审核代理规则初标可明确区分；调整没有新增危险位置误投；
+- [ ] 不可变的 13/13 张第一轮原件保持逐字节一致；`/regression/calibrate` 只覆盖 8 张坐标调整与 3 处位置冲突；
+- [ ] schema v2 导出绑定 v1 SHA-256，只保存在本地，不能自动训练模型或更新 manifest；
 - [ ] `charge-002/005/008/013/018` 的标签争议没有被当作盲调目标；
 - [ ] 评分器/渲染几何在 16:9 S2 舞台上统一为 `0.30 × 0.30`，弱裁剪抑制通过窄边界测试；
 - [ ] S1 具备端到端浏览器录像/测试；

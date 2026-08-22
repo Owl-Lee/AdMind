@@ -33,7 +33,7 @@ Observed decision failures on the 13 rule-locked drafts:
 
 The low target scores are useful evidence, not a release failure. The current detector combines BlazeFace and an EfficientDet COCO allowlist. It can protect a robot after a convenient face/person false positive, while still assigning the wrong semantic class; it can also miss a canister or energy effect that a viewer clearly paused to inspect. Stage 1B must improve this behavior against the whole set instead of optimizing one screenshot.
 
-### v0.4.0 Stage 1B candidate — pending deployment
+### v0.4.0 Stage 1B public historical candidate
 
 `evaluation/s2/candidates/v0.4.0.json` was produced by runner/config commit `e0a033194ea04a9c926a822e4330355f41ddd152`. It completed all 20/20 fixed frames. This is a candidate comparison, not a replacement for the historical baseline and not a general accuracy claim.
 
@@ -50,6 +50,14 @@ The low target scores are useful evidence, not a release failure. The current de
 
 The scorer and rendered card now use the same 0.30×0.30 footprint, and the S2 stage is fixed at 16:9. The v0.4.0 weak crop filter is intentionally narrow: it removes only a low-confidence crop-only `人物主体` candidate when no detected face center corroborates that box. Direct detections, strong crop detections, animals and faceless character candidates remain eligible. This avoids converting an animated character/animal heuristic into a blanket “no face means no subject” rule, but a back-facing low-confidence person can still be filtered; that case needs a holdout set.
 
+### v0.4.1 annotation-calibration status
+
+v0.4.1 adds `/regression/calibrate`; it does not add a detector run or new model metrics. The byte-identical schema-v1 first-pass export is preserved at `evaluation/s2/reviews/2026-08-22-product-owner.json` with SHA-256 `a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256`. It records 13/13 priority opinions: five AI-assisted project-agent protection drafts were accepted, eight require exact replacement coordinates, and seven other frames remain unreviewed. This is not a completed 20-frame human-ground-truth set.
+
+The calibration page contains only the eight adjustment cases. It supports normalized drag/resize, exact percentage input, person/face/character target add and delete, reset, undo, and separate resolution of three placement conflicts. Each proposed upper-corner card shows the scorer's composite rule-risk percentage, which combines overlap and proximity rather than representing overlap alone, and warns above the 40% threshold. Confirmation requires an explicit check of the highlighted boundary and composite geometry risk; editing target geometry invalidates that acknowledgement. Completion requires 8/8 target decisions and 3/3 placement resolutions.
+
+A schema-v2 download binds the exact v1 SHA-256 and stays in browser `localStorage` until export; it is not uploaded, does not train a model and does not update the manifest automatically. Validation must receive the immutable source review, its SHA-256 and the trusted calibration seed. The expected eight target IDs are derived from the source adjustment records, and placement resolution is locked to seed-defined `charge-005/008/009`; export-declared IDs are never the authority. A maintainer must validate the result, create a separately versioned reviewed manifest and then re-score saved predictions before publishing reviewed-label metrics.
+
 ### Evaluation layers
 
 1. **Detector:** fixed frame → protected-target boxes. Report matches, misses and extra boxes class-agnostically at IoU ≥ 0.25.
@@ -65,7 +73,7 @@ pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:3000/regression`, then select **Run fixed set**. The page loads only repository-owned or documented local assets; image inference stays in the browser. Use **Export JSON** to capture a new candidate run.
+Open `http://localhost:3000/regression`, then select **Run fixed set**. The page loads only repository-owned or documented local assets; image inference stays in the browser. Use **Export JSON** to capture a new candidate run. Open `http://localhost:3000/regression/calibrate` for the eight-item exact-coordinate second review.
 
 The page defaults to **Priority review**, a 13-frame queue made from the original seven subjective drafts plus `charge-002/005/008/013/016/018`. The other seven frames remain unreviewed agent-rule drafts. Green boxes are agent-drafted target references. Purple dashed boxes are current model output, hidden by default to reduce anchoring. Blue regions are the current review placement choice, prefilled from the agent draft and dashed until confirmed. The four-step flow is: (1) check every green protected target, (2) select every acceptable upper corner or defer, (3) explain the decision or adjustment, and (4) confirm and export. Choices are stored only in that browser's `localStorage`; confirmation can be undone and does not train the model automatically. **Export review JSON** downloads a separate artifact. It does not upload data, write to the repository, modify the manifest or change the tracked baseline; a maintainer must validate and commit it separately.
 
@@ -83,11 +91,13 @@ It validates manifest and prediction contracts, source/model/frame checksums, 12
 - `public/evaluation/s2/frames/*.jpg` — immutable 1280×720 regression frames.
 - `evaluation/s2/baselines/v0.2.7.json` — runner/config provenance, model hashes, raw predictions, metrics and failures.
 - `evaluation/s2/candidates/v0.4.0.json` — Stage 1B candidate provenance, raw predictions, metrics and failures.
-- `/regression` — bilingual visual runner and local product-review queue. Green solid boxes are agent-drafted target references, purple dashed boxes are hidden-by-default model output, and blue areas are the current agent-prefilled review choice: dashed before confirmation and solid afterward.
+- `evaluation/s2/reviews/2026-08-22-product-owner.json` — immutable schema-v1 first-pass evidence and its SHA-256-bound identity.
+- `/regression` — bilingual visual runner and first-pass review history. Green solid boxes are AI-assisted project-agent drafts, purple dashed boxes are hidden-by-default browser-local MediaPipe output, and blue areas are review choices. TwelveLabs generates neither box type.
+- `/regression/calibrate` — bilingual local second-review tool for eight replacement-coordinate decisions and three placement conflicts; it exports separate schema-v2 evidence.
 
 ### Next step
 
-Complete the 13-frame priority queue before another tuning pass, resolving the five disputed accepted-placement drafts (`charge-002/005/008/013/018`), the clear `charge-016` over-deferral and the original seven subjective drafts. Then sample the other seven agent-rule drafts as a secondary audit. Do not merge exported review JSON into the manifest automatically: a maintainer must validate and commit the evidence deliberately. Confirmation does not train the model. The first acceptance priority remains **zero new unsafe placements**; recall improvements must not be purchased by covering protected content. Add a back-facing low-confidence-person holdout before generalizing the weak crop filter.
+Finish the eight replacement-coordinate decisions and three placement resolutions, validate the schema-v2 evidence against the immutable v1 SHA-256, and deliberately create a separately versioned reviewed manifest. Only then re-score the saved predictions; this is a label-only comparison, not a fresh inference run. Review the remaining seven frames in a later pass instead of claiming 20-frame completion. The first acceptance priority remains **zero new unsafe placements**; recall improvements must not be purchased by covering protected content. Add a back-facing low-confidence-person holdout before generalizing the weak crop filter.
 
 ---
 
@@ -139,6 +149,14 @@ AdMind 阶段 1A 用可重复的项目内部评估，替代围绕单张截图反
 
 评分器与线上卡片现在使用同一个 `0.30 × 0.30` footprint，S2 舞台固定为 16:9。v0.4.0 的弱裁剪过滤刻意保持窄范围：只有低置信、仅来自裁剪、且框内没有检测脸部中心佐证的 `人物主体` 候选会被移除。直接检测、强裁剪、动物与无脸角色候选仍然保留。这避免把动画角色/动物启发式扩张成“没有脸就没有主体”的通用规则，但背面低置信人物仍可能被过滤，必须通过留出集验证。
 
+### v0.4.1 标注校准状态
+
+v0.4.1 新增 `/regression/calibrate`，没有新增检测器运行或模型指标。逐字节一致的 schema v1 第一轮导出保存在 `evaluation/s2/reviews/2026-08-22-product-owner.json`，SHA-256 为 `a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256`。它记录 13/13 张优先样本意见：5 张 AI 辅助的项目代理保护框初标被接受，8 张需要精确替换坐标，另外 7 张仍未产品审核。因此这不是 20 张全量人工真值集。
+
+校框页只包含 8 张待调整样本，支持归一化拖动/缩放、精确百分比输入、新增或删除人物/人脸/角色目标、重置、撤销，并单独裁决 3 处位置冲突。每个待确认上角广告位会显示评分器的规则综合风险百分比；该分数同时考虑重叠与邻近度，不是纯重叠比例，超过 40% 阈值时明确警告。确认前必须勾选已检查重点边界与规则综合风险；只要保护框几何再次变化，该勾选就会失效。只有完成 8/8 张目标决定和 3/3 处位置裁决才算完整。
+
+schema v2 下载会绑定准确的 v1 SHA-256，并在导出前只保存在浏览器 `localStorage`；它不会上传、不会训练模型，也不会自动更新 manifest。校验必须同时取得不可变源复核、其 SHA-256 和可信 calibration seed。预期 8 张目标 ID 从源复核的调整记录推导，位置裁决严格锁定为 seed 定义的 `charge-005/008/009`；导出自报 ID 不具权威性。维护者必须校验结果，建立单独版本化的复核 manifest，再用已保存预测重新评分，之后才能发布基于复核标签的指标。
+
 ### 三层评估
 
 1. **检测器层：** 固定帧 → 保护目标框。以 IoU ≥ 0.25 统计匹配、漏检和多余框，第一版按“是否需要保护”做类别无关评估。
@@ -154,7 +172,7 @@ pnpm install
 pnpm dev
 ```
 
-打开 `http://localhost:3000/regression`，点击 **Run fixed set / 运行固定集**。页面只加载仓库内自有或已经记录来源的本地素材，画面推理仍在浏览器中完成。点击 **Export JSON / 导出 JSON** 可以保存新的候选结果。
+打开 `http://localhost:3000/regression`，点击 **Run fixed set / 运行固定集**。页面只加载仓库内自有或已经记录来源的本地素材，画面推理仍在浏览器中完成。点击 **Export JSON / 导出 JSON** 可以保存新的候选结果。打开 `http://localhost:3000/regression/calibrate` 可进行 8 张精确坐标二审。
 
 页面默认进入 **Priority review / 优先复核**，共 13 张：原有 7 张主观初标加 `charge-002/005/008/013/016/018`；另外 7 张仍是未人工审核的代理规则初标。绿色框是代理保护目标参考；紫色虚线框是当前模型输出，为减少锚定默认隐藏；蓝色区域是当前复核位置选择，由代理初标预填，确认前为虚线，确认后为实线。四步流程为：(1) 检查全部绿色保护目标；(2) 选择所有可接受上角，或选择顺延；(3) 说明决定或调整；(4) 确认并导出。选择只保存在当前浏览器 `localStorage`，可以撤销；确认本身不会自动训练模型。**Export review JSON / 导出审核 JSON** 只下载独立文件，不会上传、写入仓库、直接修改 manifest 或改变已保存基线；必须由维护者另行校验并提交。
 
@@ -172,8 +190,10 @@ pnpm test:s2-regression
 - `public/evaluation/s2/frames/*.jpg`：不可变的 1280×720 固定回归帧。
 - `evaluation/s2/baselines/v0.2.7.json`：运行器与配置来源、模型哈希、原始预测、指标和失败案例。
 - `evaluation/s2/candidates/v0.4.0.json`：阶段 1B 候选的来源、原始预测、指标和失败案例。
-- `/regression`：双语可视化运行器与本地产品复核队列；绿色实线框是代理保护目标参考，紫色虚线框是默认隐藏的模型输出，蓝色区域是代理预填的当前复核选择，确认前为虚线、确认后为实线。
+- `evaluation/s2/reviews/2026-08-22-product-owner.json`：不可变 schema v1 第一轮证据及其 SHA-256 身份。
+- `/regression`：双语可视化运行器与第一轮复核历史；绿色实线框是 AI 辅助的项目代理初标，紫色虚线框是默认隐藏的浏览器本地 MediaPipe 输出，蓝色区域是复核选择。TwelveLabs 不生成这两类框。
+- `/regression/calibrate`：针对 8 张替换坐标与 3 处位置冲突的双语本地二审工具，导出独立 schema v2 证据。
 
 ### 下一步
 
-下一轮调参前先完成 13 张优先队列：解决 `charge-002/005/008/013/018` 五张可接受位置争议、明确的 `charge-016` 过度顺延，以及原有 7 张主观初标；随后再抽查另外 7 张代理规则初标。导出的审核 JSON 不能自动合并进 manifest，必须由维护者校验并提交；确认不会自动训练模型。第一验收优先级仍是**不得新增危险位置误投**，不能用遮挡受保护内容的代价换取表面召回率。泛化弱裁剪过滤前，还要增加背面低置信人物留出集。
+先完成 8 张替换坐标和 3 处位置裁决，依据不可变 v1 SHA-256 校验 schema v2 证据，并有意建立单独版本化的复核 manifest。只有之后才能用已保存预测重新评分；这属于标签变化对比，不是新的推理运行。另外 7 张必须在后续单独复核，不能宣称 20 张已经完成。第一验收优先级仍是**不得新增危险位置误投**，不能用遮挡受保护内容的代价换取表面召回率。泛化弱裁剪过滤前，还要增加背面低置信人物留出集。

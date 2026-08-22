@@ -1,7 +1,7 @@
 # AdMind 项目工程交接文档
 
 > 最后更新：2026-08-22<br>
-> 当前公开版本：`v0.4.0`（阶段 1B 候选与人工复核实验室）<br>
+> 当前公开版本：`v0.4.1`（阶段 1B 保护框精确校准工具）<br>
 > 公开 GitHub：`https://github.com/Owl-Lee/AdMind`<br>
 > 公开演示：`https://admind-decision-console.liyanbao06.chatgpt.site/`（无需登录）<br>
 > 代码事实来源：公开仓库 `main`、本交接文档和 `CHANGELOG.md`。私有归档不是“正式版”，也不是日常开发源；在归档处置方案确定前不要删除。<br>
@@ -36,6 +36,7 @@ AdMind 是一个面向长视频平台的 AI 广告决策原型。它不是广告
 - 线上演示：<https://admind-decision-console.liyanbao06.chatgpt.site/#demo>
 - 决策方式：<https://admind-decision-console.liyanbao06.chatgpt.site/#decision>
 - S2 回归实验室：<https://admind-decision-console.liyanbao06.chatgpt.site/regression>
+- S2 保护框校准：<https://admind-decision-console.liyanbao06.chatgpt.site/regression/calibrate>
 - 公开仓库：<https://github.com/Owl-Lee/AdMind>
 - Sites 项目 ID：`appgprj_6a7c0083237c819185c04e9fd932fba7`
 - 公开主分支：`main`；功能修改先进入短生命周期分支，通过 CI 后合并。
@@ -105,7 +106,7 @@ AdMind 确定性规则：播放器状态、伦理边界、素材形式、商业�
 | `app/lib/face-detector.ts` | MediaPipe 人脸/主体检测、去重和检测参数 |
 | `app/lib/pause-decision.ts` | S2 安全区域和暂停决策逻辑 |
 | `app/lib/pause-regression.ts` | 固定帧标注校验、目标匹配和基线指标重算 |
-| `app/regression/` | 双语 S2 浏览器回归实验室 |
+| `app/regression/` | 双语 S2 浏览器回归实验室与 `/regression/calibrate` 保护框二审工具 |
 | `evaluation/s2/` | 规则初标、待产品负责人复核项、调参前原始预测和回归说明 |
 | `public/evaluation/s2/frames/` | 带 SHA-256 的不可变固定帧 |
 | `app/page.tsx` | 把三类素材、分析 JSON 和决策结果注入页面 |
@@ -122,7 +123,7 @@ AdMind 确定性规则：播放器状态、伦理边界、素材形式、商业�
 
 1. **S3 视频切换虽然已修复和发布，但还没有得到用户完整回归确认。** 需要依次测试当前公开的海上救援、医疗转运：能加载、能拖动、能播放、切换后标题和证据同步变化。FEMA 灾后素材已经退出公开选择器，不再列入当前验收。
 2. **S1/S3 当前片段面板需要实际播放验证。** 时间跨过分析片段边界时，标签、时间范围和分数应该改变；不得继续给人“写死 90%”的感觉。
-3. **S2 检测仍是工程权衡。** 历史 v0.2.7 配置参考基线在 13 张规则明确初标上量化出 36.4% 召回率、16.0% 精确率和 30.8% 危险误投率；公开 v0.4.0 候选为 45.5% 召回率、23.8% 精确率和 23.1% 危险误投率。两组都只是固定集结果；标签由代理按规则起草，不能称为产品负责人已审核。`charge-012` 已真实修复，但剩余六个决策失败中有五张标签存在争议，下一轮必须先审标签，不能盲调。
+3. **S2 检测仍是工程权衡。** 历史 v0.2.7 配置参考基线在 13 张规则明确初标上量化出 36.4% 召回率、16.0% 精确率和 30.8% 危险误投率；公开 v0.4.0 候选为 45.5% 召回率、23.8% 精确率和 23.1% 危险误投率。两组都绑定原始 schema v1 代理初标 manifest。v0.4.1 只增加校框工具，没有新增检测器运行或指标；必须等 8 张坐标二审、3 处位置裁决、版本化复核 manifest 和重评分全部完成后，才能发布基于复核标签的新数字。
 
 ### P1：产品完成度问题
 
@@ -156,7 +157,7 @@ AdMind 确定性规则：播放器状态、伦理边界、素材形式、商业�
 
 **1A，已完成：建立回归样本与基线。** 已从公开仓库内授权明确的《CHARGE》素材固定截取 20 张 1280×720 关键帧，保存校验和、保护目标和可接受广告位置。20 张标签全部由代理按规则起草，不是人工标准答案；13 张进入阻断指标，7 张保持诊断状态。旧计划中的 Sprite Fright 没有进入公开数据集。
 
-**1B，候选已发布、13 张优先复核原件已接收：** v0.4.0 候选已用同一固定集完成前后对比并真实修复 `charge-012`。产品负责人已完成 `/regression` 的 13 张优先复核并导出原件；另外 7 张仍是未经人工审核的代理规则初标。13 条记录中 5 张保护框确认正确、8 张要求调整，且 `charge-005/008/009` 的位置选择与备注仍需裁决。原件已独立归档，不会自动覆盖 manifest、改变已发布指标或训练模型。
+**1B，v0.4.1 校框工具已公开：** v0.4.0 候选继续作为历史固定集结果。产品负责人第一轮 13/13 张优先意见已逐字节归档，其中 5 张保护框初标被接受、8 张进入精确坐标二审；另外 7 张仍未产品审核。`/regression/calibrate` 只处理这 8 张与 3 处位置冲突，支持拖动、缩放、精确百分比、新增/删除/重置与撤销。schema v2 导出绑定不可变 v1 SHA-256，但不会上传、训练模型或自动修改 manifest。
 
 **1C：固化浏览器基准。** 把 MediaPipe WASM 固定到本地，增加独立浏览器基准任务，并为状态机、旧结果清理和高召回兜底补齐测试。
 
@@ -458,3 +459,36 @@ S1 的商业兜底边界：当整片持续高张力时，不等于永远不投�
 2. 另建有版本号和来源记录的产品复核 manifest；不能直接覆盖当前 manifest，也不能覆盖 v0.3.0/v0.4.0 已发布证据。
 3. 使用已保存的原始预测针对新 manifest 重算，并明确标为“标签变更后的重评分”；只有重新执行浏览器检测时才能称为新推理运行。
 4. 新口径稳定后再更新阻断指标、双语文档和测试；接收复核文件本身不会自动训练模型。
+
+## 二十三、v0.4.1 保护框精确校准工具（2026-08-22）
+
+### 完成
+
+- 新增公开双语 `/regression/calibrate` 二审页，只覆盖第一轮要求调整的 8 张样本；第一轮 13/13 张优先意见原件继续逐字节保存在 `evaluation/s2/reviews/2026-08-22-product-owner.json`，SHA-256 为 `a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256`。
+- 页面提供归一化保护框拖动与缩放、精确百分比输入、人物/人脸/角色目标新增、选中目标删除、建议重置和撤销；`charge-008` 可以明确记录为“无保护目标”的纯特效负对照。
+- 待确认上角广告位会显示评分器的规则综合风险百分比；该分数同时考虑重叠与邻近度，不是纯重叠比例，超过 40% 阈值时明确警告。保护框确认前必须勾选已检查重点边界与规则综合风险；框几何变化会使勾选失效，必须重新检查。
+- `charge-005/008/009` 的 3 处位置冲突独立列出；完整导出要求 8/8 张目标决定与 3/3 处位置裁决全部完成。
+- schema v2 导出绑定准确的 v1 SHA-256，草稿只保存在浏览器 `localStorage`。页面不会上传复核数据、不会训练模型，也不会自动改写 `evaluation/s2/manifest.json`。
+- schema v2 验证必须取得不可变源复核、其 SHA-256 和可信 calibration seed；8 张目标 ID 从源复核调整记录推导，3 处位置裁决严格锁定为 `charge-005/008/009`，不接受导出自报 ID 作为合同来源。
+- 框来源继续明确：绿色是 AI 辅助的项目代理初标/二稿，紫色虚线是浏览器本地 MediaPipe 输出，TwelveLabs 不生成这两类 S2 框。绿色框在明确确认前不是最终真值。
+
+English summary: public v0.4.1 adds `/regression/calibrate` for eight exact-coordinate decisions and three placement conflicts. Proposed card areas expose the scorer's composite rule-risk percentage—overlap plus proximity, not overlap alone—and warnings above 40%; confirmation requires a highlighted-boundary and composite-risk acknowledgement that resets after geometry edits. The immutable schema-v1 evidence remains the source record; schema-v2 validation requires its SHA-256 and the trusted calibration seed, deriving the eight target IDs from the source and locking placement resolution to `charge-005/008/009` rather than trusting export-declared IDs. The export remains local evidence until a maintainer validates it; it does not upload, train a model or update the manifest automatically.
+
+### 验证
+
+- 已核对当前实现的 8 张校框种子、3 处位置冲突、v1 SHA 绑定、归一化矩形边界、包含重叠与邻近度的规则综合风险提示、边界/综合风险确认门和 schema v2 可信 seed 合同；相关校验由 `app/lib/pause-review.test.ts` 与渲染断言覆盖。
+- 文档没有新增或替换任何模型指标。v0.3.0 历史基线与 v0.4.0 候选数字继续绑定原始 schema v1 代理初标 manifest。
+- 发布集成仍应以当前分支的完整 `pnpm check`、公开路由访问和中英文浏览器回归为最终质量门；不要只凭本节文档判定部署成功。
+
+### 遗留
+
+- 第一轮只完成 13 张优先样本意见：5 张保护框初标被接受，8 张等待在校框页确认精确替换坐标；`charge-001/004/006/007/012/017/020` 另外 7 张仍未产品审核。不能宣称 20 张全量人工真值已经完成。
+- schema v2 只是复核证据，不是 manifest，也不是训练数据自动接入。维护者必须校验导出，单独建立有版本号和来源记录的复核 manifest。
+- v0.4.1 没有新推理运行或新模型指标。即使复用 v0.4.0 原始预测重算，也必须明确写成“标签变化后的重评分”，不能称为新的检测器运行。
+
+### 下一步
+
+1. 由产品负责人在 `/regression/calibrate` 完成 8/8 张坐标确认与 3/3 处位置裁决，并导出 schema v2 JSON。
+2. 维护者依据 v1 SHA、数据集/帧哈希和归一化坐标合同校验 v2；保留 v1 原件不变，建立单独版本化的复核 manifest。
+3. 使用已保存预测对新 manifest 重评分，更新机器可读结果、双语基线文档和验收测试；如果要称为“新推理”，必须重新执行浏览器检测。
+4. 后续单独复核另外 7 张，再决定是否可以形成 20 张完整产品审核集；期间继续保持“危险误投不得增加”的首要门槛。

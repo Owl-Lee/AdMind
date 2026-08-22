@@ -77,4 +77,27 @@ test("server-renders the bilingual S2 regression lab", async () => {
   assert.match(html, /not human ground truth/);
   assert.match(html, /not TwelveLabs/);
   assert.match(html, /MediaPipe model output/);
+  assert.match(html, /href="\/regression\/calibrate"/);
+  assert.match(html, /Adjust the 8 flagged boxes/);
+});
+
+test("server-renders the bilingual S2 protection calibration lab", async () => {
+  const response = await render("/regression/calibrate");
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+  const html = await response.text();
+  assert.match(html, /<title>S2 Protection Calibration · AdMind<\/title>/i);
+  assert.match(html, /Turn review notes into exact boxes/);
+  assert.match(html, /not MediaPipe output/);
+  assert.match(html, /Boxes 0\/8/);
+  assert.match(html, /Proposed ad area/);
+  assert.match(html, /Composite rule risk/);
+  assert.match(html, /Bilingual calibration record/);
+  assert.match(html, /I checked the highlighted boundary/);
+  assert.match(html, /EN: Center the protected character/);
+  assert.match(html, /ZH: 把保护人物改到画面中央/);
+  assert.match(html, /charge-005/);
+  assert.match(html, /<span>019<\/span>/);
+  assert.match(html, /Resolve three placement-note conflicts/);
+  assert.match(html, /Back to regression lab/);
 });

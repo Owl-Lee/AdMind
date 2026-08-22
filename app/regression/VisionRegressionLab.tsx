@@ -28,7 +28,7 @@ import {
 import styles from "./VisionRegressionLab.module.css";
 
 const manifest = manifestJson as RegressionManifest;
-const APP_VERSION = "0.4.0";
+const APP_VERSION = "0.4.1";
 const priorityReviewSamples = reviewableSamples(manifest);
 type SampleFilter = "all" | "needs-review" | "unsafe";
 
@@ -278,11 +278,12 @@ export function VisionRegressionLab() {
         missed: "FN",
         falsePositive: "FP",
         reviewTitle: "Product review queue",
-        reviewProgress: `${confirmedReviewCount}/${priorityReviewSamples.length} priority samples confirmed locally`,
-        reviewScope: "13 priority samples = 7 original subjective drafts + 6 rule drafts flagged during visual audit.",
+        reviewProgress: `Tracked first-pass review 13/13 · this browser draft ${confirmedReviewCount}/${priorityReviewSamples.length}`,
+        reviewScope: "The archived first pass accepted five green drafts and flagged eight for coordinate calibration. Seven other frames still have unreviewed agent drafts.",
         localOnly: "Review choices are saved only in this browser. Nothing is uploaded or written to the repository.",
         baselineNotice: "Green regions are AI-assisted annotation drafts prepared by the project agent—not TwelveLabs output and not human ground truth. Exported review JSON must be validated and committed separately before it can affect the manifest or baseline.",
         exportReview: `${confirmedReviewCount === priorityReviewSamples.length ? "Export complete" : "Export partial"} review JSON (${confirmedReviewCount}/${priorityReviewSamples.length})`,
+        openCalibration: "Adjust the 8 flagged boxes",
         downloaded: "Downloaded locally. Nothing was uploaded.",
         currentRun: report ? "Current browser candidate run · not saved as the accepted baseline" : "Run the fixed set to create a browser-local candidate result",
         metricNote: "* Exploratory only: nested face and body boxes can describe the same valid protected subject, but this raw-box metric still counts the extra box as a false positive.",
@@ -350,11 +351,12 @@ export function VisionRegressionLab() {
         missed: "漏检",
         falsePositive: "误检",
         reviewTitle: "产品负责人复核队列",
-        reviewProgress: `优先样本已在本地确认 ${confirmedReviewCount}/${priorityReviewSamples.length}`,
-        reviewScope: "13 张优先样本 = 原有 7 张主观初标 + 视觉审计新发现的 6 张争议规则初标。",
+        reviewProgress: `仓库已接收第一轮复核 13/13 · 当前浏览器草稿 ${confirmedReviewCount}/${priorityReviewSamples.length}`,
+        reviewScope: "归档的第一轮复核确认了 5 张绿色初标，并要求对 8 张进行精确坐标校准；另外 7 张仍只有未经人工审核的代理初标。",
         localOnly: "审核选择只保存在当前浏览器，不会上传，也不会写入仓库。",
         baselineNotice: "绿色区域是项目代理制作的 AI 辅助初标，不是 TwelveLabs 输出，也不是人工标准答案。导出的审核 JSON 必须另行校验并提交，之后才可能影响 manifest 或基线。",
         exportReview: `${confirmedReviewCount === priorityReviewSamples.length ? "导出完整" : "导出部分"}审核 JSON（${confirmedReviewCount}/${priorityReviewSamples.length}）`,
+        openCalibration: "调整 8 张争议保护框",
         downloaded: "已下载到本地，没有上传任何内容。",
         currentRun: report ? "当前浏览器候选运行 · 尚未写入已接受基线" : "运行固定集后，会生成仅存在当前浏览器的候选结果",
         metricNote: "* 仅作探索诊断：脸框和人体框可能同时描述同一个有效保护主体，但原始框指标仍会把额外框计为误检。",
@@ -451,6 +453,7 @@ export function VisionRegressionLab() {
           <small>{copy.baselineNotice}</small>
         </div>
         <div className={styles.reviewExport}>
+          <Link className={styles.calibrationLink} href="/regression/calibrate">{copy.openCalibration}</Link>
           <button disabled={confirmedReviewCount === 0} onClick={exportReview}>{copy.exportReview}</button>
           {reviewDownloaded ? <output aria-live="polite">{copy.downloaded}</output> : null}
         </div>
