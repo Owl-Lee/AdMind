@@ -1,0 +1,342 @@
+{
+  "schemaVersion": 1,
+  "kind": "admind-s2-product-review",
+  "baseDataset": {
+    "datasetId": "s2-charge-fixed-v1",
+    "manifestSchemaVersion": 2,
+    "manifestCreatedAt": "2026-08-21",
+    "sourceAssetSha256": "060b30c3b09c9734ac7806d940dcde7cc853e4bc73fd63a0eb9f6acb3300debe"
+  },
+  "generatedAt": "2026-08-22T04:10:38.781Z",
+  "generatedBy": {
+    "appVersion": "0.4.0",
+    "gitCommit": "working-tree"
+  },
+  "reviewer": {
+    "role": "product-owner",
+    "identityVerified": false
+  },
+  "persistence": "browser-local-download",
+  "complete": true,
+  "eligibleSampleIds": [
+    "charge-002",
+    "charge-003",
+    "charge-005",
+    "charge-008",
+    "charge-009",
+    "charge-010",
+    "charge-011",
+    "charge-013",
+    "charge-014",
+    "charge-015",
+    "charge-016",
+    "charge-018",
+    "charge-019"
+  ],
+  "pendingSampleIds": [],
+  "reviews": [
+    {
+      "sampleId": "charge-002",
+      "frameSha256": "8269e48cf0fc6875696789431fa97b0b2ead4d237addd9884ac91394c778e162",
+      "scope": "placement-and-target-draft-review",
+      "agentDraft": {
+        "targetStatus": "agent-draft",
+        "manifestReviewStatus": "rule-confirmed",
+        "draftSignature": "{\"acceptablePlacements\":[\"top-right\"],\"expectedAction\":\"show-card\",\"frameSha256\":\"8269e48cf0fc6875696789431fa97b0b2ead4d237addd9884ac91394c778e162\",\"protectionTargets\":[{\"id\":\"person-1\",\"kind\":\"person\",\"required\":true,\"rect\":{\"x\":0.05,\"y\":0.04,\"width\":0.58,\"height\":0.93}}],\"reviewStatus\":\"rule-confirmed\"}",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-right"
+        ]
+      },
+      "productReview": {
+        "targetAssessment": "correct",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-right"
+        ],
+        "note": "暂无"
+      },
+      "placementChangedFromAgentDraft": false,
+      "confirmedAt": "2026-08-22T04:04:12.011Z"
+    },
+    {
+      "sampleId": "charge-003",
+      "frameSha256": "721fba3895540eb01ce967fd1cdd62adbf2ec98da10c1e440e2a0d9abcf513ad",
+      "scope": "placement-and-target-draft-review",
+      "agentDraft": {
+        "targetStatus": "agent-draft",
+        "manifestReviewStatus": "needs-user-review",
+        "draftSignature": "{\"acceptablePlacements\":[],\"expectedAction\":\"defer\",\"frameSha256\":\"721fba3895540eb01ce967fd1cdd62adbf2ec98da10c1e440e2a0d9abcf513ad\",\"protectionTargets\":[{\"id\":\"person-1\",\"kind\":\"person\",\"required\":true,\"rect\":{\"x\":0.14,\"y\":0.1,\"width\":0.58,\"height\":0.84}}],\"reviewStatus\":\"needs-user-review\"}",
+        "action": "defer",
+        "acceptablePlacements": []
+      },
+      "productReview": {
+        "targetAssessment": "correct",
+        "action": "defer",
+        "acceptablePlacements": [],
+        "note": "暂无"
+      },
+      "placementChangedFromAgentDraft": false,
+      "confirmedAt": "2026-08-22T04:04:16.385Z"
+    },
+    {
+      "sampleId": "charge-005",
+      "frameSha256": "2698278977d12385d205fe3a536434522162683612b9a58b1c9a3664b27900dd",
+      "scope": "placement-and-target-draft-review",
+      "agentDraft": {
+        "targetStatus": "agent-draft",
+        "manifestReviewStatus": "rule-confirmed",
+        "draftSignature": "{\"acceptablePlacements\":[\"top-right\"],\"expectedAction\":\"show-card\",\"frameSha256\":\"2698278977d12385d205fe3a536434522162683612b9a58b1c9a3664b27900dd\",\"protectionTargets\":[{\"id\":\"person-1\",\"kind\":\"person\",\"required\":true,\"rect\":{\"x\":0,\"y\":0.12,\"width\":0.37,\"height\":0.88}}],\"reviewStatus\":\"rule-confirmed\"}",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-right"
+        ]
+      },
+      "productReview": {
+        "targetAssessment": "needs-adjustment",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-right"
+        ],
+        "note": "其实左上右上都可以绿框识别的不准确绿框应该在中间然后那蓝框应该就是左上右上都是有空间的"
+      },
+      "placementChangedFromAgentDraft": false,
+      "confirmedAt": "2026-08-22T04:04:39.476Z"
+    },
+    {
+      "sampleId": "charge-008",
+      "frameSha256": "892f6b7b9b3742e0deb7a6970f6c70b67f849f3a622d4fd818328b25f14d0918",
+      "scope": "placement-and-target-draft-review",
+      "agentDraft": {
+        "targetStatus": "agent-draft",
+        "manifestReviewStatus": "rule-confirmed",
+        "draftSignature": "{\"acceptablePlacements\":[\"top-left\"],\"expectedAction\":\"show-card\",\"frameSha256\":\"892f6b7b9b3742e0deb7a6970f6c70b67f849f3a622d4fd818328b25f14d0918\",\"protectionTargets\":[{\"id\":\"object-1\",\"kind\":\"critical-object\",\"required\":true,\"rect\":{\"x\":0.43,\"y\":0.06,\"width\":0.55,\"height\":0.88}}],\"reviewStatus\":\"rule-confirmed\"}",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-left"
+        ]
+      },
+      "productReview": {
+        "targetAssessment": "needs-adjustment",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-left"
+        ],
+        "note": "这里我觉得绿框不准这个纯纯就是一个特效这也没有人脸我觉得这个可以遮挡呀啊而且广告其实可以全屏因为这里什么都没有没有人脸没有战斗"
+      },
+      "placementChangedFromAgentDraft": false,
+      "confirmedAt": "2026-08-22T04:06:20.408Z"
+    },
+    {
+      "sampleId": "charge-009",
+      "frameSha256": "e267944d7bba05de736fa991f60b40eaa076f99ec07a99d1dc7eedfa69257aee",
+      "scope": "placement-and-target-draft-review",
+      "agentDraft": {
+        "targetStatus": "agent-draft",
+        "manifestReviewStatus": "needs-user-review",
+        "draftSignature": "{\"acceptablePlacements\":[\"top-right\"],\"expectedAction\":\"show-card\",\"frameSha256\":\"e267944d7bba05de736fa991f60b40eaa076f99ec07a99d1dc7eedfa69257aee\",\"protectionTargets\":[{\"id\":\"person-1\",\"kind\":\"person\",\"required\":true,\"rect\":{\"x\":0.3,\"y\":0.08,\"width\":0.49,\"height\":0.82}},{\"id\":\"character-1\",\"kind\":\"robot-character\",\"required\":true,\"rect\":{\"x\":0,\"y\":0.45,\"width\":0.31,\"height\":0.55}}],\"reviewStatus\":\"needs-user-review\"}",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-right"
+        ]
+      },
+      "productReview": {
+        "targetAssessment": "correct",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-left"
+        ],
+        "note": "相比右上其实这里我感觉左上更好因为右上的空间有点小左上智力明显空间会大一些但右上硬说也可以"
+      },
+      "placementChangedFromAgentDraft": true,
+      "confirmedAt": "2026-08-22T04:06:44.168Z"
+    },
+    {
+      "sampleId": "charge-010",
+      "frameSha256": "daa5fbf75afffad723961c13973e5903b49f6ab0efe1af5605f1e4b11f473f9a",
+      "scope": "placement-and-target-draft-review",
+      "agentDraft": {
+        "targetStatus": "agent-draft",
+        "manifestReviewStatus": "needs-user-review",
+        "draftSignature": "{\"acceptablePlacements\":[],\"expectedAction\":\"defer\",\"frameSha256\":\"daa5fbf75afffad723961c13973e5903b49f6ab0efe1af5605f1e4b11f473f9a\",\"protectionTargets\":[{\"id\":\"action-1\",\"kind\":\"character-action\",\"required\":true,\"rect\":{\"x\":0.26,\"y\":0.05,\"width\":0.67,\"height\":0.92}}],\"reviewStatus\":\"needs-user-review\"}",
+        "action": "defer",
+        "acceptablePlacements": []
+      },
+      "productReview": {
+        "targetAssessment": "correct",
+        "action": "defer",
+        "acceptablePlacements": [],
+        "note": "正确的无需调整"
+      },
+      "placementChangedFromAgentDraft": false,
+      "confirmedAt": "2026-08-22T04:06:55.672Z"
+    },
+    {
+      "sampleId": "charge-011",
+      "frameSha256": "ba8da0ccd88772c46149e20b98e752656a758123c6bcc3bb2e62d6054a73d878",
+      "scope": "placement-and-target-draft-review",
+      "agentDraft": {
+        "targetStatus": "agent-draft",
+        "manifestReviewStatus": "needs-user-review",
+        "draftSignature": "{\"acceptablePlacements\":[],\"expectedAction\":\"defer\",\"frameSha256\":\"ba8da0ccd88772c46149e20b98e752656a758123c6bcc3bb2e62d6054a73d878\",\"protectionTargets\":[{\"id\":\"person-1\",\"kind\":\"person\",\"required\":true,\"rect\":{\"x\":0.34,\"y\":0.05,\"width\":0.38,\"height\":0.95}},{\"id\":\"character-1\",\"kind\":\"robot-character\",\"required\":true,\"rect\":{\"x\":0,\"y\":0.18,\"width\":0.31,\"height\":0.82}}],\"reviewStatus\":\"needs-user-review\"}",
+        "action": "defer",
+        "acceptablePlacements": []
+      },
+      "productReview": {
+        "targetAssessment": "needs-adjustment",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-left",
+          "top-right"
+        ],
+        "note": "我觉得其实左上右上都可以那这个人他还是居中的这个识别左边给他胳膊识别进去了我觉得不太准就是绿色框"
+      },
+      "placementChangedFromAgentDraft": true,
+      "confirmedAt": "2026-08-22T04:07:36.948Z"
+    },
+    {
+      "sampleId": "charge-013",
+      "frameSha256": "84bce1b9dbe0fb5480ddf90e6d346b39355349dd0e5d957c03c02111e8462391",
+      "scope": "placement-and-target-draft-review",
+      "agentDraft": {
+        "targetStatus": "agent-draft",
+        "manifestReviewStatus": "rule-confirmed",
+        "draftSignature": "{\"acceptablePlacements\":[\"top-right\"],\"expectedAction\":\"show-card\",\"frameSha256\":\"84bce1b9dbe0fb5480ddf90e6d346b39355349dd0e5d957c03c02111e8462391\",\"protectionTargets\":[{\"id\":\"character-1\",\"kind\":\"robot-character\",\"required\":true,\"rect\":{\"x\":0.02,\"y\":0.08,\"width\":0.52,\"height\":0.9}}],\"reviewStatus\":\"rule-confirmed\"}",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-right"
+        ]
+      },
+      "productReview": {
+        "targetAssessment": "needs-adjustment",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-right",
+          "top-left"
+        ],
+        "note": "应该就是左上右上都可以因为这边这个绿框不准这绿框应该框到中间它框框的明显偏左了"
+      },
+      "placementChangedFromAgentDraft": true,
+      "confirmedAt": "2026-08-22T04:07:15.516Z"
+    },
+    {
+      "sampleId": "charge-014",
+      "frameSha256": "a5233ff62eedad62e98062ca327f5c3ad7acb2da231949b61e3a2b04176f2d72",
+      "scope": "placement-and-target-draft-review",
+      "agentDraft": {
+        "targetStatus": "agent-draft",
+        "manifestReviewStatus": "needs-user-review",
+        "draftSignature": "{\"acceptablePlacements\":[],\"expectedAction\":\"defer\",\"frameSha256\":\"a5233ff62eedad62e98062ca327f5c3ad7acb2da231949b61e3a2b04176f2d72\",\"protectionTargets\":[{\"id\":\"character-1\",\"kind\":\"robot-character\",\"required\":true,\"rect\":{\"x\":0.08,\"y\":0.08,\"width\":0.48,\"height\":0.88}},{\"id\":\"person-1\",\"kind\":\"person\",\"required\":true,\"rect\":{\"x\":0.55,\"y\":0.08,\"width\":0.43,\"height\":0.9}}],\"reviewStatus\":\"needs-user-review\"}",
+        "action": "defer",
+        "acceptablePlacements": []
+      },
+      "productReview": {
+        "targetAssessment": "correct",
+        "action": "defer",
+        "acceptablePlacements": [],
+        "note": "正确的暂无问题"
+      },
+      "placementChangedFromAgentDraft": false,
+      "confirmedAt": "2026-08-22T04:07:45.413Z"
+    },
+    {
+      "sampleId": "charge-015",
+      "frameSha256": "22e86826044ff2003f73a80d1c942c5eb800c2d1f8c43be0f6914d198e6f0105",
+      "scope": "placement-and-target-draft-review",
+      "agentDraft": {
+        "targetStatus": "agent-draft",
+        "manifestReviewStatus": "needs-user-review",
+        "draftSignature": "{\"acceptablePlacements\":[],\"expectedAction\":\"defer\",\"frameSha256\":\"22e86826044ff2003f73a80d1c942c5eb800c2d1f8c43be0f6914d198e6f0105\",\"protectionTargets\":[{\"id\":\"person-1\",\"kind\":\"person\",\"required\":true,\"rect\":{\"x\":0.5,\"y\":0.1,\"width\":0.36,\"height\":0.84}},{\"id\":\"character-1\",\"kind\":\"robot-character\",\"required\":true,\"rect\":{\"x\":0.05,\"y\":0.25,\"width\":0.37,\"height\":0.72}}],\"reviewStatus\":\"needs-user-review\"}",
+        "action": "defer",
+        "acceptablePlacements": []
+      },
+      "productReview": {
+        "targetAssessment": "needs-adjustment",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-right",
+          "top-left"
+        ],
+        "note": "左上右上有一点小空间这个绿框总体是正确的但我觉得它有点框大了它就是把整个人虽然框进去了但是这个人就是你懂我意思吧如果这个如果瞄着他的边体积最小的话这个感觉就是体积最大他就是确实是框进去但是也占用了很多空闲空间"
+      },
+      "placementChangedFromAgentDraft": true,
+      "confirmedAt": "2026-08-22T04:10:03.070Z"
+    },
+    {
+      "sampleId": "charge-016",
+      "frameSha256": "589c588854b3cbbb355af6d40f5eae3b54a0da524c918326e79c8b41dbf61661",
+      "scope": "placement-and-target-draft-review",
+      "agentDraft": {
+        "targetStatus": "agent-draft",
+        "manifestReviewStatus": "rule-confirmed",
+        "draftSignature": "{\"acceptablePlacements\":[\"top-left\"],\"expectedAction\":\"show-card\",\"frameSha256\":\"589c588854b3cbbb355af6d40f5eae3b54a0da524c918326e79c8b41dbf61661\",\"protectionTargets\":[{\"id\":\"person-1\",\"kind\":\"person\",\"required\":true,\"rect\":{\"x\":0.55,\"y\":0.04,\"width\":0.43,\"height\":0.96}}],\"reviewStatus\":\"rule-confirmed\"}",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-left"
+        ]
+      },
+      "productReview": {
+        "targetAssessment": "needs-adjustment",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-left",
+          "top-right"
+        ],
+        "note": "这个框的就太不准了我发现这个框经常框半边人然后偏左或偏右这应该框中间或者直接就框他的脸你直接瞄准脸嗯这个图片明显脸的话在中间左上右上其实都可以但是你这个绿框太歪了"
+      },
+      "placementChangedFromAgentDraft": true,
+      "confirmedAt": "2026-08-22T04:08:45.141Z"
+    },
+    {
+      "sampleId": "charge-018",
+      "frameSha256": "b1caf3a40ca9f36f93b25e7c5a615df8bdebf189296eb00afb556b8a6ef7c571",
+      "scope": "placement-and-target-draft-review",
+      "agentDraft": {
+        "targetStatus": "agent-draft",
+        "manifestReviewStatus": "rule-confirmed",
+        "draftSignature": "{\"acceptablePlacements\":[\"top-left\"],\"expectedAction\":\"show-card\",\"frameSha256\":\"b1caf3a40ca9f36f93b25e7c5a615df8bdebf189296eb00afb556b8a6ef7c571\",\"protectionTargets\":[{\"id\":\"person-1\",\"kind\":\"person\",\"required\":true,\"rect\":{\"x\":0.48,\"y\":0.15,\"width\":0.33,\"height\":0.8}}],\"reviewStatus\":\"rule-confirmed\"}",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-left"
+        ]
+      },
+      "productReview": {
+        "targetAssessment": "needs-adjustment",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-left",
+          "top-right"
+        ],
+        "note": "绿色的框太歪了左上右上都是可以的绿框这边只秒到了身体的30%吧我是觉得它就是很明显没有框住人"
+      },
+      "placementChangedFromAgentDraft": true,
+      "confirmedAt": "2026-08-22T04:09:08.701Z"
+    },
+    {
+      "sampleId": "charge-019",
+      "frameSha256": "36dbaca72636a959b55a330de6fe664cf522e129293abe579606c03eb28b6100",
+      "scope": "placement-and-target-draft-review",
+      "agentDraft": {
+        "targetStatus": "agent-draft",
+        "manifestReviewStatus": "needs-user-review",
+        "draftSignature": "{\"acceptablePlacements\":[\"top-left\",\"top-right\"],\"expectedAction\":\"show-card\",\"frameSha256\":\"36dbaca72636a959b55a330de6fe664cf522e129293abe579606c03eb28b6100\",\"protectionTargets\":[{\"id\":\"person-1\",\"kind\":\"person\",\"required\":true,\"rect\":{\"x\":0.47,\"y\":0.12,\"width\":0.31,\"height\":0.81}}],\"reviewStatus\":\"needs-user-review\"}",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-left",
+          "top-right"
+        ]
+      },
+      "productReview": {
+        "targetAssessment": "needs-adjustment",
+        "action": "show-card",
+        "acceptablePlacements": [
+          "top-left",
+          "top-right"
+        ],
+        "note": "这个肯定就是左上右上都可以了然后左上右上空间其实都挺大的这个绿框实在是歪的太厉害"
+      },
+      "placementChangedFromAgentDraft": false,
+      "confirmedAt": "2026-08-22T04:09:24.481Z"
+    }
+  ]
+}

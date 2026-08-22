@@ -75,4 +75,6 @@ test("server-renders the bilingual S2 regression lab", async () => {
   assert.match(html, /charge-019/);
   assert.match(html, /Priority review 13/);
   assert.match(html, /not human ground truth/);
+  assert.match(html, /not TwelveLabs/);
+  assert.match(html, /MediaPipe model output/);
 });

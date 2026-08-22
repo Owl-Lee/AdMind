@@ -283,6 +283,165 @@ export function buildReviewExport(
   };
 }
 
+function samePlacements(left: ReviewPlacement[], right: ReviewPlacement[]) {
+  return left.length === right.length && left.every((placement) => right.includes(placement));
+}
+
+function validIsoTimestamp(value: unknown): value is string {
+  return typeof value === "string" && !Number.isNaN(Date.parse(value));
+}
+
+function readReviewPlacements(value: unknown): ReviewPlacement[] | null {
+  if (!Array.isArray(value)) return null;
+  const placements = value.filter(
+    (placement): placement is ReviewPlacement => REVIEW_PLACEMENTS.has(placement as ReviewPlacement),
+  );
+  return placements.length === value.length && new Set(placements).size === placements.length
+    ? placements
+    : null;
+}
+
+/**
+ * Validates a downloaded product-review artifact against the exact manifest draft
+ * that it claims to review. This deliberately does not merge the review into the
+ * manifest: target adjustments still need explicit normalized rectangles.
+ */
+export function validateReviewExport(manifest: RegressionManifest, value: unknown) {
+  const issues: string[] = [];
+  if (!isObject(value)) return ["review export must be an object"];
+  if (value.schemaVersion !== 1) issues.push("schemaVersion must be 1");
+  if (value.kind !== "admind-s2-product-review") issues.push("kind is invalid");
+
+  const eligible = reviewableSamples(manifest);
+  const eligibleById = new Map(eligible.map((sample) => [sample.id, sample]));
+  const expectedEligibleIds = eligible.map((sample) => sample.id);
+  const baseDataset = isObject(value.baseDataset) ? value.baseDataset : null;
+  if (!baseDataset) {
+    issues.push("baseDataset is missing");
+  } else {
+    if (baseDataset.datasetId !== manifest.datasetId) issues.push("datasetId does not match the manifest");
+    if (baseDataset.manifestSchemaVersion !== manifest.schemaVersion) issues.push("manifestSchemaVersion does not match");
+    if (baseDataset.manifestCreatedAt !== manifest.createdAt) issues.push("manifestCreatedAt does not match");
+    if (baseDataset.sourceAssetSha256 !== manifest.source.sha256) issues.push("sourceAssetSha256 does not match");
+  }
+  if (!validIsoTimestamp(value.generatedAt)) issues.push("generatedAt is invalid");
+  if (!isObject(value.generatedBy)
+    || typeof value.generatedBy.appVersion !== "string"
+    || typeof value.generatedBy.gitCommit !== "string") {
+    issues.push("generatedBy is invalid");
+  }
+  if (!isObject(value.reviewer)
+    || value.reviewer.role !== "product-owner"
+    || value.reviewer.identityVerified !== false) {
+    issues.push("reviewer contract is invalid");
+  }
+  if (value.persistence !== "browser-local-download") issues.push("persistence is invalid");
+
+  const eligibleSampleIds = Array.isArray(value.eligibleSampleIds)
+    ? value.eligibleSampleIds.filter((sampleId): sampleId is string => typeof sampleId === "string")
+    : [];
+  if (!Array.isArray(value.eligibleSampleIds)
+    || eligibleSampleIds.length !== value.eligibleSampleIds.length
+    || new Set(eligibleSampleIds).size !== eligibleSampleIds.length
+    || eligibleSampleIds.length !== expectedEligibleIds.length
+    || !expectedEligibleIds.every((sampleId) => eligibleSampleIds.includes(sampleId))) {
+    issues.push("eligibleSampleIds do not match the current priority queue");
+  }
+
+  const pendingSampleIds = Array.isArray(value.pendingSampleIds)
+    ? value.pendingSampleIds.filter((sampleId): sampleId is string => typeof sampleId === "string")
+    : [];
+  if (!Array.isArray(value.pendingSampleIds)
+    || pendingSampleIds.length !== value.pendingSampleIds.length
+    || new Set(pendingSampleIds).size !== pendingSampleIds.length
+    || pendingSampleIds.some((sampleId) => !eligibleById.has(sampleId))) {
+    issues.push("pendingSampleIds are invalid");
+  }
+
+  const reviews = Array.isArray(value.reviews) ? value.reviews : [];
+  if (!Array.isArray(value.reviews)) issues.push("reviews must be an array");
+  const reviewedIds = new Set<string>();
+  for (const rawReview of reviews) {
+    if (!isObject(rawReview) || typeof rawReview.sampleId !== "string") {
+      issues.push("review record is invalid");
+      continue;
+    }
+    const sample = eligibleById.get(rawReview.sampleId);
+    if (!sample) {
+      issues.push(`${rawReview.sampleId}: sample is not in the priority queue`);
+      continue;
+    }
+    if (reviewedIds.has(sample.id)) issues.push(`${sample.id}: duplicate review`);
+    reviewedIds.add(sample.id);
+    if (rawReview.frameSha256 !== sample.frameSha256) issues.push(`${sample.id}: frameSha256 does not match`);
+    if (rawReview.scope !== "placement-and-target-draft-review") issues.push(`${sample.id}: scope is invalid`);
+    if (!validIsoTimestamp(rawReview.confirmedAt)) issues.push(`${sample.id}: confirmedAt is invalid`);
+
+    const expectedDraft = agentDraft(sample);
+    const rawDraft = isObject(rawReview.agentDraft) ? rawReview.agentDraft : null;
+    if (!rawDraft) {
+      issues.push(`${sample.id}: agentDraft is missing`);
+    } else {
+      const draftPlacementsValue = readReviewPlacements(rawDraft.acceptablePlacements);
+      if (rawDraft.targetStatus !== expectedDraft.targetStatus
+        || rawDraft.manifestReviewStatus !== expectedDraft.manifestReviewStatus
+        || rawDraft.draftSignature !== expectedDraft.draftSignature
+        || rawDraft.action !== expectedDraft.action
+        || !draftPlacementsValue
+        || !samePlacements(draftPlacementsValue, expectedDraft.acceptablePlacements)) {
+        issues.push(`${sample.id}: agentDraft does not match the current manifest draft`);
+      }
+    }
+
+    const productReview = isObject(rawReview.productReview) ? rawReview.productReview : null;
+    if (!productReview) {
+      issues.push(`${sample.id}: productReview is missing`);
+      continue;
+    }
+    const productPlacements = readReviewPlacements(productReview.acceptablePlacements);
+    const targetAssessment = productReview.targetAssessment;
+    const action = productReview.action;
+    const note = productReview.note;
+    if (targetAssessment !== "correct" && targetAssessment !== "needs-adjustment") {
+      issues.push(`${sample.id}: targetAssessment is invalid`);
+    }
+    if (action !== "show-card" && action !== "defer") issues.push(`${sample.id}: action is invalid`);
+    if (!productPlacements
+      || (action === "show-card" && productPlacements.length === 0)
+      || (action === "defer" && productPlacements.length > 0)) {
+      issues.push(`${sample.id}: product placements are invalid`);
+    }
+    if (typeof note !== "string" || note.trim().length === 0 || note.trim().length > 500) {
+      issues.push(`${sample.id}: note is invalid`);
+    }
+    if (productPlacements && (action === "show-card" || action === "defer")) {
+      const reviewItem: ReviewWorkspaceItem = {
+        sampleId: sample.id,
+        frameSha256: sample.frameSha256,
+        draftSignature: expectedDraft.draftSignature,
+        targetAssessment: targetAssessment === "correct" || targetAssessment === "needs-adjustment"
+          ? targetAssessment
+          : null,
+        action,
+        acceptablePlacements: productPlacements,
+        note: typeof note === "string" ? note : "",
+        confirmedAt: typeof rawReview.confirmedAt === "string" ? rawReview.confirmedAt : null,
+      };
+      if (rawReview.placementChangedFromAgentDraft !== !decisionsMatch(sample, reviewItem)) {
+        issues.push(`${sample.id}: placementChangedFromAgentDraft is inconsistent`);
+      }
+    }
+  }
+
+  const expectedPending = expectedEligibleIds.filter((sampleId) => !reviewedIds.has(sampleId));
+  if (pendingSampleIds.length !== expectedPending.length
+    || !expectedPending.every((sampleId) => pendingSampleIds.includes(sampleId))) {
+    issues.push("pendingSampleIds do not match the review records");
+  }
+  if (value.complete !== (expectedPending.length === 0)) issues.push("complete is inconsistent with pending reviews");
+  return issues;
+}
+
 export function reviewStorageKey(manifest: RegressionManifest) {
   return `admind:s2-review:${manifest.datasetId}:v2`;
 }

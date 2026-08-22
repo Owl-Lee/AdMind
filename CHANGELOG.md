@@ -1,10 +1,22 @@
 # Changelog
 
-[English](#changelog) · [中文（最新版本）](#040-中文说明)
+[English](#changelog) · [中文（最新版本）](#未发布中文说明)
 
 Notable project changes are recorded here.
 
 ## Unreleased
+
+### S2 product-review intake
+
+- Archived the product owner's byte-identical 13-item priority-review export at `evaluation/s2/reviews/2026-08-22-product-owner.json` (SHA-256 `a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256`). The remaining seven frames are still unreviewed agent drafts, so this is not a complete 20-frame human review.
+- Recorded five accepted protection-box drafts and eight requests for box adjustment. Because the export has no replacement coordinates and `charge-005/008/009` contain placement-note ambiguities, the original evidence remains separate and does not overwrite the manifest, baseline or public v0.4.0 metrics.
+- Added a manifest-bound import validator and regression tests for dataset, source/frame hashes, draft signatures, queue completeness and stale-artifact rejection. The lab legend now names green boxes as project-agent annotation drafts and purple boxes as MediaPipe output, explicitly separating both from TwelveLabs.
+
+### 未发布中文说明
+
+- 将产品负责人已完成的 13 张优先复核原件逐字节归档到 `evaluation/s2/reviews/2026-08-22-product-owner.json`（SHA-256 `a4dff4b18bb18497909d21ea70d75f1be438021072fc5da9c6b896aeff1d7256`）。另外 7 张仍是未人工审核的代理初标，因此这不是 20 张全量人工复核。
+- 复核中有 5 张保护框初标被确认，8 张要求调整。由于导出没有替换坐标，且 `charge-005/008/009` 的位置选择与备注存在歧义，原始证据继续独立保存，不会覆盖 manifest、基线或公开 v0.4.0 指标。
+- 新增与 manifest 绑定的导入校验器及回归测试，覆盖数据集、源素材/帧哈希、初标签名、队列完整性与旧文件拒绝。实验室图例现已明确：绿色框是项目代理标注初稿，紫色框是 MediaPipe 输出，两者都不是 TwelveLabs 生成。
 
 ## 0.4.0 · 2026-08-21
 
