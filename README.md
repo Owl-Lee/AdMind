@@ -15,6 +15,7 @@
 [Live demo](https://admind-decision-console.liyanbao06.chatgpt.site/) ·
 [Architecture](docs/ARCHITECTURE.md) ·
 [Case study](docs/CASE_STUDY.md) ·
+[S2 baseline](docs/S2_REGRESSION_BASELINE.md) ·
 [Development](docs/DEVELOPMENT.md) ·
 [Roadmap](docs/ROADMAP.md) ·
 [中文说明](#中文说明)
@@ -40,7 +41,7 @@ AI supplies bounded evidence about the video. Deterministic rules retain final a
 | --- | --- | --- |
 | **S1 · Climax avoidance** | When should an ad appear? | Cached, time-coded TwelveLabs analyses identify narrative segments. AdMind compares a fixed break with a safer window or lower-disruption fallback. |
 | **S2 · Pause protection** | Should a pause ad appear, and where? | A browser-side state machine observes pause, resume, seeking, visibility and focus. MediaPipe inspects the paused frame and scores four candidate corners. |
-| **S3 · Ethical boundary** | Is advertising allowed here at all? | Rescue, medical and disaster evidence feeds deterministic hard rules that can block in-content advertising regardless of commercial value. |
+| **S3 · Ethical boundary** | Is advertising allowed here at all? | Rescue and medical evidence feeds deterministic hard rules that can block in-content advertising regardless of commercial value. |
 
 The live experience presents the three scenarios as one continuous story and exposes the evidence behind each decision.
 
@@ -85,6 +86,8 @@ English is the default public experience. The `EN / 中` control switches the co
 
 The deployment is a product demonstration, not an advertising network, auction service or production campaign-management platform.
 
+The public [S2 Vision Regression Lab](https://admind-decision-console.liyanbao06.chatgpt.site/regression) replays 20 fixed 1280×720 frames and reports the current project-local baseline. The labels were drafted by the project agent from explicit placement rules: 13 rule-confirmed samples enter the blocking metrics, while seven subjective frames remain diagnostic until the product owner reviews them.
+
 ## Quick start
 
 ### Requirements
@@ -123,6 +126,7 @@ Individual gates are also available:
 pnpm lint
 pnpm typecheck
 pnpm test:unit
+pnpm test:s2-regression
 pnpm test:rendered
 pnpm build
 ```
@@ -163,6 +167,8 @@ packages/video-analyzer/     Provider adapters, prompts and normalization
 services/api/                Standalone Fastify adapter
 analysis/runs/               Validated analysis consumed by the demo
 analysis/raw/                Provider output retained for traceability
+evaluation/s2/               Fixed-frame labels, raw baseline and reports
+public/evaluation/s2/        Immutable browser-consumable regression frames
 worker/                      Media routing for the deployed experience
 docs/                        Architecture, research, specs and handoff notes
 tests/                       Rendered-output verification
@@ -172,6 +178,7 @@ tests/                       Rendered-output verification
 
 - [Architecture](docs/ARCHITECTURE.md) — system boundaries and runtime flows.
 - [Case study](docs/CASE_STUDY.md) — product problem, engineering decisions and interview-ready explanation.
+- [S2 regression baseline](docs/S2_REGRESSION_BASELINE.md) — fixed-frame methodology, measured reference-configuration results and limitations.
 - [Development](docs/DEVELOPMENT.md) — setup, commands and contribution workflow.
 - [Roadmap](docs/ROADMAP.md) — staged path from prototype to public release.
 - [Video analyzer](docs/VIDEO_ANALYZER.md) — provider contract and evidence pipeline.
@@ -191,7 +198,7 @@ AdMind is a **public, portfolio-grade product prototype**. The complete demonstr
 Current boundaries:
 
 - S1 and S3 prove the pipeline on a fixed set of licensed or public-domain demo clips; they are not broad benchmark results.
-- S2 prioritizes recall and conservative avoidance. Animated characters, small subjects and complex backgrounds still need a fixed regression set and calibration.
+- S2 now has a 20-frame 1280×720 fixed regression set and a measured pre-tuning baseline. Across 13 rule-confirmed samples, safe-placement agreement is 6/13 (46.2%), unsafe placement is 4/13 (30.8%) and over-deferral is 3/13 (23.1%); protected-target precision is 4/25 (16.0%), recall is 4/11 (36.4%), F1 is 22.2%, and latency is 318 ms p50 / 335 ms p95. The v0.3.0 harness at `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` captured this run while preserving the detector configuration behavior referenced to v0.2.7 at `bdf66d1db7511f97feba49713f9995ea6ef13711`. These are fixed-set results, not a general accuracy claim; seven subjective labels still await product-owner review and Stage 1B calibration remains open.
 - Pause thresholds and risk weights are product hypotheses, not industry-optimal constants.
 - Deferred delivery is represented within the current session; cross-page and cross-device campaign orchestration is not implemented.
 - The public release intentionally omits an earlier optional Sprite Fright sample that did not ship with a reproducible asset workflow.
@@ -241,7 +248,7 @@ AI 负责提供有明确边界的视频内容证据。确定性规则继续掌�
 | --- | --- | --- |
 | **S1 · 剧情高点避让** | 广告应该什么时候出现？ | 使用缓存且带时间码的 TwelveLabs 分析识别叙事片段。AdMind 会比较固定广告点与更安全的窗口，并在必要时选择更低打断的形式。 |
 | **S2 · 用户暂停保护** | 暂停时应该投广告吗？应该放在哪里？ | 浏览器端状态机观察暂停、恢复、拖动、页面可见性和焦点。MediaPipe 检查暂停画面，并为四个候选角落计算遮挡风险。 |
-| **S3 · 伦理边界** | 这个场景是否允许出现广告？ | 救援、医疗和灾难等证据进入确定性硬规则；无论商业价值多高，规则都可以阻断内容内广告。 |
+| **S3 · 伦理边界** | 这个场景是否允许出现广告？ | 救援和医疗证据进入确定性硬规则；无论商业价值多高，规则都可以阻断内容内广告。 |
 
 线上体验把三个场景组织成一条连续叙事，并直接展示每次决定背后的证据。
 
@@ -286,6 +293,8 @@ flowchart LR
 
 该部署是产品能力演示，不是广告网络、广告竞价服务或生产级广告活动管理平台。
 
+公开的 [S2 视觉回归实验室](https://admind-decision-console.liyanbao06.chatgpt.site/regression) 会重复运行 20 张 1280×720 固定帧，并展示当前项目内部基线。标准答案由项目代理依据明确位置规则起草：13 张 `rule-confirmed` 规则明确初标进入阻断指标，另外 7 张主观样本保持诊断状态，等待产品负责人复核。
+
 ## 快速开始
 
 ### 环境要求
@@ -324,6 +333,7 @@ pnpm check
 pnpm lint
 pnpm typecheck
 pnpm test:unit
+pnpm test:s2-regression
 pnpm test:rendered
 pnpm build
 ```
@@ -364,6 +374,8 @@ packages/video-analyzer/     AI 服务适配器、提示词与结果标准化
 services/api/                独立 Fastify 适配器
 analysis/runs/               Demo 使用的已校验分析结果
 analysis/raw/                为可追溯性保留的服务商原始输出
+evaluation/s2/               固定帧标注、原始基线与报告
+public/evaluation/s2/        供浏览器读取的不可变回归帧
 worker/                      已部署体验的媒体路由
 docs/                        架构、研究、规格与交接文档
 tests/                       服务端渲染输出验证
@@ -373,6 +385,7 @@ tests/                       服务端渲染输出验证
 
 - [架构文档](docs/ARCHITECTURE.md) —— 系统边界和运行链路。
 - [案例分析](docs/CASE_STUDY.md) —— 产品问题、工程决策和面试讲解方式。
+- [S2 回归基线](docs/S2_REGRESSION_BASELINE.md) —— 固定帧方法、参考配置实测结果与限制。
 - [开发文档](docs/DEVELOPMENT.md) —— 环境配置、命令和贡献流程。
 - [路线图](docs/ROADMAP.md) —— 从原型到公开发布的阶段计划。
 - [视频分析器](docs/VIDEO_ANALYZER.md) —— 服务商契约与证据处理链路。
@@ -392,7 +405,7 @@ AdMind 是一个**公开、达到作品集展示标准的产品原型**。完整
 当前边界包括：
 
 - S1 和 S3 使用一组固定的授权素材或公共领域 Demo 视频证明链路，不代表广泛基准测试结果。
-- S2 优先保证召回和保守避让。动画角色、小目标和复杂背景仍需要固定回归样本与进一步校准。
+- S2 已建立 20 张 1280×720 固定回归集并保存调参前基线。13 张 `rule-confirmed` 规则明确初标中的安全位置一致率为 `6/13 = 46.2%`，危险位置误投为 `4/13 = 30.8%`，过度顺延为 `3/13 = 23.1%`；保护目标精确率为 `4/25 = 16.0%`，召回率为 `4/11 = 36.4%`，F1 为 `22.2%`，推理耗时为 P50 `318 ms` / P95 `335 ms`。本次结果由 v0.3.0 harness 提交 `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` 运行，检测配置行为参考 v0.2.7 提交 `bdf66d1db7511f97feba49713f9995ea6ef13711`，并不表示旧提交直接运行了新 harness。这些只是固定集结果，不是通用准确率；7 张主观样本仍待产品负责人复核，阶段 1B 校准仍待完成。
 - 暂停阈值和风险权重属于当前产品假设，不是行业最优常数。
 - 广告顺延目前只在当前会话中表达，尚未实现跨页面、跨设备的广告任务编排。
 - 公开版本有意移除了一个早期可选的 Sprite Fright 样本，因为它没有形成可复现的素材发布流程。

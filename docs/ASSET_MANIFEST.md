@@ -20,6 +20,10 @@ This file records the provenance and release basis for binary assets distributed
 
 Attribution: `(CC) Blender Foundation | studio.blender.org`. Blender names and logos are not used to imply endorsement.
 
+### Derived S2 regression frames
+
+`public/evaluation/s2/frames/*.jpg` contains 20 fixed 1280×720 still frames extracted from `public/admind-charge-demo-720p.mp4` for the Stage 1A paused-frame regression set. They remain derivative works of `CHARGE` under CC BY 4.0 and retain the attribution above. Exact timestamps and individual SHA-256 values are recorded in `evaluation/s2/manifest.json`; the rule-drafting contact sheet is `evaluation/s2/contact-sheet.jpg` (SHA-256: `439e116628aae6c637943ad4aed18e9dc5e2b3866eb0fa340c7b99ad984fd138`). The project agent drafted every protection target and acceptable placement from explicit rules: 13 rule-clear samples are marked `rule-confirmed`, while seven subjective samples remain `needs-user-review` until the product owner reviews them. The stills are evaluation evidence, not new project-owned artwork.
+
 ## U.S. government visual information
 
 | Local file | Original work | Agency / author | Status | Local modification |

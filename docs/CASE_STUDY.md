@@ -50,7 +50,7 @@ Rescue and medical evidence can trigger a hard block. A high bid cannot override
 
 - The demonstration uses cached analyses for a small, fixed media set; it is not a broad benchmark.
 - Model confidence is evidence quality, not a calibrated probability of business success.
-- Pause thresholds and placement weights are product hypotheses awaiting a fixed regression set.
+- Pause thresholds and placement weights now have a 20-frame 1280×720 pre-tuning baseline, but they remain product hypotheses until the product owner reviews the seven subjective drafts and Stage 1B improves the rule-confirmed set without adding unsafe placements.
 - Delivery deferral is session-scoped; production campaign orchestration and durable audit storage are future work.
 - No production revenue, uplift or retention claim is made.
 
@@ -62,9 +62,9 @@ React 19 · TypeScript · vinext / Vite · Zod · Fastify · MediaPipe Tasks Vis
 
 > AdMind is a policy-first ad decision layer for long-form video. I used a video-understanding API to produce time-coded semantic evidence, then normalized that output behind Zod contracts. A deterministic TypeScript engine combines it with player events, campaign constraints and ethical rules. For pause ads, MediaPipe runs locally on the current frame and a spatial scorer selects the safest region—or rejects all of them. The important design choice is that the model never gets final authority: every allow, defer, downgrade or block remains explainable and testable.
 
-## Next milestone
+## Current evidence and next milestone
 
-Build and label a fixed S2 paused-frame regression set, report placement and rejection accuracy, then tune thresholds against that complete set rather than individual screenshots.
+Stage 1A established a checksum-backed set of 20 fixed 1280×720 S2 frames. The project agent drafted the labels from explicit placement rules: 13 rule-clear samples are locked as `rule-confirmed`, while seven subjective frames await product-owner review. The v0.3.0 harness at `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` captured detector behavior configured from the v0.2.7 reference at `bdf66d1db7511f97feba49713f9995ea6ef13711`; the older commit did not run the new harness. On the 13 rule-confirmed frames, safe-placement agreement is 6/13 (46.2%), unsafe placement is 4/13 (30.8%) and over-deferral is 3/13 (23.1%). Protected-target precision is 4/25 (16.0%), recall is 4/11 (36.4%), F1 is 22.2%, and latency is 318 ms p50 / 335 ms p95. These are project-local fixed-set results, not general accuracy. Stage 1B will tune detection and placement against the complete reviewed set rather than individual screenshots.
 
 ---
 
@@ -118,7 +118,7 @@ S2 不宣称读取用户意图，只观察当前页面和播放器：暂停、�
 
 - Demo 使用少量固定素材的缓存分析，不是大规模基准测试。
 - 模型证据分数表示证据质量，不是商业成功率的校准概率。
-- 暂停阈值与位置权重是等待固定回归集验证的产品假设。
+- 暂停阈值与位置权重已经有 20 张 1280×720 固定帧的调参前基线，但在产品负责人复核 7 张主观初标、且阶段 1B 能够不增加危险误投地改进 `rule-confirmed` 集之前，它们仍属于产品假设。
 - 广告顺延只存在于当前会话；生产活动编排和持久化审计属于未来工作。
 - 项目不宣称已经产生生产收入、增长或留存提升。
 
@@ -130,6 +130,6 @@ React 19 · TypeScript · vinext / Vite · Zod · Fastify · MediaPipe Tasks Vis
 
 > AdMind 是一个面向长视频、政策优先的广告决策层。我先用视频理解 API 生成带时间码的语义证据，再通过 Zod 契约把输出标准化。确定性的 TypeScript 引擎把这些证据与播放器事件、广告任务约束和伦理规则组合起来。对于暂停广告，MediaPipe 在浏览器本地分析当前画面，空间评分器选择最安全区域，也可以拒绝所有位置。最关键的设计是模型不拥有最终决定权：允许、顺延、降级或阻断都保持可解释和可测试。
 
-## 下一里程碑
+## 当前证据与下一里程碑
 
-建立并标注固定的 S2 暂停画面回归集，报告位置命中率和拒投准确率，然后根据完整样本调整阈值，而不是围绕单张截图反复调参。
+阶段 1A 已建立带校验和的 20 张 1280×720 S2 固定帧。标准答案由项目代理依据明确位置规则起草：13 张规则明确样本锁定为 `rule-confirmed`，7 张主观样本等待产品负责人复核。本次基线由 v0.3.0 harness 提交 `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` 运行，检测配置行为参考 v0.2.7 提交 `bdf66d1db7511f97feba49713f9995ea6ef13711`；旧提交本身并未运行新 harness。13 张 `rule-confirmed` 样本上的安全位置一致率为 `6/13 = 46.2%`，危险位置误投为 `4/13 = 30.8%`，过度顺延为 `3/13 = 23.1%`；保护目标精确率为 `4/25 = 16.0%`，召回率为 `4/11 = 36.4%`，F1 为 `22.2%`，推理耗时为 P50 `318 ms` / P95 `335 ms`。这些属于项目内部固定集结果，不是通用准确率。阶段 1B 将根据完整复核集调整检测与位置规则，不再围绕单张截图反复调参。

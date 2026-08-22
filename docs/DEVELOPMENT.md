@@ -53,6 +53,7 @@ Never commit `.env.local`, provider keys or generated credentials.
 | `pnpm lint` | Run ESLint. |
 | `pnpm typecheck` | Run TypeScript without emitting files. |
 | `pnpm test:unit` | Run Vitest unit and integration tests. |
+| `pnpm test:s2-regression` | Validate the fixed S2 manifest, frame hashes, scorer and tracked baseline. |
 | `pnpm test:rendered` | Build and verify rendered HTML. |
 | `pnpm test` | Run unit tests and rendered-output verification. |
 | `pnpm check` | Run lint, typecheck and the full test command. |
@@ -76,11 +77,20 @@ Keep the raw provider response for traceability and the normalized run for appli
 
 - `packages/decision-engine/src/engine.test.ts` covers hard filters, ranking and audit reasons.
 - `app/lib/pause-decision.test.ts` covers S2 spatial placement rules.
+- `app/lib/pause-regression.test.ts` validates the Stage 1A fixed-frame contract and recomputes the tracked baseline from raw predictions. That baseline was run by the v0.3.0 harness commit `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` with detector configuration behavior referenced to v0.2.7 commit `bdf66d1db7511f97feba49713f9995ea6ef13711`; the older commit did not run the new harness.
 - `packages/video-analyzer/src/*.test.ts` covers provider normalization and repeated-run consensus.
 - `services/api/src/app.test.ts` verifies the Fastify adapter.
 - `tests/rendered-html.test.mjs` confirms production-rendered output.
 
 The release acceptance pass also verifies navigation, localization, media controls, ad dismissal and responsive layout in a real browser. Converting those acceptance paths into checked-in end-to-end tests remains a roadmap item.
+
+### Run the S2 browser baseline
+
+Start `pnpm dev`, open `http://localhost:3000/regression`, and choose **Run fixed set**. The runner evaluates the 20 exact 1280×720 image files recorded in `evaluation/s2/manifest.json`; green boxes are rule-drafted protection targets and purple dashed boxes are current predictions. The project agent drafted every target and acceptable placement from explicit rules: 13 rule-clear samples are locked as `rule-confirmed`, while seven subjective samples remain diagnostic until the product owner reviews them. Exported browser results are candidate evidence, not a new accepted baseline until the manifest, model/config hashes and bilingual baseline report are updated together.
+
+The tracked fixed-set result is 6/13 (46.2%) safe-placement agreement, 4/13 (30.8%) unsafe placement and 3/13 (23.1%) over-deferral. Protected-target precision is 4/25 (16.0%), recall is 4/11 (36.4%), F1 is 22.2%, and the recorded run measured 318 ms p50 / 335 ms p95. These figures apply only to this fixed set.
+
+Ordinary CI deliberately replays the tracked raw predictions instead of running fresh MediaPipe inference. The current WASM runtime is fetched from jsDelivr, so making it a blocking network-dependent CI step would create false failures. Stage 1C will vendor the runtime and add a separate browser benchmark job.
 
 ## Media in local development
 
@@ -151,6 +161,7 @@ pnpm dev:api
 | `pnpm lint` | 运行 ESLint。 |
 | `pnpm typecheck` | 运行 TypeScript 检查但不生成文件。 |
 | `pnpm test:unit` | 运行 Vitest 单元与集成测试。 |
+| `pnpm test:s2-regression` | 验证 S2 固定清单、帧校验和、评分器与已保存基线。 |
 | `pnpm test:rendered` | 构建并验证渲染后的 HTML。 |
 | `pnpm test` | 运行单元测试和渲染结果验证。 |
 | `pnpm check` | 依次运行 lint、typecheck 和完整测试。 |
@@ -174,11 +185,20 @@ pnpm analyze:video \
 
 - `packages/decision-engine/src/engine.test.ts` 覆盖硬规则、排序和审计理由。
 - `app/lib/pause-decision.test.ts` 覆盖 S2 空间位置规则。
+- `app/lib/pause-regression.test.ts` 验证阶段 1A 固定帧合同，并使用原始预测重算已保存基线。该基线由 v0.3.0 harness 提交 `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` 运行，检测配置行为参考 v0.2.7 提交 `bdf66d1db7511f97feba49713f9995ea6ef13711`；旧提交本身并未运行新 harness。
 - `packages/video-analyzer/src/*.test.ts` 覆盖服务商标准化和多次运行共识。
 - `services/api/src/app.test.ts` 验证 Fastify 适配器。
 - `tests/rendered-html.test.mjs` 验证生产渲染结果。
 
 发布验收还会在真实浏览器中验证导航、国际化、媒体控制、广告关闭和响应式布局。把这些路径转成仓库内端到端自动测试仍是后续任务。
+
+### 运行 S2 浏览器基线
+
+启动 `pnpm dev`，打开 `http://localhost:3000/regression`，选择 **Run fixed set / 运行固定集**。运行器会评估 `evaluation/s2/manifest.json` 记录的 20 张 1280×720 固定图片；绿色框是规则初标保护目标，紫色虚线框是当前预测。全部保护目标和可接受位置均由项目代理依据明确规则起草：13 张规则明确样本锁定为 `rule-confirmed`，7 张主观样本在产品负责人复核前保持诊断状态。浏览器导出的结果只是候选证据；只有清单、模型/配置哈希和双语基线报告一起更新后，才能成为新的正式基线。
+
+当前固定集结果为：安全位置一致率 `6/13 = 46.2%`，危险误投 `4/13 = 30.8%`，过度顺延 `3/13 = 23.1%`；保护目标精确率 `4/25 = 16.0%`，召回率 `4/11 = 36.4%`，F1 `22.2%`，已记录运行耗时为 P50 `318 ms` / P95 `335 ms`。这些数字仅适用于当前固定集。
+
+普通 CI 会重放已保存的原始预测，而不会重新执行 MediaPipe。当前 WASM 运行时仍从 jsDelivr 加载，把它作为强制联网 CI 会制造假失败。阶段 1C 会把运行时固定到仓库并增加独立浏览器基准任务。
 
 ## 本地开发媒体
 

@@ -2,14 +2,21 @@ import type { NormalizedRect } from "./pause-decision";
 
 export type FaceDetectionEvidence = {
   status: "ready" | "unavailable";
-  faces: NormalizedRect[];
+  faces: DetectedFace[];
   subjects: DetectedSubject[];
   inferenceMs: number;
   message: string;
 };
 
+export type DetectedFace = NormalizedRect & {
+  confidence: number;
+  source: string;
+};
+
 export type DetectedSubject = NormalizedRect & {
+  confidence: number;
   label: string;
+  source: string;
 };
 
 let detectorPromise: Promise<import("@mediapipe/tasks-vision").FaceDetector> | null = null;
@@ -20,6 +27,31 @@ const CROP_MIN_CONFIDENCE = 0.48;
 // Placement safety favors recall: an extra obstacle is less harmful than covering a missed character.
 const SUBJECT_MIN_CONFIDENCE = 0.34;
 const CROP_SUBJECT_MIN_CONFIDENCE = 0.34;
+const MEDIAPIPE_TASKS_VISION_VERSION = "1.0.1";
+const MEDIAPIPE_WASM_ROOT = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_TASKS_VISION_VERSION}/wasm`;
+const FACE_MODEL_PATH = "/models/blaze_face_full_range.tflite";
+const OBJECT_MODEL_PATH = "/models/efficientdet_lite0.tflite";
+
+export const PAUSE_VISION_CONFIG = {
+  configVersion: "s2-vision-v1",
+  mediapipeTasksVision: MEDIAPIPE_TASKS_VISION_VERSION,
+  wasmRoot: MEDIAPIPE_WASM_ROOT,
+  faceModel: {
+    path: FACE_MODEL_PATH,
+    sha256: "3698b18f063835bc609069ef052228fbe86d9c9a6dc8dcb7c7c2d69aed2b181b",
+  },
+  objectModel: {
+    path: OBJECT_MODEL_PATH,
+    sha256: "0720bf247bd76e6594ea28fa9c6f7c5242be774818997dbbeffc4da460c723bb",
+  },
+  thresholds: {
+    facePrimary: PRIMARY_MIN_CONFIDENCE,
+    faceMirrored: MIRROR_MIN_CONFIDENCE,
+    faceCrop: CROP_MIN_CONFIDENCE,
+    subjectPrimary: SUBJECT_MIN_CONFIDENCE,
+    subjectCrop: CROP_SUBJECT_MIN_CONFIDENCE,
+  },
+} as const;
 
 type SourceRegion = {
   x: number;
@@ -28,9 +60,8 @@ type SourceRegion = {
   height: number;
 };
 
-type FaceCandidate = NormalizedRect & {
-  confidence: number;
-};
+type FaceCandidate = DetectedFace;
+type VisualSource = HTMLVideoElement | HTMLImageElement | HTMLCanvasElement;
 
 const FULL_FRAME: SourceRegion = { x: 0, y: 0, width: 1, height: 1 };
 const DETAIL_REGIONS: SourceRegion[] = [
@@ -73,11 +104,11 @@ async function getDetector() {
   if (!detectorPromise) {
     detectorPromise = import("@mediapipe/tasks-vision").then(async ({ FaceDetector, FilesetResolver }) => {
       const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm",
+        MEDIAPIPE_WASM_ROOT,
       );
       return FaceDetector.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: "/models/blaze_face_full_range.tflite",
+          modelAssetPath: FACE_MODEL_PATH,
           delegate: "CPU",
         },
         runningMode: "IMAGE",
@@ -92,11 +123,11 @@ async function getObjectDetector() {
   if (!objectDetectorPromise) {
     objectDetectorPromise = import("@mediapipe/tasks-vision").then(async ({ ObjectDetector, FilesetResolver }) => {
       const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm",
+        MEDIAPIPE_WASM_ROOT,
       );
       return ObjectDetector.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: "/models/efficientdet_lite0.tflite",
+          modelAssetPath: OBJECT_MODEL_PATH,
           delegate: "CPU",
         },
         runningMode: "IMAGE",
@@ -137,8 +168,7 @@ function deduplicateFaces(faces: FaceCandidate[]) {
     if (unique.some((candidate) => isSameFace(candidate, face))) return unique;
     unique.push(face);
     return unique;
-  }, [])
-    .map(({ x, y, width, height }) => ({ x, y, width, height }));
+  }, []);
 }
 
 function normalizeDetections(
@@ -148,6 +178,7 @@ function normalizeDetections(
   mirrored = false,
   minimumScore = PRIMARY_MIN_CONFIDENCE,
   sourceRegion: SourceRegion = FULL_FRAME,
+  source = "face-direct",
 ) {
   return detections.flatMap((detection) => {
     const box = detection.boundingBox;
@@ -167,26 +198,30 @@ function normalizeDetections(
       width: normalizedWidth * sourceRegion.width,
       height: Math.min(1, box.height / height) * sourceRegion.height,
       confidence,
+      source,
     }];
   });
 }
 
 function detectRegion(
   detector: import("@mediapipe/tasks-vision").FaceDetector,
-  video: HTMLVideoElement,
+  visual: VisualSource,
+  sourceWidth: number,
+  sourceHeight: number,
   region: SourceRegion,
+  regionIndex: number,
 ) {
   const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvas.width = sourceWidth;
+  canvas.height = sourceHeight;
   const context = canvas.getContext("2d");
   if (!context) return [];
   context.drawImage(
-    video,
-    region.x * video.videoWidth,
-    region.y * video.videoHeight,
-    region.width * video.videoWidth,
-    region.height * video.videoHeight,
+    visual,
+    region.x * sourceWidth,
+    region.y * sourceHeight,
+    region.width * sourceWidth,
+    region.height * sourceHeight,
     0,
     0,
     canvas.width,
@@ -200,6 +235,7 @@ function detectRegion(
     false,
     CROP_MIN_CONFIDENCE,
     region,
+    `face-crop-${regionIndex + 1}`,
   );
 }
 
@@ -209,6 +245,7 @@ function normalizeSubjects(
   height: number,
   sourceRegion: SourceRegion = FULL_FRAME,
   minimumScore = SUBJECT_MIN_CONFIDENCE,
+  source = "subject-direct",
 ) {
   return detections.flatMap((detection) => {
     const box = detection.boundingBox;
@@ -225,26 +262,30 @@ function normalizeSubjects(
       height: normalizedHeight * sourceRegion.height,
       confidence: category.score,
       label: SUBJECT_LABELS[category.categoryName] ?? "画面主体",
+      source,
     }];
   });
 }
 
 function detectSubjectsInRegion(
   detector: import("@mediapipe/tasks-vision").ObjectDetector,
-  video: HTMLVideoElement,
+  visual: VisualSource,
+  sourceWidth: number,
+  sourceHeight: number,
   region: SourceRegion,
+  regionIndex: number,
 ) {
   const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvas.width = sourceWidth;
+  canvas.height = sourceHeight;
   const context = canvas.getContext("2d");
   if (!context) return [];
   context.drawImage(
-    video,
-    region.x * video.videoWidth,
-    region.y * video.videoHeight,
-    region.width * video.videoWidth,
-    region.height * video.videoHeight,
+    visual,
+    region.x * sourceWidth,
+    region.y * sourceHeight,
+    region.width * sourceWidth,
+    region.height * sourceHeight,
     0,
     0,
     canvas.width,
@@ -256,44 +297,44 @@ function detectSubjectsInRegion(
     canvas.height,
     region,
     CROP_SUBJECT_MIN_CONFIDENCE,
+    `subject-crop-${regionIndex + 1}`,
   );
 }
 
-function deduplicateSubjects(subjects: Array<DetectedSubject & { confidence: number }>) {
+function deduplicateSubjects(subjects: DetectedSubject[]) {
   return subjects
     .sort((a, b) => b.confidence - a.confidence)
-    .reduce<Array<DetectedSubject & { confidence: number }>>((unique, subject) => {
+    .reduce<DetectedSubject[]>((unique, subject) => {
       if (unique.some((candidate) => isSameFace(candidate, subject))) return unique;
       unique.push(subject);
       return unique;
-    }, [])
-    .map(({ x, y, width, height, label }) => ({ x, y, width, height, label }));
+    }, []);
 }
 
-export async function detectFacesInPausedFrame(video: HTMLVideoElement): Promise<FaceDetectionEvidence> {
-  if (!video.videoWidth || !video.videoHeight || video.readyState < 2) {
-    return { status: "unavailable", faces: [], subjects: [], inferenceMs: 0, message: "当前帧尚未解码。" };
-  }
-
+async function detectFacesInVisualSource(
+  visual: VisualSource,
+  sourceWidth: number,
+  sourceHeight: number,
+): Promise<FaceDetectionEvidence> {
   try {
     const [detector, objectDetector] = await Promise.all([
       getDetector(),
       getObjectDetector().catch(() => null),
     ]);
     const startedAt = performance.now();
-    const result = detector.detect(video);
-    const directFaces = normalizeDetections(result.detections, video.videoWidth, video.videoHeight);
+    const result = detector.detect(visual);
+    const directFaces = normalizeDetections(result.detections, sourceWidth, sourceHeight);
 
     // A mirrored second pass improves recall for profile faces without sending frames off-device.
     const mirrorCanvas = document.createElement("canvas");
-    mirrorCanvas.width = video.videoWidth;
-    mirrorCanvas.height = video.videoHeight;
+    mirrorCanvas.width = sourceWidth;
+    mirrorCanvas.height = sourceHeight;
     const context = mirrorCanvas.getContext("2d");
     let mirroredFaces: FaceCandidate[] = [];
     if (context) {
       context.translate(mirrorCanvas.width, 0);
       context.scale(-1, 1);
-      context.drawImage(video, 0, 0, mirrorCanvas.width, mirrorCanvas.height);
+      context.drawImage(visual, 0, 0, mirrorCanvas.width, mirrorCanvas.height);
       const mirroredResult = detector.detect(mirrorCanvas);
       mirroredFaces = normalizeDetections(
         mirroredResult.detections,
@@ -301,13 +342,29 @@ export async function detectFacesInPausedFrame(video: HTMLVideoElement): Promise
         mirrorCanvas.height,
         true,
         MIRROR_MIN_CONFIDENCE,
+        FULL_FRAME,
+        "face-mirrored",
       );
     }
-    const detailFaces = DETAIL_REGIONS.flatMap((region) => detectRegion(detector, video, region));
+    const detailFaces = DETAIL_REGIONS.flatMap((region, index) => detectRegion(
+      detector,
+      visual,
+      sourceWidth,
+      sourceHeight,
+      region,
+      index,
+    ));
     const subjects = objectDetector
       ? deduplicateSubjects([
-          ...normalizeSubjects(objectDetector.detect(video).detections, video.videoWidth, video.videoHeight),
-          ...DETAIL_REGIONS.flatMap((region) => detectSubjectsInRegion(objectDetector, video, region)),
+          ...normalizeSubjects(objectDetector.detect(visual).detections, sourceWidth, sourceHeight),
+          ...DETAIL_REGIONS.flatMap((region, index) => detectSubjectsInRegion(
+            objectDetector,
+            visual,
+            sourceWidth,
+            sourceHeight,
+            region,
+            index,
+          )),
         ])
       : [];
     const inferenceMs = Math.round(performance.now() - startedAt);
@@ -332,4 +389,18 @@ export async function detectFacesInPausedFrame(video: HTMLVideoElement): Promise
       message: error instanceof Error ? `本地视觉模型暂不可用：${error.message}` : "本地视觉模型暂不可用。",
     };
   }
+}
+
+export async function detectFacesInPausedFrame(video: HTMLVideoElement): Promise<FaceDetectionEvidence> {
+  if (!video.videoWidth || !video.videoHeight || video.readyState < 2) {
+    return { status: "unavailable", faces: [], subjects: [], inferenceMs: 0, message: "当前帧尚未解码。" };
+  }
+  return detectFacesInVisualSource(video, video.videoWidth, video.videoHeight);
+}
+
+export async function detectFacesInRegressionFrame(image: HTMLImageElement): Promise<FaceDetectionEvidence> {
+  if (!image.complete || !image.naturalWidth || !image.naturalHeight) {
+    return { status: "unavailable", faces: [], subjects: [], inferenceMs: 0, message: "固定回归帧尚未解码。" };
+  }
+  return detectFacesInVisualSource(image, image.naturalWidth, image.naturalHeight);
 }
