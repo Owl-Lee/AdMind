@@ -10,7 +10,7 @@ No unreleased changes are documented yet.
 
 ## 0.5.0 · 2026-08-22
 
-v0.5.0 packages the next public S2 evidence and browser-reproducibility release. It does not introduce a new reviewed-label metric or replace the historical v0.4.0 `s2-vision-v4` candidate.
+v0.5.0 is the public S2 evidence-intake and browser-reproducibility release. It does not introduce a new reviewed-label metric or replace the historical v0.4.0 `s2-vision-v4` candidate.
 
 ### Local review intake and reproducible browser inference
 
@@ -22,11 +22,14 @@ v0.5.0 packages the next public S2 evidence and browser-reproducibility release.
 - Added a pause-session token guard. Resume, seeking, visibility/focus loss, reset, ad completion and component cleanup invalidate the active token so a late MediaPipe promise cannot display a stale box or ad.
 - Added a bounded TwelveLabs asset lifecycle to the offline analyzer. Success, processing failure, processing timeout and analysis failure all request deletion in `finally`; a failed deletion emits an actionable warning without replacing the primary result. Regression tests cover all five lifecycle paths. Maintainers should still audit provider assets created by earlier CLI versions.
 - Stage 1B is still open: the product owner must complete all 8/8 replacement-coordinate decisions and 3/3 placement resolutions, then later review the other seven frames. Until a complete schema-v2 artifact is validated and a separately versioned reviewed manifest exists, none of the 20 frames may be described as complete human ground truth and no reviewed-label metric may be published.
-- Stage 1C is partially implemented in code. It becomes complete only after the first `s2-vision-v5` CI run and a fresh hosted-site run verify the local runtime, 20/20 availability and safety gate. No new model number is inferred from the implementation alone.
+- Released commit `3025d0ab4fdea704e77d01bfd122ec54e8853d40` to public `main`. GitHub Actions run `32555440933` passed both `quality` and `s2-browser-regression`; Sites v67 is live at `https://admind-decision-console.liyanbao06.chatgpt.site`.
+- Post-deployment Playwright passed 3/3 suites: fresh 20-frame local MediaPipe inference, complete bilingual responsive coverage at 360/430/768/1440 CSS pixels, and the full browser-local schema-v2 file-intake/hash-validation path. Stage 1C browser reproducibility is therefore complete, without creating or publishing a new v5 model metric.
+- Branch protection now strictly requires `quality` and `s2-browser-regression` before merge. Administrator enforcement remains disabled and is documented as a repository-governance limitation.
+- The v0.5.0 annotated tag and GitHub Release are intentionally deferred until the project owner decides how to handle historical media-redistribution records and the personal email present in old commit metadata. Public `main` and Sites v67 are deployed facts, not a claim that repository history is rights-clean.
 
 ### 0.5.0 中文说明
 
-- v0.5.0 是下一公开版本的 S2 证据接收与浏览器可复现性工程收尾，不新增基于复核标签的模型指标，也不替换历史 v0.4.0 `s2-vision-v4` 候选。
+- v0.5.0 是已经公开的 S2 证据接收与浏览器可复现性工程版本，不新增基于复核标签的模型指标，也不替换历史 v0.4.0 `s2-vision-v4` 候选。
 - 新增双语 `/regression/intake` 页面。用户选择 schema v2 校准 JSON 后，页面会记录该原件的准确 SHA-256，并只在本地严格校验不可变 schema v1 SHA-256、可信 calibration seed、8 张坐标决定与 3 处位置裁决；完整合同通过后才在内存中生成复核 manifest 预览。
 - 接收页可以使用同一份 v0.4.0 已保存原始预测对预览标签做重评分，并分别下载预览 JSON 和重评分 JSON。这只是**标签变化后的重评分**，不是新的检测器运行。所选文件不会上传；页面不会训练模型、提交文件或覆盖 `evaluation/s2/manifest.json`。
 - 将 MediaPipe Tasks Vision 1.0.1 的 6 个 WASM/加载器文件固定到 `/mediapipe/wasm`，记录 SHA-256，并把运行时来源版本推进到 `s2-vision-v5`。现有 v0.4.0/v4 指标继续作为历史数字保留，不发生变化。
@@ -35,7 +38,10 @@ v0.5.0 packages the next public S2 evidence and browser-reproducibility release.
 - 新增暂停会话 token 防护。恢复、拖动、页面隐藏/失焦、重置、广告完成和组件清理都会使当前 token 失效，迟到的 MediaPipe Promise 不能再展示旧框或误投广告。
 - 为离线分析器补上有界的 TwelveLabs 临时素材生命周期。成功、处理失败、处理超时与分析异常都会在 `finally` 中请求删除；删除失败会给出可执行告警但不会覆盖主要结果，五条路径均由回归测试覆盖。维护者仍需盘点旧版 CLI 曾经创建的历史 provider 资产。
 - 阶段 1B 仍未完成：产品负责人还需完成 8/8 张替换坐标决定与 3/3 处位置裁决，之后另行复核另外 7 张。在完整 schema v2 经校验并建立单独版本化的复核 manifest 前，不能把 20 张称为完整人工真值，也不能发布基于复核标签的新指标。
-- 阶段 1C 目前只是代码侧部分完成。只有首次 `s2-vision-v5` CI 和线上新鲜运行都验证本地 runtime、20/20 可用性与安全门后，才能标记完全完成；不能仅凭实现推导新模型数字。
+- 发布提交 `3025d0ab4fdea704e77d01bfd122ec54e8853d40` 已进入公开 `main`。GitHub Actions 运行 `32555440933` 的 `quality` 与 `s2-browser-regression` 双绿；Sites v67 已上线到 `https://admind-decision-console.liyanbao06.chatgpt.site`。
+- 部署后 Playwright 3/3 通过：20 张本地 MediaPipe 新鲜推理、360/430/768/1440 CSS 像素完整双语响应式，以及完整的浏览器本地 schema v2 文件接收/哈希校验流程。阶段 1C 浏览器可复现性工程因此完成，但没有产生或发布新的 v5 模型指标。
+- 分支保护现在以 strict 模式要求 `quality` 与 `s2-browser-regression` 两项检查后才能合并；管理员强制执行仍关闭，并作为仓库治理限制明确记录。
+- v0.5.0 annotated tag 与 GitHub Release 暂缓创建，等待项目负责人决定历史素材再分发记录和旧提交个人邮箱的治理方式。公开 `main` 与 Sites v67 已部署只是代码/站点事实，不代表仓库历史已经完成权利清理。
 
 ## 0.4.1 · 2026-08-22
 

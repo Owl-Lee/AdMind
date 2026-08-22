@@ -58,13 +58,13 @@ The calibration page contains only the eight adjustment cases. It supports norma
 
 A schema-v2 download binds the exact v1 SHA-256 and stays in browser `localStorage` until export; it is not uploaded, does not train a model and does not update the manifest automatically. Validation must receive the immutable source review, its SHA-256 and the trusted calibration seed. The expected eight target IDs are derived from the source adjustment records, and placement resolution is locked to seed-defined `charge-005/008/009`; export-declared IDs are never the authority. A maintainer must validate the result, create a separately versioned reviewed manifest and then re-score saved predictions before publishing reviewed-label metrics.
 
-### v0.5.0 evidence-intake and browser-reproducibility candidate
+### Public v0.5.0 evidence intake and browser reproducibility
 
 `/regression/intake` is a bilingual, browser-local intake for the future schema-v2 file. It reuses the immutable v1 review, its SHA-256, the trusted calibration seed and the saved v0.4.0 raw prediction report. Incomplete or untrusted input is rejected. A complete 8/8-coordinate plus 3/3-placement export produces only an in-memory reviewed-manifest preview and separate downloadable preview/rescore JSON. The selected file is not uploaded, the tracked manifest is not overwritten, and no model is trained. Before/after metrics come from re-scoring the same saved predictions under changed labels; this is not a new detector run. The other seven frames remain diagnostic and unreviewed.
 
-The candidate also self-hosts the six MediaPipe Tasks Vision 1.0.1 runtime files under `/mediapipe/wasm`, records their SHA-256 values and advances runtime provenance to `s2-vision-v5`. A dedicated Playwright Chromium CI job builds the exact revision and performs fresh inference on all 20 frames. It rejects jsDelivr requests, critical local-asset failures and unavailable frames. `charge-005/008/013/016/018` are a temporary diagnostic exception until schema-v2 intake resolves their first-pass label/box adjustments; `charge-002` was confirmed correct and remains in the stable gate. Every other stable-label sample is also prohibited from becoming newly unsafe. The job uploads the JSON report and a full-page screenshot. A pause-session token separately prevents a late MediaPipe promise from delivering after resume, seek, hidden/blur, reset or cleanup.
+The release also self-hosts the six MediaPipe Tasks Vision 1.0.1 runtime files under `/mediapipe/wasm`, records their SHA-256 values and advances runtime provenance to `s2-vision-v5`. A dedicated Playwright Chromium CI job builds the exact revision and performs fresh inference on all 20 frames. It rejects jsDelivr requests, critical local-asset failures and unavailable frames. `charge-005/008/013/016/018` are a temporary diagnostic exception until schema-v2 intake resolves their first-pass label/box adjustments; `charge-002` was confirmed correct and remains in the stable gate. Every other stable-label sample is also prohibited from becoming newly unsafe. The job uploads the JSON report and a full-page screenshot. A pause-session token separately prevents a late MediaPipe promise from delivering after resume, seek, hidden/blur, reset or cleanup.
 
-No v5 model metric exists yet. The v0.4.0/v4 result above remains the historical comparison. Stage 1C is only partially complete until the first v5 CI run and a fresh hosted-site run pass the local-runtime, 20/20-availability and temporary safety gates.
+Release commit `3025d0ab4fdea704e77d01bfd122ec54e8853d40` is on public `main`. Actions run `32555440933` passed both `quality` and `s2-browser-regression`; Sites v67 is deployed, and hosted Playwright passed 3/3 suites covering fresh 20-frame local MediaPipe inference, bilingual 360/430/768/1440 responsive behavior and complete schema-v2 upload/hash validation. This completes Stage 1C browser reproducibility. It creates no v5 model metric; the v0.4.0/v4 result above remains the historical comparison. Strict branch protection requires both checks, while administrator enforcement remains disabled.
 
 The new sealed holdout contains six immutable 1280×720 JPEGs: four cross-source primary samples and two same-source `CHARGE` supplemental diagnostics. Every item is `sealed-unreviewed`, `useForTuning = false` and `groundTruth = null`; sampling categories are not labels. Same-host extraction with the pinned Chromium/source bytes was byte-identical in two runs. This is evaluation infrastructure, not a metric or truth set. Model outcomes must remain unopened until the candidate is frozen, and the two supplemental frames cannot be presented as independent generalization evidence.
 
@@ -95,7 +95,7 @@ pnpm test:s2-regression
 
 It validates manifest and prediction contracts, source/model/frame checksums, 1280×720 frame dimensions, ground-truth-box policy behavior, current-policy replay from raw detections and reproducibility of the tracked report. `pnpm test:s2-holdout` separately verifies the sealed holdout hashes, dimensions, split counts and no-label/no-tuning invariants.
 
-The v0.5.0 candidate replaces that old network boundary. The ordinary quality job still performs deterministic saved-prediction replay; the independent fresh-browser gate is:
+Public v0.5.0 replaces that old network boundary. The ordinary quality job still performs deterministic saved-prediction replay; the independent fresh-browser gate is:
 
 ```bash
 pnpm exec playwright install chromium
@@ -103,7 +103,7 @@ pnpm build
 pnpm test:s2-browser
 ```
 
-It runs pinned Chromium against the production server, loads the six local runtime files and writes `artifacts/s2-browser-regression/current.json` plus `regression-lab.png`. The first CI and hosted fresh runs remain required evidence before Stage 1C is called complete.
+It runs pinned Chromium against the production server, loads the six local runtime files and writes `artifacts/s2-browser-regression/current.json` plus `regression-lab.png`. Actions run `32555440933` and the post-deployment 3/3 hosted suites are the release evidence that closes the Stage 1C engineering gate.
 
 ### Tracked evidence
 
@@ -121,7 +121,7 @@ It runs pinned Chromium against the production server, loads the six local runti
 
 ### Next step
 
-Finish the eight replacement-coordinate decisions and three placement resolutions, validate the schema-v2 evidence through `/regression/intake`, and deliberately create a separately versioned reviewed manifest. The intake preview/rescore is evidence, not an automatic repository merge. Review the remaining seven frames in a later pass instead of claiming 20-frame completion. Separately, run the first v5 CI and hosted fresh-browser checks before closing Stage 1C. Until v2 resolves the five disputed drafts, keep them diagnostic and forbid newly unsafe outcomes on all other stable-label samples; recall improvements must not be purchased by covering protected content. Keep the six holdout frames sealed with `groundTruth = null` and `useForTuning = false` until the candidate is frozen and a separate product-review artifact is created.
+Finish the eight replacement-coordinate decisions and three placement resolutions, validate the schema-v2 evidence through `/regression/intake`, and deliberately create a separately versioned reviewed manifest. The intake preview/rescore is evidence, not an automatic repository merge. Review the remaining seven frames in a later pass instead of claiming 20-frame completion. Keep the released v5 CI and hosted-browser gates green, but do not infer a new model metric from their success. Until v2 resolves the five disputed drafts, keep them diagnostic and forbid newly unsafe outcomes on all other stable-label samples; recall improvements must not be purchased by covering protected content. Keep the six holdout frames sealed with `groundTruth = null` and `useForTuning = false` until a model candidate is frozen and a separate product-review artifact is created.
 
 ---
 
@@ -181,13 +181,13 @@ v0.4.1 新增 `/regression/calibrate`，没有新增检测器运行或模型指�
 
 schema v2 下载会绑定准确的 v1 SHA-256，并在导出前只保存在浏览器 `localStorage`；它不会上传、不会训练模型，也不会自动更新 manifest。校验必须同时取得不可变源复核、其 SHA-256 和可信 calibration seed。预期 8 张目标 ID 从源复核的调整记录推导，位置裁决严格锁定为 seed 定义的 `charge-005/008/009`；导出自报 ID 不具权威性。维护者必须校验结果，建立单独版本化的复核 manifest，再用已保存预测重新评分，之后才能发布基于复核标签的指标。
 
-### v0.5.0 证据接收与浏览器可复现性候选
+### 公开 v0.5.0 证据接收与浏览器可复现性
 
 `/regression/intake` 是面向未来 schema v2 文件的双语浏览器本地接收页。它复用不可变 v1 复核、其 SHA-256、可信 calibration seed 和 v0.4.0 已保存原始预测报告；不完整或不可信输入会被拒绝。完整 8/8 坐标 + 3/3 位置导出只会生成内存中的复核 manifest 预览，并可分别下载预览/重评分 JSON。所选文件不会上传，受追踪 manifest 不会被覆盖，模型也不会被训练。前后指标来自同一份已保存预测在标签变化后的重评分，不是新的检测器运行。另外 7 张仍保持诊断和未产品审核状态。
 
-同一候选把 MediaPipe Tasks Vision 1.0.1 的 6 个 runtime 文件固定到 `/mediapipe/wasm`，记录 SHA-256，并把 runtime 来源推进为 `s2-vision-v5`。独立 Playwright Chromium CI 会按准确提交构建，对 20 张执行新鲜推理；它拒绝 jsDelivr 请求、关键本地资源失败和不可用帧。`charge-005/008/013/016/018` 在 schema v2 解决第一轮标签/保护框调整前暂作诊断例外；`charge-002` 已确认正确并继续进入稳定门，其余稳定标签样本同样不得新增危险误投。任务上传 JSON 报告与整页截图。另有 pause session token 阻止迟到 MediaPipe Promise 在恢复、拖动、隐藏/失焦、重置或清理后继续投放。
+同一发布版本把 MediaPipe Tasks Vision 1.0.1 的 6 个 runtime 文件固定到 `/mediapipe/wasm`，记录 SHA-256，并把 runtime 来源推进为 `s2-vision-v5`。独立 Playwright Chromium CI 会按准确提交构建，对 20 张执行新鲜推理；它拒绝 jsDelivr 请求、关键本地资源失败和不可用帧。`charge-005/008/013/016/018` 在 schema v2 解决第一轮标签/保护框调整前暂作诊断例外；`charge-002` 已确认正确并继续进入稳定门，其余稳定标签样本同样不得新增危险误投。任务上传 JSON 报告与整页截图。另有 pause session token 阻止迟到 MediaPipe Promise 在恢复、拖动、隐藏/失焦、重置或清理后继续投放。
 
-目前没有 v5 模型指标；上方 v0.4.0/v4 结果继续作为历史对比。首次 v5 CI 与线上新鲜运行通过本地 runtime、20/20 可用和临时安全门前，阶段 1C 只能算部分完成。
+发布提交 `3025d0ab4fdea704e77d01bfd122ec54e8853d40` 已进入公开 `main`。Actions 运行 `32555440933` 的 `quality` 与 `s2-browser-regression` 双绿；Sites v67 已部署，线上 Playwright 3/3 通过，覆盖 20 张本地 MediaPipe 新鲜推理、360/430/768/1440 双语响应式以及完整 schema v2 上传/哈希校验。阶段 1C 浏览器可复现性工程因此完成，但没有产生 v5 模型指标；上方 v0.4.0/v4 结果继续作为历史对比。分支保护以 strict 模式要求两项检查，管理员强制执行仍关闭。
 
 新密封 holdout 包含 6 张不可变 1280×720 JPEG：4 张跨来源主要样本、2 张同源 `CHARGE` 补充诊断。全部保持 `sealed-unreviewed`、`useForTuning = false`、`groundTruth = null`；抽样类别不是标签。同一主机、固定 Chromium/源字节两次抽帧逐字节一致。这是评估基础设施，不是指标或真值集；候选冻结前不得打开模型结果，2 张补充帧也不能包装成独立泛化证据。
 
@@ -216,7 +216,7 @@ pnpm dev
 pnpm test:s2-regression
 ```
 
-它会验证清单与预测合同、源视频/模型/帧校验和、1280×720 图片尺寸、标准框驱动的当前位置规则、原始检测框经过当前规则后的重放结果，以及保存报告能否完整重算。v0.5.0 候选已经结束旧的 jsDelivr 网络边界：普通质量任务继续确定性重放已保存预测，独立新鲜浏览器门为：
+它会验证清单与预测合同、源视频/模型/帧校验和、1280×720 图片尺寸、标准框驱动的当前位置规则、原始检测框经过当前规则后的重放结果，以及保存报告能否完整重算。公开 v0.5.0 已经结束旧的 jsDelivr 网络边界：普通质量任务继续确定性重放已保存预测，独立新鲜浏览器门为：
 
 ```bash
 pnpm exec playwright install chromium
@@ -224,7 +224,7 @@ pnpm build
 pnpm test:s2-browser
 ```
 
-它会在生产服务器上使用固定 Chromium、加载 6 个本地 runtime 文件，并写出 `artifacts/s2-browser-regression/current.json` 和 `regression-lab.png`。首次 CI 与线上新鲜运行仍是阶段 1C 完成前必须取得的证据。
+它会在生产服务器上使用固定 Chromium、加载 6 个本地 runtime 文件，并写出 `artifacts/s2-browser-regression/current.json` 和 `regression-lab.png`。Actions 运行 `32555440933` 与部署后线上 3/3 套件已成为关闭阶段 1C 工程门的发布证据。
 
 ### 已保存证据
 
@@ -242,4 +242,4 @@ pnpm test:s2-browser
 
 ### 下一步
 
-先完成 8 张替换坐标和 3 处位置裁决，通过 `/regression/intake` 校验 schema v2 证据，并有意建立单独版本化的复核 manifest；接收页预览/重评分只是证据，不会自动合并仓库。另外 7 张必须在后续单独复核，不能宣称 20 张已经完成。另一条并行任务是完成首次 v5 CI 与线上新鲜浏览器检查，再关闭阶段 1C。v2 解决 5 张争议初标前，让它们保持诊断，并禁止其余稳定标签样本新增危险误投；不能用遮挡受保护内容的代价换取表面召回率。6 张 holdout 必须继续保持 `groundTruth = null`、`useForTuning = false`，直到候选冻结并建立单独产品复核文件。
+先完成 8 张替换坐标和 3 处位置裁决，通过 `/regression/intake` 校验 schema v2 证据，并有意建立单独版本化的复核 manifest；接收页预览/重评分只是证据，不会自动合并仓库。另外 7 张必须在后续单独复核，不能宣称 20 张已经完成。继续维持已发布 v5 CI 与线上浏览器门双绿，但不能根据工程门通过推导新模型指标。v2 解决 5 张争议初标前，让它们保持诊断，并禁止其余稳定标签样本新增危险误投；不能用遮挡受保护内容的代价换取表面召回率。6 张 holdout 必须继续保持 `groundTruth = null`、`useForTuning = false`，直到模型候选冻结并建立单独产品复核文件。

@@ -201,7 +201,8 @@
 - **And** all 20 frames are available, both detector requirements remain fail-closed, and the report carries v5/local-runtime provenance
 - **And** `charge-005/008/013/016/018` are temporary diagnostic exceptions pending schema-v2 label/box resolution; `charge-002` is confirmed and remains in the stable gate; every other stable-label sample is also prohibited from becoming newly unsafe
 - **And** the CI job uploads the fresh JSON report and full-page screenshot, retaining a trace on failure
-- **And** the historical v0.4.0/v4 metrics stay unchanged; v5 is not called complete until the first CI and hosted fresh runs pass.
+- **And** the historical v0.4.0/v4 metrics stay unchanged; passing the engineering gate does not create a new model metric
+- **And** release commit `3025d0ab4fdea704e77d01bfd122ec54e8853d40` satisfies this criterion: Actions run `32555440933` passed `quality` and `s2-browser-regression`, Sites v67 was deployed, and hosted Playwright passed 3/3 suites covering 20-frame local inference, bilingual 360/430/768/1440 responsive behavior and full schema-v2 upload/hash validation.
 
 #### AT-S2-16 Late pause inference cannot deliver stale UI or ads
 
@@ -483,7 +484,8 @@ After P0 passes:
 - [ ] the dedicated Chromium job loads six local MediaPipe assets without jsDelivr, completes 20/20 frames, applies the explicit five-sample diagnostic exception, forbids newly unsafe stable-label samples and uploads JSON/screenshot evidence;
 - [ ] the six-frame holdout preserves its 4 cross-source / 2 same-source split, byte hashes, `sealed-unreviewed`, `groundTruth = null` and `useForTuning = false` invariants;
 - [ ] resume, seek, hidden/blur, reset and a newer pause invalidate prior session tokens so stale promises cannot deliver;
-- [ ] the first v5 CI and hosted fresh runs pass before Stage 1C or any v5 model result is declared complete;
+- [x] v0.5.0 release evidence passes the first v5 CI and hosted fresh runs, completing Stage 1C browser reproducibility without declaring a v5 model result;
+- [x] strict branch protection requires `quality` and `s2-browser-regression`; administrator enforcement is explicitly documented as disabled;
 - [ ] unresolved `charge-005/008/013/016/018` labels/boxes are not used as blind tuning targets, while confirmed `charge-002` remains in the stable gate;
 - [ ] scorer/rendered geometry is 0.30×0.30 on the 16:9 S2 stage, and weak crop suppression passes its narrow-boundary tests;
 - [ ] S1 has an end-to-end browser recording/test;
@@ -781,7 +783,9 @@ Do not call the phase complete if any condition holds:
 
 **And** CI 上传新鲜 JSON 报告和整页截图，失败时保留 trace
 
-**And** 历史 v0.4.0/v4 指标保持不变；首次 CI 和线上新鲜运行通过前不得把 v5 标为完成。
+**And** 历史 v0.4.0/v4 指标保持不变；工程门通过不产生新的模型指标
+
+**And** 发布提交 `3025d0ab4fdea704e77d01bfd122ec54e8853d40` 已满足该标准：Actions 运行 `32555440933` 的 `quality` 与 `s2-browser-regression` 双绿、Sites v67 已部署，线上 Playwright 3/3 通过，覆盖 20 张本地新鲜推理、360/430/768/1440 双语响应式及完整 schema v2 上传/哈希校验。
 
 ### AT-S2-16 迟到的暂停推理不得投放旧界面或广告
 
@@ -1073,7 +1077,8 @@ P1 在 P0 通过后实施：
 - [ ] 独立 Chromium 任务从本地加载 6 个 MediaPipe runtime 文件且不请求 jsDelivr，完成 20/20 张、应用明确的 5 张诊断例外、阻止稳定标签新增危险误投，并上传 JSON/截图证据；
 - [ ] 6 张 holdout 保持 4 张跨来源 / 2 张同源分组、字节哈希、`sealed-unreviewed`、`groundTruth = null` 与 `useForTuning = false` 约束；
 - [ ] 恢复、拖动、隐藏/失焦、重置和新暂停会使旧 token 失效，迟到 Promise 不得继续投放；
-- [ ] 首次 v5 CI 与线上新鲜运行通过后，才能宣布阶段 1C 或任何 v5 模型结果完成；
+- [x] v0.5.0 已通过首次 v5 CI 与线上新鲜运行，阶段 1C 浏览器可复现性工程完成，但没有宣布新的 v5 模型结果；
+- [x] 分支保护以 strict 模式要求 `quality` 与 `s2-browser-regression`，并明确记录管理员强制执行仍关闭；
 - [ ] 未解决的 `charge-005/008/013/016/018` 标签/保护框没有被当作盲调目标，已确认的 `charge-002` 继续进入稳定门；
 - [ ] 评分器/渲染几何在 16:9 S2 舞台上统一为 `0.30 × 0.30`，弱裁剪抑制通过窄边界测试；
 - [ ] S1 具备端到端浏览器录像/测试；

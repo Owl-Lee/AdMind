@@ -1,7 +1,8 @@
 # AdMind 项目工程交接文档
 
 > 最后更新：2026-08-22<br>
-> 当前公开版本：`v0.4.1`（阶段 1B 保护框精确校准工具）；下一公开候选：`v0.5.0`（本地复核接收与浏览器可复现性工程收尾，待首次 v5 CI 与线上新鲜运行）<br>
+> 当前公开代码与站点：`v0.5.0`（提交 `3025d0ab4fdea704e77d01bfd122ec54e8853d40`，Sites v67）；阶段 1C 浏览器可复现性工程已完成，但没有新增模型指标<br>
+> GitHub annotated tag / Release：暂缓创建，等待项目负责人决定历史素材再分发权与旧提交个人邮箱的治理方式；代码和站点公开不等于历史已经完成权利清理<br>
 > 公开 GitHub：`https://github.com/Owl-Lee/AdMind`<br>
 > 公开演示：`https://admind-decision-console.liyanbao06.chatgpt.site/`（无需登录）<br>
 > 代码事实来源：公开仓库 `main`、本交接文档和 `CHANGELOG.md`。私有归档不是“正式版”，也不是日常开发源；在归档处置方案确定前不要删除。<br>
@@ -37,7 +38,7 @@ AdMind 是一个面向长视频平台的 AI 广告决策原型。它不是广告
 - 决策方式：<https://admind-decision-console.liyanbao06.chatgpt.site/#decision>
 - S2 回归实验室：<https://admind-decision-console.liyanbao06.chatgpt.site/regression>
 - S2 保护框校准：<https://admind-decision-console.liyanbao06.chatgpt.site/regression/calibrate>
-- S2 schema v2 本地接收预览（v0.5.0 候选路由）：`/regression/intake`；部署前不要把它写成已上线公开地址
+- S2 schema v2 本地接收预览：<https://admind-decision-console.liyanbao06.chatgpt.site/regression/intake>
 - 公开仓库：<https://github.com/Owl-Lee/AdMind>
 - Sites 项目 ID：`appgprj_6a7c0083237c819185c04e9fd932fba7`
 - 公开主分支：`main`；功能修改先进入短生命周期分支，通过 CI 后合并。
@@ -135,13 +136,13 @@ AdMind 确定性规则：播放器状态、伦理边界、素材形式、商业�
 ### P1：产品完成度问题
 
 4. **中英文切换已经实现。** 公开页面默认英文，中文为完整模式；统一本地化层同步可见文案、动态属性、HTML 文档语言和字幕轨道。后续新增文案仍必须进入覆盖测试。
-5. **S2 固定集浏览器回归已经固化，但全站 E2E 仍不完整。** v0.5.0 候选已加入独立 Playwright Chromium 20 帧新鲜推理任务；它会阻止 CDN 请求和不可用帧并上传 JSON/截图。`charge-005/008/013/016/018` 在 schema v2 解决标签/保护框调整前暂作诊断例外；`charge-002` 已确认正确并继续进入稳定门，其余稳定标签同样不得新增危险误投。首次 CI 与线上新鲜运行仍待完成；非 S2 路径仍需继续转成可重复测试。
+5. **S2 固定集浏览器回归与本轮线上 E2E 已通过，但更广泛的全站行为仍需持续覆盖。** v0.5.0 的独立 Playwright Chromium 任务会阻止 CDN 请求和不可用帧并上传 JSON/截图。`charge-005/008/013/016/018` 在 schema v2 解决标签/保护框调整前暂作诊断例外；`charge-002` 已确认正确并继续进入稳定门，其余稳定标签同样不得新增危险误投。Actions 运行 `32555440933` 双绿，部署后 3/3 套件覆盖 20 帧、本轮双语响应式与 schema v2 上传/哈希校验；未来新增的非 S2 路径仍需继续转成可重复测试。
 6. **README 和核心交接资料已同步。** README 保持英文完整内容在上、中文完整内容在下，并与当前三场景、双语站点和公开边界一致；较早的研究/spec 文档仍作为历史设计依据。
 7. **真实效果指标尚未验证。** “减少打扰、提高完成率、兼顾商业价值”仍是产品假设，不能写成已经通过 A/B 实验证明。
 
-### P0：发布 GitHub 前必须处理
+### P0：公开历史与 Release 治理仍需负责人决定
 
-8. 早期 `Sprite Fright` 与 FEMA 视频已从当前代码树、公开选择器和发布包移除，但二进制仍可从旧公开提交及 `v0.2.4`—`v0.4.1` 标签历史中取回。项目负责人必须选择：补齐准确再分发权记录，或明确授权重写公开历史、标签和旧 Release；在此之前不得宣称整个 Git 历史已经完成权利清理。
+8. 早期 `Sprite Fright` 与 FEMA 视频已从当前代码树、公开选择器和发布包移除，但二进制仍可从旧公开提交及 `v0.2.4`—`v0.4.1` 标签历史中取回。项目负责人必须选择：补齐准确再分发权记录，或明确授权重写公开历史、标签和旧 Release；在此之前不得宣称整个 Git 历史已经完成权利清理，也不要创建 v0.5.0 annotated tag / GitHub Release。公开 `main` 与 Sites v67 已上线只是代码和部署事实，不是“权利已清洁发布”。
 9. 页面继续使用 `public/game-ad-clean.png`。项目所有者已于 2026-08-19 明确确认该图属于自己的项目素材并可用于公开作品集；未使用的原始截图副本不进入公开发布快照。
 10. API Key 只能放在本地 `.env.local`，绝不能写入代码、文档、聊天、Git 或前端 bundle。公开前必须做 secrets 扫描。
 11. 旧公开提交的 author metadata 包含个人邮箱 `liyanbao522@gmail.com`。项目负责人需确认愿意继续公开该联系方式；若不愿意，应与第 8 项历史重写一次性处理，单独修改当前 Git 配置不能撤回旧提交中的邮箱。
@@ -167,7 +168,7 @@ AdMind 确定性规则：播放器状态、伦理边界、素材形式、商业�
 
 **1B，v0.4.1 校框工具已公开：** v0.4.0 候选继续作为历史固定集结果。产品负责人第一轮 13/13 张优先意见已逐字节归档，其中 5 张保护框初标被接受、8 张进入精确坐标二审；另外 7 张仍未产品审核。`/regression/calibrate` 只处理这 8 张与 3 处位置冲突，支持拖动、缩放、精确百分比、新增/删除/重置与撤销。schema v2 导出绑定不可变 v1 SHA-256，但不会上传、训练模型或自动修改 manifest。
 
-**1C，v0.5.0 候选已部分实现：固化浏览器基准。** 6 个 MediaPipe Tasks Vision 1.0.1 runtime 文件已固定到本地，`s2-vision-v5` 记录其 SHA；独立 Chromium CI 会新鲜运行 20 帧并上传证据；pause session token 防止迟到 Promise 误投。另已建立 6 张密封未复核 holdout：4 张跨来源主要样本、2 张同源补充诊断，全部 `groundTruth = null`、`useForTuning = false`。首次 v5 CI 与线上新鲜运行通过前不得标为完全完成，也不得发布新模型指标。
+**1C，v0.5.0 已公开并完成浏览器可复现性工程：** 6 个 MediaPipe Tasks Vision 1.0.1 runtime 文件已固定到本地，`s2-vision-v5` 记录其 SHA；独立 Chromium CI 新鲜运行 20 帧并上传证据；pause session token 防止迟到 Promise 误投。发布提交 `3025d0ab4fdea704e77d01bfd122ec54e8853d40` 已进入公开 `main`，Actions 运行 `32555440933` 的 `quality` 与 `s2-browser-regression` 双绿，Sites v67 已部署，线上 Playwright 3/3 通过。另有 6 张密封未复核 holdout：4 张跨来源主要样本、2 张同源补充诊断，全部 `groundTruth = null`、`useForTuning = false`。完成工程门不产生或发布新模型指标。
 
 **离线提供商数据生命周期已补强。** TwelveLabs CLI 现在使用默认十分钟处理期限，并在成功、处理失败、处理超时或分析异常后通过 `finally` 请求删除临时上传资产；删除失败会明确提示维护者手动清理，同时不覆盖主要分析结果，五条回归测试覆盖这些路径。仍需维护者登录 TwelveLabs 盘点并删除旧版 CLI 可能遗留的历史资产。
 
@@ -398,7 +399,7 @@ S1 的商业兜底边界：当整片持续高张力时，不等于永远不投�
 - 当前结果刻意保留调参前的真实问题，不为了简历把低分隐藏或改成好看的数字；13 个规则明确标签仍只是代理初标，7 个 `needs-user-review` 诊断帧需要产品负责人复核后才能进入正式阻断指标。
 - **历史遗留，已由 v0.4.0 候选解决：** v0.3.0 当时的位置评分器按 `0.3 × 0.24` 计算，而页面约为 `0.3 × 0.3`；当前评分器与线上卡片已统一为 `0.30 × 0.30`。
 - 当前 BlazeFace + EfficientDet 会把机器人或特效误识别成人脸/人物，也会漏掉罐体、能量效果等显著物体；重复框合并仍需校准。
-- **当时的历史边界，已由 v0.5.0 候选代码解决：** 普通 CI 当时只校验图片字节、标注合同、评分器和已保存原始预测；WASM 当时来自 jsDelivr。当前候选已改用本地 runtime 并增加独立新鲜 Chromium 任务，但仍需首次 CI 与线上运行验证。
+- **当时的历史边界，已由公开 v0.5.0 解决并验证：** 普通 CI 当时只校验图片字节、标注合同、评分器和已保存原始预测；WASM 当时来自 jsDelivr。当前版本改用本地 runtime，并由 Actions 运行 `32555440933` 与部署后线上 3/3 套件完成新鲜 Chromium 验证。
 
 ### 下一步
 
@@ -503,32 +504,36 @@ English summary: public v0.4.1 adds `/regression/calibrate` for eight exact-coor
 3. 使用已保存预测对新 manifest 重评分，更新机器可读结果、双语基线文档和验收测试；如果要称为“新推理”，必须重新执行浏览器检测。
 4. 后续单独复核另外 7 张，再决定是否可以形成 20 张完整产品审核集；期间继续保持“危险误投不得增加”的首要门槛。
 
-## 二十四、v0.5.0 本地证据接收与浏览器可复现性候选（2026-08-22）
+## 二十四、v0.5.0 本地证据接收与浏览器可复现性发布（2026-08-22）
 
 ### 完成
 
 - 新增双语 `/regression/intake`：只在浏览器本地读取 schema v2，严格校验 v1 SHA、可信 seed、8/8 坐标与 3/3 位置裁决；通过后只生成内存预览，并用 v0.4.0 已保存原始预测做标签重评分。页面不上传、不训练、不提交、不覆盖 manifest。
 - MediaPipe Tasks Vision 1.0.1 的 6 个 runtime 文件已固定到 `/mediapipe/wasm` 并记录 SHA，配置推进为 `s2-vision-v5`；v0.4.0/v4 指标继续作为历史证据，没有新模型数字。
-- 独立 Playwright Chromium CI 会按准确提交构建、新鲜运行 20 帧、阻止 jsDelivr 与关键资源/可用性失败，并上传 JSON/截图。`charge-005/008/013/016/018` 在 schema v2 解决标签/保护框调整前暂作诊断例外；`charge-002` 已确认正确并继续进入稳定门，其余稳定标签同样不得新增危险误投。
+- 独立 Playwright Chromium CI 按准确提交构建、新鲜运行 20 帧、阻止 jsDelivr 与关键资源/可用性失败，并上传 JSON/截图。`charge-005/008/013/016/018` 在 schema v2 解决标签/保护框调整前暂作诊断例外；`charge-002` 已确认正确并继续进入稳定门，其余稳定标签同样不得新增危险误投。
 - pause session token 会在恢复、拖动、隐藏/失焦、重置、广告完成或新会话时使旧 token 失效，阻止迟到 Promise 误投。
 - 新增 6 张 1280×720 密封未复核 holdout：4 张跨来源主要样本、2 张同源 `CHARGE` 补充诊断；全部为 `sealed-unreviewed`、`useForTuning = false`、`groundTruth = null`。同一主机、相同 Chromium/源字节两次抽帧逐字节一致。这是基础设施，不是标签、模型指标或独立泛化证明。
 
-English summary: the v0.5.0 candidate adds a local-only `/regression/intake` validator/preview and saved-prediction label-only rescore, six self-hosted MediaPipe 1.0.1 runtime files with `s2-vision-v5` provenance, a fresh Chromium evidence job, stale-promise session guards, and a sealed six-frame holdout. Five disputed schema-v1 drafts remain temporary diagnostics; stable labels outside that set may not become newly unsafe. The holdout remains unlabeled and tuning-prohibited. No new model metric is claimed.
+English summary: public v0.5.0 adds a local-only `/regression/intake` validator/preview and saved-prediction label-only rescore, six self-hosted MediaPipe 1.0.1 runtime files with `s2-vision-v5` provenance, a fresh Chromium evidence job, stale-promise session guards, and a sealed six-frame holdout. Release commit `3025d0ab4fdea704e77d01bfd122ec54e8853d40` passed both required checks in Actions run `32555440933`; Sites v67 and the hosted 3/3 Playwright suites are live evidence. Five disputed schema-v1 drafts remain temporary diagnostics; stable labels outside that set may not become newly unsafe. The holdout remains unlabeled and tuning-prohibited. No new model metric is claimed. The annotated tag/GitHub Release is intentionally deferred pending the owner's media-rights and historical-email decision.
 
 ### 验证
 
-- 主任务已运行完整质量门；文档侧仅记录代码中存在的路由、脚本、CI 与 manifest 合同，不编造提交 SHA 或新指标。
+- 发布提交 `3025d0ab4fdea704e77d01bfd122ec54e8853d40` 已进入公开 `main`；GitHub Actions 运行 `32555440933` 的 `quality` 与 `s2-browser-regression` 双绿。
+- Sites v67 已部署到公开地址；部署后 hosted Playwright 3/3 通过，覆盖 20 张本地 MediaPipe 新鲜推理、360/430/768/1440 双语响应式以及完整 schema v2 上传/哈希校验。
+- 分支保护以 strict 模式要求 `quality` 与 `s2-browser-regression`；管理员强制执行仍关闭。
 - holdout manifest、6 张 1280×720 图片、4/2 分组、逐帧 SHA、`groundTruth = null` 与 `useForTuning = false` 已落盘；抽帧脚本支持 `--verify-only`。
 
 ### 遗留
 
 - 阶段 1B 仍需产品负责人完成 8/8 张坐标和 3/3 处位置裁决，维护者再校验并建立单独版本化 reviewed manifest；另外 7 张仍需后续产品复核。不能宣称 20 张人工真值完成。
-- 阶段 1C 只是代码侧部分完成。首次 v5 CI 与线上新鲜运行通过本地 runtime、20/20 可用和临时安全门前，不能标为完全完成。
+- 阶段 1C 浏览器可复现性工程已完成，但不产生或发布新模型指标；v0.4.0/v4 数字仍是历史固定集证据。
 - holdout 结果必须在候选冻结前保持密封；2 张同源补充帧不能包装成独立泛化证据。
+- v0.5.0 annotated tag / GitHub Release 暂不创建，等待项目负责人决定旧历史中的素材再分发权与个人邮箱治理；不得把已经上线的代码/站点描述成“历史权利已清理”。
 
 ### 下一步
 
 1. 产品负责人完成并导出完整 schema v2；用 `/regression/intake` 校验并下载独立预览/重评分证据。
 2. 维护者单独建立版本化 reviewed manifest，再决定是否发布标签变化后的重评分；不能称为新推理。
-3. 跑通首次 v5 CI 与线上新鲜 20 帧，确认本地 WASM、20/20 可用和稳定标签安全门。
-4. 候选冻结后再为 holdout 建立独立产品复核文件；原 sealed manifest 不覆盖、不用于调参。
+3. 继续维持 `quality`、`s2-browser-regression` 与线上回归双绿；新增功能必须覆盖对应双语和断点，不得根据工程门通过推导新指标。
+4. 模型候选冻结后再为 holdout 建立独立产品复核文件；原 sealed manifest 不覆盖、不用于调参。
+5. 由项目负责人决定历史素材再分发权与旧提交个人邮箱的处理方式，再决定是否创建 v0.5.0 annotated tag / GitHub Release。
