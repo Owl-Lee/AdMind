@@ -8,6 +8,7 @@ const REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
   ["本地视觉未在当前帧检测到稳定避让目标。", "Local vision found no stable avoidance target in the current frame."],
   ["四个候选区域都会遮挡人物或播放器保留区，本次暂停不展示广告。", "All four candidate regions would cover a subject or reserved player area, so no ad is shown during this pause."],
   ["当前帧未检测到稳定主体，优先使用不遮挡字幕与控制条的顶部区域。", "No stable subject was detected, so prefer the top region that avoids captions and controls."],
+  ["本地视觉模型暂不可用，本次暂停不展示广告并进入待交付队列。", "Local vision is temporarily unavailable. No ad is shown during this pause, and the task moves to the pending-delivery queue."],
   ["暂停未稳定，广告任务已进入待交付队列。", "The pause was not stable; the ad task moved to the pending-delivery queue."],
   ["当前画面没有安全位置，广告任务已顺延。", "No safe position exists in the current frame; the ad task was deferred."],
   ["页面已隐藏，本次广告取消并顺延。", "The page was hidden; this ad attempt was canceled and deferred."],

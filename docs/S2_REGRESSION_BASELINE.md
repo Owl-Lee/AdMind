@@ -6,7 +6,7 @@
 
 ### What this baseline means
 
-AdMind Stage 1A replaces screenshot-by-screenshot intuition with a repeatable, project-local evaluation. The first set contains 20 fixed 1280×720 frames derived from the licensed `CHARGE` excerpt. The agent drafted every label from the written annotation rules. Thirteen rule-clear drafts are locked into regression metrics; seven dense or compositionally ambiguous drafts remain diagnostic until the product owner reviews them.
+AdMind Stage 1A replaces screenshot-by-screenshot intuition with a repeatable, project-local evaluation. The first set contains 20 fixed 1280×720 frames derived from the licensed `CHARGE` excerpt. The agent drafted every target and placement label from the written annotation rules; none of the 20 is human ground truth. Thirteen rule-clear drafts enter blocking metrics, while seven dense or compositionally ambiguous drafts remain diagnostic.
 
 These figures describe **agreement on this exact regression set**. They are not a general computer-vision accuracy claim, a production SLA or a calibrated probability of correctness.
 
@@ -16,7 +16,7 @@ Before any Stage 1B tuning, the v0.3.0 regression harness at commit `e3ceabe1eb4
 
 | Metric | Result | Interpretation |
 | --- | ---: | --- |
-| Rule-locked / pending-review samples | 13 / 7 | Only the rule-clear first drafts affect blocking metrics. |
+| Blocking / diagnostic agent drafts | 13 / 7 | Only the rule-clear first drafts affect blocking metrics; neither group is human ground truth. |
 | Model availability | 20 / 20 · **100%** | Every fixed frame completed browser inference. |
 | Safe-placement agreement | 6 / 13 · **46.2%** | The chosen corner or deferral matched an accepted draft answer. Unavailable inference would count as a miss. |
 | Unsafe placement | 4 / 13 · **30.8%** | A card was placed outside the accepted safe set. This is the highest-priority error. |
@@ -32,6 +32,23 @@ Observed decision failures on the 13 rule-locked drafts:
 - Over-deferral: `charge-002`, `charge-012` and `charge-016` returned `none` even though a rule-clear safe corner exists.
 
 The low target scores are useful evidence, not a release failure. The current detector combines BlazeFace and an EfficientDet COCO allowlist. It can protect a robot after a convenient face/person false positive, while still assigning the wrong semantic class; it can also miss a canister or energy effect that a viewer clearly paused to inspect. Stage 1B must improve this behavior against the whole set instead of optimizing one screenshot.
+
+### v0.4.0 Stage 1B candidate — pending deployment
+
+`evaluation/s2/candidates/v0.4.0.json` was produced by runner/config commit `e0a033194ea04a9c926a822e4330355f41ddd152`. It completed all 20/20 fixed frames. This is a candidate comparison, not a replacement for the historical baseline and not a general accuracy claim.
+
+| Metric | v0.2.7 configuration baseline | v0.4.0 candidate |
+| --- | ---: | ---: |
+| Safe-placement agreement | 6/13 · 46.2% | 7/13 · 53.8% |
+| Unsafe placement | 4/13 · 30.8% | 3/13 · 23.1% |
+| Over-deferral | 3/13 · 23.1% | 3/13 · 23.1% |
+| Protected targets | TP 4 / FP 21 / FN 7 | TP 5 / FP 16 / FN 6 |
+| Precision / recall / F1 | 16.0% / 36.4% / 22.2% | 23.8% / 45.5% / 31.3% |
+| Inference latency | 318 / 335 ms p50/p95 | 277 / 307 ms p50/p95 |
+
+`charge-012` is the genuine corrected decision: it no longer over-defers. Six decision failures remain: `charge-002`, `charge-005`, `charge-008`, `charge-013`, `charge-016` and `charge-018`. Before further tuning, label audit found the accepted placement drafts for `charge-002/005/008/013/018` disputable. Those five must be resolved instead of treated as settled labels; `charge-016` remains the clear unresolved over-deferral case.
+
+The scorer and rendered card now use the same 0.30×0.30 footprint, and the S2 stage is fixed at 16:9. The v0.4.0 weak crop filter is intentionally narrow: it removes only a low-confidence crop-only `人物主体` candidate when no detected face center corroborates that box. Direct detections, strong crop detections, animals and faceless character candidates remain eligible. This avoids converting an animated character/animal heuristic into a blanket “no face means no subject” rule, but a back-facing low-confidence person can still be filtered; that case needs a holdout set.
 
 ### Evaluation layers
 
@@ -50,7 +67,7 @@ pnpm dev
 
 Open `http://localhost:3000/regression`, then select **Run fixed set**. The page loads only repository-owned or documented local assets; image inference stays in the browser. Use **Export JSON** to capture a new candidate run.
 
-For product review, select **Needs review** to isolate the seven diagnostic drafts. Each card records three independent decisions: whether the green agent-drafted protection target is correct or needs adjustment, whether a muted card may use the upper-left and/or upper-right position or must be deferred, and a required review note. Review choices are stored only in that browser's `localStorage`. **Export review JSON** downloads a separate review artifact; it does not upload data, write to the repository, modify the manifest or change the tracked baseline. A confirmation can be undone before exporting. Purple dashed model boxes are hidden by default to reduce anchoring and can be revealed after a run.
+The page defaults to **Priority review**, a 13-frame queue made from the original seven subjective drafts plus `charge-002/005/008/013/016/018`. The other seven frames remain unreviewed agent-rule drafts. Green boxes are agent-drafted target references. Purple dashed boxes are current model output, hidden by default to reduce anchoring. Blue regions are the current review placement choice, prefilled from the agent draft and dashed until confirmed. The four-step flow is: (1) check every green protected target, (2) select every acceptable upper corner or defer, (3) explain the decision or adjustment, and (4) confirm and export. Choices are stored only in that browser's `localStorage`; confirmation can be undone and does not train the model automatically. **Export review JSON** downloads a separate artifact. It does not upload data, write to the repository, modify the manifest or change the tracked baseline; a maintainer must validate and commit it separately.
 
 The deterministic offline gate is:
 
@@ -65,11 +82,12 @@ It validates manifest and prediction contracts, source/model/frame checksums, 12
 - `evaluation/s2/manifest.json` — annotation policy, rule-drafted targets and placement answers.
 - `public/evaluation/s2/frames/*.jpg` — immutable 1280×720 regression frames.
 - `evaluation/s2/baselines/v0.2.7.json` — runner/config provenance, model hashes, raw predictions, metrics and failures.
-- `/regression` — bilingual visual runner and local product-review queue. Green solid boxes are agent-drafted target references, purple dashed boxes are current model output and blue areas preview the reviewer's selected rendered-ad footprint.
+- `evaluation/s2/candidates/v0.4.0.json` — Stage 1B candidate provenance, raw predictions, metrics and failures.
+- `/regression` — bilingual visual runner and local product-review queue. Green solid boxes are agent-drafted target references, purple dashed boxes are hidden-by-default model output, and blue areas are the current agent-prefilled review choice: dashed before confirmation and solid afterward.
 
 ### Next step
 
-The manifest deliberately records a geometry mismatch that Stage 1B must resolve: the scorer evaluates a 0.30×0.24 candidate while the rendered creative reserves approximately 0.30×0.30. Stage 1B should then tune thresholds, duplicate suppression, box sizing and placement geometry against the rule-locked set. The first acceptance priority is **zero new unsafe placements**; recall improvements must not be purchased by covering protected content. The product owner can review the seven ambiguous drafts without blocking this pre-tuning baseline.
+Complete the 13-frame priority queue before another tuning pass, resolving the five disputed accepted-placement drafts (`charge-002/005/008/013/018`), the clear `charge-016` over-deferral and the original seven subjective drafts. Then sample the other seven agent-rule drafts as a secondary audit. Do not merge exported review JSON into the manifest automatically: a maintainer must validate and commit the evidence deliberately. Confirmation does not train the model. The first acceptance priority remains **zero new unsafe placements**; recall improvements must not be purchased by covering protected content. Add a back-facing low-confidence-person holdout before generalizing the weak crop filter.
 
 ---
 
@@ -77,7 +95,7 @@ The manifest deliberately records a geometry mismatch that Stage 1B must resolve
 
 ### 这份基线代表什么
 
-AdMind 阶段 1A 用可重复的项目内部评估，替代围绕单张截图反复凭感觉调参。第一套题库包含 20 张从已授权《CHARGE》片段派生的 1280×720 固定画面。全部答案由代理按照书面规则起草；其中 13 张规则明确的初标锁入回归指标，另外 7 张动作密集或构图存在争议的初稿先作为诊断样本，等待产品负责人复核。
+AdMind 阶段 1A 用可重复的项目内部评估，替代围绕单张截图反复凭感觉调参。第一套题库包含 20 张从已授权《CHARGE》片段派生的 1280×720 固定画面。全部保护目标与位置标签都由代理按照书面规则起草，20 张都不是人工标准答案；其中 13 张规则明确初标进入阻断指标，另外 7 张动作密集或构图存在争议的初稿保持诊断状态。
 
 这些数字只表示**当前模型在这一组固定回归样本上的一致率**，不代表计算机视觉的通用准确率、生产 SLA 或经过校准的正确概率。
 
@@ -87,7 +105,7 @@ AdMind 阶段 1A 用可重复的项目内部评估，替代围绕单张截图反
 
 | 指标 | 结果 | 含义 |
 | --- | ---: | --- |
-| 规则锁定初标 / 待复核样本 | 13 / 7 | 只有规则明确的初稿进入阻断指标。 |
+| 阻断 / 诊断代理初标 | 13 / 7 | 只有规则明确初稿进入阻断指标；两组都不是人工标准答案。 |
 | 模型可用性 | 20 / 20 · **100%** | 所有固定帧均完成浏览器推理。 |
 | 安全位置一致率 | 6 / 13 · **46.2%** | 选择的角落或顺延结果属于接受的初稿答案；模型不可用也会计为未命中。 |
 | 危险位置误投 | 4 / 13 · **30.8%** | 卡片落在未接受的位置；这是最高优先级错误。 |
@@ -103,6 +121,23 @@ AdMind 阶段 1A 用可重复的项目内部评估，替代围绕单张截图反
 - 过度顺延：`charge-002`、`charge-012`、`charge-016` 明确存在安全角落，系统却返回 `none`。
 
 较低的目标指标是有价值的证据，不是发布失败。当前检测器组合 BlazeFace 与 EfficientDet 的 COCO 类别白名单：它可能因为把机器人误识别人脸或人物而碰巧避开角色，但语义类别仍然错误；它也可能漏掉用户明显会暂停查看的罐体或能量效果。阶段 1B 必须根据整套样本改进，而不是只把某一张截图调对。
+
+### v0.4.0 阶段 1B 候选结果 — 待部署
+
+`evaluation/s2/candidates/v0.4.0.json` 由运行器/配置提交 `e0a033194ea04a9c926a822e4330355f41ddd152` 生成，20/20 张固定帧全部完成推理。它是候选对比，不替代历史基线，也不代表通用准确率。
+
+| 指标 | v0.2.7 配置参考基线 | v0.4.0 候选 |
+| --- | ---: | ---: |
+| 安全位置一致率 | 6/13 · 46.2% | 7/13 · 53.8% |
+| 危险位置误投 | 4/13 · 30.8% | 3/13 · 23.1% |
+| 过度顺延 | 3/13 · 23.1% | 3/13 · 23.1% |
+| 保护目标 | TP 4 / FP 21 / FN 7 | TP 5 / FP 16 / FN 6 |
+| 精确率 / 召回率 / F1 | 16.0% / 36.4% / 22.2% | 23.8% / 45.5% / 31.3% |
+| 推理耗时 | P50/P95 318/335 ms | P50/P95 277/307 ms |
+
+`charge-012` 是得到真实修复的决策：系统不再对它过度顺延。仍有 `charge-002`、`charge-005`、`charge-008`、`charge-013`、`charge-016`、`charge-018` 六个决策失败。继续调参前的标签审计发现，`charge-002/005/008/013/018` 五张的可接受位置初标存在争议，不能再把它们当作已经定论的标签盲调；`charge-016` 仍是明确未解决的过度顺延案例。
+
+评分器与线上卡片现在使用同一个 `0.30 × 0.30` footprint，S2 舞台固定为 16:9。v0.4.0 的弱裁剪过滤刻意保持窄范围：只有低置信、仅来自裁剪、且框内没有检测脸部中心佐证的 `人物主体` 候选会被移除。直接检测、强裁剪、动物与无脸角色候选仍然保留。这避免把动画角色/动物启发式扩张成“没有脸就没有主体”的通用规则，但背面低置信人物仍可能被过滤，必须通过留出集验证。
 
 ### 三层评估
 
@@ -121,7 +156,7 @@ pnpm dev
 
 打开 `http://localhost:3000/regression`，点击 **Run fixed set / 运行固定集**。页面只加载仓库内自有或已经记录来源的本地素材，画面推理仍在浏览器中完成。点击 **Export JSON / 导出 JSON** 可以保存新的候选结果。
 
-产品负责人可选择 **Needs review / 待复核**，只查看 7 张诊断初稿。每张卡片分三步记录：绿色代理初标保护框正确或需要调整；静音卡片允许位于左上、右上、两个位置都可以，或必须顺延；以及必填的复核备注。选择只保存在当前浏览器的 `localStorage`。点击 **Export review JSON / 导出审核 JSON** 只会下载一份独立审核文件，不会上传数据、写入仓库、直接修改 manifest 或改变已保存基线；导出前也可以撤销确认。为减少模型结果对人工判断的锚定，紫色虚线模型框默认隐藏，运行后可手动显示。
+页面默认进入 **Priority review / 优先复核**，共 13 张：原有 7 张主观初标加 `charge-002/005/008/013/016/018`；另外 7 张仍是未人工审核的代理规则初标。绿色框是代理保护目标参考；紫色虚线框是当前模型输出，为减少锚定默认隐藏；蓝色区域是当前复核位置选择，由代理初标预填，确认前为虚线，确认后为实线。四步流程为：(1) 检查全部绿色保护目标；(2) 选择所有可接受上角，或选择顺延；(3) 说明决定或调整；(4) 确认并导出。选择只保存在当前浏览器 `localStorage`，可以撤销；确认本身不会自动训练模型。**Export review JSON / 导出审核 JSON** 只下载独立文件，不会上传、写入仓库、直接修改 manifest 或改变已保存基线；必须由维护者另行校验并提交。
 
 离线确定性质量门为：
 
@@ -136,8 +171,9 @@ pnpm test:s2-regression
 - `evaluation/s2/manifest.json`：标注规则、规则起草的保护目标与位置初标。
 - `public/evaluation/s2/frames/*.jpg`：不可变的 1280×720 固定回归帧。
 - `evaluation/s2/baselines/v0.2.7.json`：运行器与配置来源、模型哈希、原始预测、指标和失败案例。
-- `/regression`：双语可视化运行器与本地产品复核队列；绿色实线框是代理起草的保护目标参考，紫色虚线框是当前模型输出，蓝色区域预览审核者选择的实际广告占位。
+- `evaluation/s2/candidates/v0.4.0.json`：阶段 1B 候选的来源、原始预测、指标和失败案例。
+- `/regression`：双语可视化运行器与本地产品复核队列；绿色实线框是代理保护目标参考，紫色虚线框是默认隐藏的模型输出，蓝色区域是代理预填的当前复核选择，确认前为虚线、确认后为实线。
 
 ### 下一步
 
-清单刻意记录了阶段 1B 必须解决的一处几何偏差：评分器当前按 0.30×0.24 计算候选区域，而实际渲染广告约占 0.30×0.30。阶段 1B 随后应根据规则锁定初标调整阈值、重复框合并、框尺寸和广告占位几何。第一验收优先级是**不得新增危险位置误投**；不能用遮挡受保护内容的代价换取表面召回率。7 张争议初稿可由产品负责人后续复核，不阻塞这份调参前基线。
+下一轮调参前先完成 13 张优先队列：解决 `charge-002/005/008/013/018` 五张可接受位置争议、明确的 `charge-016` 过度顺延，以及原有 7 张主观初标；随后再抽查另外 7 张代理规则初标。导出的审核 JSON 不能自动合并进 manifest，必须由维护者校验并提交；确认不会自动训练模型。第一验收优先级仍是**不得新增危险位置误投**，不能用遮挡受保护内容的代价换取表面召回率。泛化弱裁剪过滤前，还要增加背面低置信人物留出集。

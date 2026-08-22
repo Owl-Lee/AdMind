@@ -77,7 +77,8 @@ Keep the raw provider response for traceability and the normalized run for appli
 
 - `packages/decision-engine/src/engine.test.ts` covers hard filters, ranking and audit reasons.
 - `app/lib/pause-decision.test.ts` covers S2 spatial placement rules.
-- `app/lib/pause-regression.test.ts` validates the Stage 1A fixed-frame contract and recomputes the tracked baseline from raw predictions. That baseline was run by the v0.3.0 harness commit `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` with detector configuration behavior referenced to v0.2.7 commit `bdf66d1db7511f97feba49713f9995ea6ef13711`; the older commit did not run the new harness.
+- `app/lib/face-detector.test.ts` covers the narrow weak crop-only person suppression boundary and confirms that direct, strong crop and animal candidates remain eligible; the implementation's label guard also leaves faceless character candidates eligible.
+- `app/lib/pause-regression.test.ts` validates the Stage 1A fixed-frame contract and recomputes both the historical baseline and the tracked Stage 1B candidate from raw predictions. The historical baseline was run by v0.3.0 harness commit `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` with detector configuration behavior referenced to v0.2.7 commit `bdf66d1db7511f97feba49713f9995ea6ef13711`; the older commit did not run the new harness. The final v0.4.0 browser artifact uses `s2-vision-v4`, runner/config commit `e0a033194ea04a9c926a822e4330355f41ddd152` and `generatedAt` `2026-08-22T03:42:41.155Z`.
 - `packages/video-analyzer/src/*.test.ts` covers provider normalization and repeated-run consensus.
 - `services/api/src/app.test.ts` verifies the Fastify adapter.
 - `tests/rendered-html.test.mjs` confirms production-rendered output.
@@ -86,9 +87,13 @@ The release acceptance pass also verifies navigation, localization, media contro
 
 ### Run the S2 browser baseline
 
-Start `pnpm dev`, open `http://localhost:3000/regression`, and choose **Run fixed set**. The runner evaluates the 20 exact 1280×720 image files recorded in `evaluation/s2/manifest.json`; green boxes are rule-drafted protection targets and purple dashed boxes are current predictions. The project agent drafted every target and acceptable placement from explicit rules: 13 rule-clear samples are locked as `rule-confirmed`, while seven subjective samples remain diagnostic until the product owner reviews them. Exported browser results are candidate evidence, not a new accepted baseline until the manifest, model/config hashes and bilingual baseline report are updated together.
+Start `pnpm dev`, open `http://localhost:3000/regression`, and choose **Run fixed set**. The runner evaluates the 20 exact 1280×720 image files recorded in `evaluation/s2/manifest.json`. Every green target and placement label is an agent-authored draft, not human ground truth: 13 rule-clear samples enter blocking metrics as `rule-confirmed`, while seven remain diagnostic. Exported browser results are candidate evidence, not a new accepted baseline until the manifest, model/config hashes and bilingual report are updated together.
 
-The tracked fixed-set result is 6/13 (46.2%) safe-placement agreement, 4/13 (30.8%) unsafe placement and 3/13 (23.1%) over-deferral. Protected-target precision is 4/25 (16.0%), recall is 4/11 (36.4%), F1 is 22.2%, and the recorded run measured 318 ms p50 / 335 ms p95. These figures apply only to this fixed set.
+The page defaults to **Priority review**, a 13-frame queue made from the original seven subjective drafts plus `charge-002/005/008/013/016/018`. The other seven frames remain unreviewed agent-rule drafts. Green boxes are agent-drafted targets; purple dashed boxes are model output and are hidden by default; blue regions are the current placement choice, prefilled from the agent draft and dashed until confirmation. The four-step review is: (1) verify every green protected target, (2) select every safe upper corner or defer, (3) explain the decision or target adjustment, and (4) confirm and export. Answers stay in that browser's `localStorage`; undo is supported. Exported review JSON is not uploaded and does not modify `manifest.json`; a maintainer must validate and commit it separately. Confirmation does not train the model automatically.
+
+The main site's **Decision** view links directly to `/regression`. The S2 player and placement scorer both use a 0.30×0.30 creative footprint on a 16:9 stage. `filterUnsupportedCropSubjects` suppresses only low-confidence crop-only `人物主体` candidates without a face center inside the box. Direct detections, strong crop detections, animal candidates and faceless character candidates remain. A back-facing low-confidence person may still be removed, so a dedicated holdout set is required before generalizing this heuristic. Detection is fail-closed: both face and object detectors must initialize and run; if either one is unavailable, the whole frame is unavailable, no placement is emitted and a blocking sample counts as a miss.
+
+The historical pre-tuning result is 6/13 (46.2%) safe-placement agreement, 4/13 (30.8%) unsafe placement and 3/13 (23.1%) over-deferral, with 16.0% precision, 36.4% recall, 22.2% F1 and 318/335 ms p50/p95. The deployment-pending v0.4.0 candidate at `evaluation/s2/candidates/v0.4.0.json` completed 20/20 available frames and measures 7/13 (53.8%) safe placement, 3/13 (23.1%) unsafe placement, 3/13 (23.1%) over-deferral, TP 5 / FP 16 / FN 6, 23.8% precision, 45.5% recall, 31.3% F1 and 277/307 ms p50/p95. Target P/R/F1 is exploratory, class-agnostic raw-box matching at IoU ≥ 0.25, not calibrated semantic accuracy. It fixes `charge-012`; remaining over-deferrals are `charge-002/008/016`, while unsafe placements are `charge-005/013/018`. Do not continue tuning the disputed `charge-002/005/008/013/018` placement drafts until their labels are reviewed. These figures apply only to this fixed set. Public v0.4.0 deployment remains pending; the live site is still v0.3.0.
 
 Ordinary CI deliberately replays the tracked raw predictions instead of running fresh MediaPipe inference. The current WASM runtime is fetched from jsDelivr, so making it a blocking network-dependent CI step would create false failures. Stage 1C will vendor the runtime and add a separate browser benchmark job.
 
@@ -185,7 +190,8 @@ pnpm analyze:video \
 
 - `packages/decision-engine/src/engine.test.ts` 覆盖硬规则、排序和审计理由。
 - `app/lib/pause-decision.test.ts` 覆盖 S2 空间位置规则。
-- `app/lib/pause-regression.test.ts` 验证阶段 1A 固定帧合同，并使用原始预测重算已保存基线。该基线由 v0.3.0 harness 提交 `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` 运行，检测配置行为参考 v0.2.7 提交 `bdf66d1db7511f97feba49713f9995ea6ef13711`；旧提交本身并未运行新 harness。
+- `app/lib/face-detector.test.ts` 覆盖严格限定的低置信裁剪人物抑制边界，并确认直接检测、强裁剪与动物候选仍会保留；实现中的标签守卫也会保留无脸角色候选。
+- `app/lib/pause-regression.test.ts` 验证阶段 1A 固定帧合同，并使用原始预测重算历史基线与阶段 1B 候选。历史基线由 v0.3.0 harness 提交 `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` 运行，检测配置行为参考 v0.2.7 提交 `bdf66d1db7511f97feba49713f9995ea6ef13711`；旧提交本身并未运行新 harness。最终 v0.4.0 浏览器产物使用 `s2-vision-v4`，运行器/配置提交均为 `e0a033194ea04a9c926a822e4330355f41ddd152`，`generatedAt` 为 `2026-08-22T03:42:41.155Z`。
 - `packages/video-analyzer/src/*.test.ts` 覆盖服务商标准化和多次运行共识。
 - `services/api/src/app.test.ts` 验证 Fastify 适配器。
 - `tests/rendered-html.test.mjs` 验证生产渲染结果。
@@ -194,9 +200,13 @@ pnpm analyze:video \
 
 ### 运行 S2 浏览器基线
 
-启动 `pnpm dev`，打开 `http://localhost:3000/regression`，选择 **Run fixed set / 运行固定集**。运行器会评估 `evaluation/s2/manifest.json` 记录的 20 张 1280×720 固定图片；绿色框是规则初标保护目标，紫色虚线框是当前预测。全部保护目标和可接受位置均由项目代理依据明确规则起草：13 张规则明确样本锁定为 `rule-confirmed`，7 张主观样本在产品负责人复核前保持诊断状态。浏览器导出的结果只是候选证据；只有清单、模型/配置哈希和双语基线报告一起更新后，才能成为新的正式基线。
+启动 `pnpm dev`，打开 `http://localhost:3000/regression`，选择 **Run fixed set / 运行固定集**。运行器会评估 `evaluation/s2/manifest.json` 记录的 20 张 1280×720 固定图片。所有绿色保护目标与位置标签都是代理初标，不是人工标准答案：13 张规则明确样本以 `rule-confirmed` 身份进入阻断指标，7 张保持诊断状态。浏览器导出的结果只是候选证据；只有清单、模型/配置哈希和双语报告一起更新后，才能成为新的正式基线。
 
-当前固定集结果为：安全位置一致率 `6/13 = 46.2%`，危险误投 `4/13 = 30.8%`，过度顺延 `3/13 = 23.1%`；保护目标精确率 `4/25 = 16.0%`，召回率 `4/11 = 36.4%`，F1 `22.2%`，已记录运行耗时为 P50 `318 ms` / P95 `335 ms`。这些数字仅适用于当前固定集。
+页面默认进入 **Priority review / 优先复核**，共 13 张：原有 7 张主观初标加 `charge-002/005/008/013/016/018`；另外 7 张仍是未人工审核的代理规则初标。绿色框是代理保护目标；紫色虚线框是默认隐藏的模型输出；蓝色区域是当前复核位置选择，由代理初标预填，确认前保持虚线。四步审核为：(1) 检查全部绿色保护目标；(2) 选择所有安全上角，或选择顺延；(3) 说明决定或保护框调整；(4) 确认并导出。答案只保存在当前浏览器 `localStorage`，支持撤销。导出的审核 JSON 不会上传或修改 `manifest.json`，必须由维护者另行校验并提交；确认本身不会自动训练模型。
+
+主站 **Decision / 决策方式** 页面直接链接 `/regression`。S2 播放器与位置评分器统一使用 `0.30 × 0.30` 创意占位，舞台固定为 16:9。`filterUnsupportedCropSubjects` 只抑制框内没有脸部中心佐证的低置信裁剪 `人物主体`；直接检测、强裁剪、动物与无脸角色候选继续保留。背面低置信人物仍可能被移除，因此在泛化该启发式规则前必须建立专门留出集。检测采用 fail-closed：人脸与主体检测器必须都成功初始化并运行；任一不可用时整帧标记为不可用、不输出位置，并将阻断样本计为失败。
+
+调参前历史结果为：安全位置一致率 `6/13 = 46.2%`，危险误投 `4/13 = 30.8%`，过度顺延 `3/13 = 23.1%`，精确率 `16.0%`，召回率 `36.4%`，F1 `22.2%`，P50/P95 `318/335 ms`。待部署的 v0.4.0 候选位于 `evaluation/s2/candidates/v0.4.0.json`，20/20 张均可用，安全位置一致率 `7/13 = 53.8%`，危险误投 `3/13 = 23.1%`，过度顺延 `3/13 = 23.1%`；TP 5 / FP 16 / FN 6，精确率 `23.8%`，召回率 `45.5%`，F1 `31.3%`，P50/P95 `277/307 ms`。目标 P/R/F1 是 IoU ≥ 0.25 的类别无关原始框探索性匹配，不是经过校准的语义准确率。它修复了 `charge-012`；剩余过度顺延是 `charge-002/008/016`，危险误投是 `charge-005/013/018`。`charge-002/005/008/013/018` 的位置初标存在争议，在标签复核前不要继续针对它们调参。这些数字只适用于当前固定集。v0.4.0 公开部署仍待完成，线上站点仍是 v0.3.0。
 
 普通 CI 会重放已保存的原始预测，而不会重新执行 MediaPipe。当前 WASM 运行时仍从 jsDelivr 加载，把它作为强制联网 CI 会制造假失败。阶段 1C 会把运行时固定到仓库并增加独立浏览器基准任务。
 

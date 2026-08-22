@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import baselineJson from "../../evaluation/s2/baselines/v0.2.7.json";
+import candidateJson from "../../evaluation/s2/candidates/v0.4.0.json";
 import manifestJson from "../../evaluation/s2/manifest.json";
 import { PAUSE_VISION_CONFIG } from "./face-detector";
 import { choosePauseAdPlacement } from "./pause-decision";
@@ -11,6 +12,7 @@ import { intersectionOverUnion, scoreVisionRegression, validateRegressionManifes
 
 const manifest = manifestJson as RegressionManifest;
 const baseline = baselineJson as unknown as RegressionReport;
+const candidate = candidateJson as unknown as RegressionReport;
 const provenanceFixture: RegressionProvenance = {
   runner: { appVersion: "test", gitCommit: "fixture", platform: "vitest" },
   configurationReference: { appVersion: "0.2.7", gitCommit: "bdf66d1db7511f97feba49713f9995ea6ef13711" },
@@ -80,6 +82,53 @@ describe("S2 fixed-frame regression scorer", () => {
     });
     expect(recomputed.metrics).toEqual(baseline.metrics);
     expect(recomputed.failures).toEqual(baseline.failures);
+  });
+
+  it("recomputes the tracked v0.4.0 candidate and records a safer fixed-set result", () => {
+    expect(validateRegressionPredictions(manifest, candidate.predictions)).toEqual([]);
+    const recomputed = scoreVisionRegression(manifest, candidate.predictions, {
+      generatedAt: candidate.generatedAt,
+      provenance: candidate.provenance,
+    });
+    expect(recomputed.metrics).toEqual(candidate.metrics);
+    expect(recomputed.failures).toEqual(candidate.failures);
+    expect(candidate.provenance.vision).toEqual(PAUSE_VISION_CONFIG);
+    expect(candidate.metrics.unavailableCount).toBe(0);
+    expect(candidate.metrics.availableSampleCount).toBe(candidate.metrics.sampleCount);
+    expect(candidate.metrics.availableBlockingSampleCount).toBe(candidate.metrics.blockingSampleCount);
+    expect(candidate.metrics.safePlacementHits).toBeGreaterThan(baseline.metrics.safePlacementHits);
+    expect(candidate.metrics.unsafePlacementCount).toBeLessThan(baseline.metrics.unsafePlacementCount);
+    expect(candidate.metrics.overDeferralCount).toBeLessThanOrEqual(baseline.metrics.overDeferralCount);
+    const baselineUnsafe = new Set(
+      baseline.failures.filter((failure) => failure.kind === "unsafe-placement").map((failure) => failure.sampleId),
+    );
+    expect(candidate.failures
+      .filter((failure) => failure.kind === "unsafe-placement")
+      .every((failure) => baselineUnsafe.has(failure.sampleId))).toBe(true);
+  });
+
+  it("keeps scorer, review and rendered creative footprints on one geometry contract", () => {
+    const scorerFootprint = manifest.annotationPolicy.scorerCandidateFootprint;
+    expect(manifest.annotationPolicy.renderedCreativeFootprint).toEqual(scorerFootprint);
+    for (const prediction of candidate.predictions) {
+      for (const assessment of prediction.assessments) {
+        expect(assessment.region.width, prediction.sampleId).toBe(scorerFootprint.width);
+        expect(assessment.region.height, prediction.sampleId).toBe(scorerFootprint.height);
+      }
+    }
+  });
+
+  it("replays the v0.4.0 candidate with the current placement policy", () => {
+    const replayed = candidate.predictions.map((prediction) => {
+      const decision = prediction.status === "ready"
+        ? choosePauseAdPlacement(prediction.targets)
+        : { placement: "none" as const, assessments: [] };
+      return { ...prediction, placement: decision.placement, assessments: decision.assessments };
+    });
+    expect(replayed.map((prediction) => prediction.placement))
+      .toEqual(candidate.predictions.map((prediction) => prediction.placement));
+    expect(replayed.map((prediction) => prediction.assessments))
+      .toEqual(candidate.predictions.map((prediction) => prediction.assessments));
   });
 
   it("replays the current placement policy from raw baseline targets", () => {
