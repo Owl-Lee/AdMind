@@ -27,6 +27,7 @@ const REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
   ["个角色主体。", " character subjects."],
   ["本地视觉模型暂不可用", "Local vision model is temporarily unavailable"],
   ["当前帧尚未解码。", "The current frame has not been decoded yet."],
+  ["固定回归帧尚未解码。", "The fixed regression frame has not been decoded yet."],
   ["处于受保护区间；高价保量活动不得越过伦理边界。", " is within a protected interval; a guaranteed high-value campaign cannot override the ethical boundary."],
   ["多次分析一致度", "Cross-run agreement"],
   ["已拒绝", "rejected"],
