@@ -15,15 +15,21 @@ import {
 const manifest = manifestJson as RegressionManifest;
 
 describe("S2 product review workspace", () => {
-  it("creates a seven-sample queue from the agent drafts", () => {
+  it("creates a priority queue from pending and visually disputed agent drafts", () => {
     const workspace = createReviewWorkspace(manifest);
     expect(Object.keys(workspace.items)).toEqual([
+      "charge-002",
       "charge-003",
+      "charge-005",
+      "charge-008",
       "charge-009",
       "charge-010",
       "charge-011",
+      "charge-013",
       "charge-014",
       "charge-015",
+      "charge-016",
+      "charge-018",
       "charge-019",
     ]);
     expect(workspace.items["charge-003"].action).toBe("defer");
@@ -69,6 +75,9 @@ describe("S2 product review workspace", () => {
     };
     expect(restoreReviewWorkspace(manifest, workspace).items["charge-003"].note).toBe("Reviewed locally.");
     expect(restoreReviewWorkspace(manifest, { ...workspace, datasetId: "stale" }).items["charge-003"].note).toBe("");
+    const staleDraft = structuredClone(workspace);
+    staleDraft.items["charge-003"].draftSignature = "stale-agent-draft";
+    expect(restoreReviewWorkspace(manifest, staleDraft).items["charge-003"].note).toBe("");
   });
 
   it("exports confirmed reviews separately without changing the manifest contract", () => {
@@ -93,7 +102,9 @@ describe("S2 product review workspace", () => {
       placementChangedFromAgentDraft: false,
       productReview: { targetAssessment: "correct", action: "show-card", acceptablePlacements: ["top-right"] },
     });
-    expect(exported.pendingSampleIds).toHaveLength(6);
+    expect(exported.pendingSampleIds).toHaveLength(12);
+    expect(exported.reviews[0].agentDraft.manifestReviewStatus).toBe("needs-user-review");
+    expect(exported.reviews[0].agentDraft.draftSignature).toBe(workspace.items[sampleId].draftSignature);
     expect(exported.reviews[0]).not.toHaveProperty("protectionTargets");
     expect(manifest.samples.find((sample) => sample.id === sampleId)?.reviewStatus).toBe("needs-user-review");
   });

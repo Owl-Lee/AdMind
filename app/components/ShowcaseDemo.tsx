@@ -227,6 +227,11 @@ function DecisionMethod({ analysisRuns, consensus }: { analysisRuns: VideoAnalys
           <article><span>决策引擎</span><strong>TypeScript 规则层</strong><p>把 AI 结果转换成候选窗口，再按边界逐项筛选。</p></article>
           <article><span>验证方式</span><strong>重复分析 + 自动测试</strong><p>比较多次 API 结果，并检查最终计划是否完整可执行。</p></article>
         </div>
+        <a className="method-lab-link" href="/regression">
+          <span>S2 视觉回归实验室</span>
+          <strong>查看固定帧评估、模型输出与人工复核流程</strong>
+          <b aria-hidden="true">→</b>
+        </a>
       </section>
     </section>
   );
@@ -690,6 +695,9 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   };
 
   const placementClass = placementDecision.placement === "none" ? "" : `placement-${placementDecision.placement}`;
+  const placementRegion = placementDecision.placement === "none"
+    ? undefined
+    : placementDecision.assessments.find((assessment) => assessment.placement === placementDecision.placement)?.region;
   const showPauseEvidence = isPauseScenario && strategy === "admind";
   const showAdMindEvidence = strategy === "admind";
   const pauseAdFullscreen = isPauseScenario && strategy === "admind" && pauseSeconds >= 8;
@@ -842,6 +850,16 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
             <div
               className={`${fullscreenAd ? "ad-overlay fullscreen real-ad" : "ad-overlay card real-ad-card"} ${isPauseScenario && strategy === "admind" && !pauseAdFullscreen ? placementClass : ""} ${pauseAdFullscreen ? "pause-fullscreen" : ""}`}
               data-ad-state="visible"
+              style={isPauseScenario && strategy === "admind" && !pauseAdFullscreen && placementRegion
+                ? {
+                    bottom: "auto",
+                    height: `${placementRegion.height * 100}%`,
+                    left: `${placementRegion.x * 100}%`,
+                    right: "auto",
+                    top: `${placementRegion.y * 100}%`,
+                    width: `${placementRegion.width * 100}%`,
+                  }
+                : undefined}
             >
               <AdCreative
                 fullscreen={fullscreenAd}

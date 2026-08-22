@@ -31,6 +31,7 @@ describe("filterUnsupportedCropSubjects", () => {
   it("retains direct detections and strong crop detections without a face", () => {
     const direct = { ...weakCropSubject, source: "subject-direct" };
     const strongCrop = { ...weakCropSubject, confidence: 0.48 };
-    expect(filterUnsupportedCropSubjects([direct, strongCrop], [])).toEqual([direct, strongCrop]);
+    const facelessAnimal = { ...weakCropSubject, label: "动物主体" };
+    expect(filterUnsupportedCropSubjects([direct, strongCrop, facelessAnimal], [])).toEqual([direct, strongCrop, facelessAnimal]);
   });
 });

@@ -216,6 +216,8 @@ const REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
   ["验证方式", "Validation"],
   ["TypeScript 规则层", "TypeScript rules layer"],
   ["重复分析 + 自动测试", "Repeated analysis + automated tests"],
+  ["S2 视觉回归实验室", "S2 VISION REGRESSION LAB"],
+  ["查看固定帧评估、模型输出与人工复核流程", "Inspect fixed-frame evaluation, model output, and the product-review workflow"],
   ["内容信号已更新", "Content signal updated"],
   ["安全窗口", "Safe window"],
   ["模型观察", "Model observation"],

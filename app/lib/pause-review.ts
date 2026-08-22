@@ -7,6 +7,7 @@ export type ReviewAction = "show-card" | "defer";
 export type ReviewWorkspaceItem = {
   sampleId: string;
   frameSha256: string;
+  draftSignature: string;
   targetAssessment: ReviewTargetAssessment | null;
   action: ReviewAction;
   acceptablePlacements: ReviewPlacement[];
@@ -15,8 +16,9 @@ export type ReviewWorkspaceItem = {
 };
 
 export type ReviewWorkspace = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   datasetId: string;
+  manifestCreatedAt: string;
   sourceAssetSha256: string;
   items: Record<string, ReviewWorkspaceItem>;
 };
@@ -27,6 +29,8 @@ export type ConfirmedReviewRecord = {
   scope: "placement-and-target-draft-review";
   agentDraft: {
     targetStatus: "agent-draft";
+    manifestReviewStatus: RegressionSample["reviewStatus"];
+    draftSignature: string;
     action: ReviewAction;
     acceptablePlacements: ReviewPlacement[];
   };
@@ -66,9 +70,19 @@ export type S2ReviewExport = {
 };
 
 const REVIEW_PLACEMENTS = new Set<ReviewPlacement>(["top-left", "top-right"]);
+const FLAGGED_AGENT_DRAFTS = new Set([
+  "charge-002",
+  "charge-005",
+  "charge-008",
+  "charge-013",
+  "charge-016",
+  "charge-018",
+]);
 
-function reviewableSamples(manifest: RegressionManifest) {
-  return manifest.samples.filter((sample) => sample.reviewStatus === "needs-user-review");
+export function reviewableSamples(manifest: RegressionManifest) {
+  return manifest.samples.filter(
+    (sample) => sample.reviewStatus === "needs-user-review" || FLAGGED_AGENT_DRAFTS.has(sample.id),
+  );
 }
 
 function draftPlacements(sample: RegressionSample): ReviewPlacement[] {
@@ -77,10 +91,21 @@ function draftPlacements(sample: RegressionSample): ReviewPlacement[] {
   );
 }
 
+function draftSignature(sample: RegressionSample) {
+  return JSON.stringify({
+    acceptablePlacements: sample.acceptablePlacements,
+    expectedAction: sample.expectedAction,
+    frameSha256: sample.frameSha256,
+    protectionTargets: sample.protectionTargets,
+    reviewStatus: sample.reviewStatus,
+  });
+}
+
 function createItem(sample: RegressionSample): ReviewWorkspaceItem {
   return {
     sampleId: sample.id,
     frameSha256: sample.frameSha256,
+    draftSignature: draftSignature(sample),
     targetAssessment: null,
     action: sample.expectedAction,
     acceptablePlacements: sample.expectedAction === "show-card" ? draftPlacements(sample) : [],
@@ -91,8 +116,9 @@ function createItem(sample: RegressionSample): ReviewWorkspaceItem {
 
 export function createReviewWorkspace(manifest: RegressionManifest): ReviewWorkspace {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     datasetId: manifest.datasetId,
+    manifestCreatedAt: manifest.createdAt,
     sourceAssetSha256: manifest.source.sha256,
     items: Object.fromEntries(reviewableSamples(manifest).map((sample) => [sample.id, createItem(sample)])),
   };
@@ -103,7 +129,10 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 function restoreItem(fallback: ReviewWorkspaceItem, value: unknown): ReviewWorkspaceItem {
-  if (!isObject(value) || value.sampleId !== fallback.sampleId || value.frameSha256 !== fallback.frameSha256) {
+  if (!isObject(value)
+    || value.sampleId !== fallback.sampleId
+    || value.frameSha256 !== fallback.frameSha256
+    || value.draftSignature !== fallback.draftSignature) {
     return fallback;
   }
   const action = value.action === "defer" || value.action === "show-card" ? value.action : fallback.action;
@@ -131,8 +160,9 @@ function restoreItem(fallback: ReviewWorkspaceItem, value: unknown): ReviewWorks
 export function restoreReviewWorkspace(manifest: RegressionManifest, value: unknown): ReviewWorkspace {
   const fallback = createReviewWorkspace(manifest);
   if (!isObject(value)
-    || value.schemaVersion !== 1
+    || value.schemaVersion !== 2
     || value.datasetId !== fallback.datasetId
+    || value.manifestCreatedAt !== fallback.manifestCreatedAt
     || value.sourceAssetSha256 !== fallback.sourceAssetSha256
     || !isObject(value.items)) {
     return fallback;
@@ -187,6 +217,8 @@ export function revokeReview(item: ReviewWorkspaceItem): ReviewWorkspaceItem {
 function agentDraft(sample: RegressionSample) {
   return {
     targetStatus: "agent-draft" as const,
+    manifestReviewStatus: sample.reviewStatus,
+    draftSignature: draftSignature(sample),
     action: sample.expectedAction,
     acceptablePlacements: sample.expectedAction === "show-card" ? draftPlacements(sample) : [],
   };
@@ -252,7 +284,7 @@ export function buildReviewExport(
 }
 
 export function reviewStorageKey(manifest: RegressionManifest) {
-  return `admind:s2-review:${manifest.datasetId}:v1`;
+  return `admind:s2-review:${manifest.datasetId}:v2`;
 }
 
 export function reviewExportFilename(manifest: RegressionManifest, generatedAt: string) {

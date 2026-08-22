@@ -40,6 +40,7 @@
 .metrics span { color: #777288; font-size: 11px; font-weight: 800; }
 .metrics strong { color: #292543; font-size: 25px; }
 .metrics small { color: #8b879a; font-size: 11px; }
+.runStatus { width: min(1180px,100%); margin: -15px auto 20px; color: #695f8a; font-size: 12px; font-weight: 800; text-align: center; }
 
 .reviewPanel { display: flex; align-items: center; justify-content: space-between; gap: 28px; width: min(1180px,100%); margin: 0 auto 20px; padding: 24px 26px; border: 1px solid #d9d5f1; border-radius: 20px; background: linear-gradient(135deg,rgba(255,255,255,.98),rgba(241,239,255,.94)); box-shadow: 0 18px 48px rgba(47,42,91,.08); }
 .reviewPanel > div:first-child { display: grid; gap: 7px; max-width: 780px; }
@@ -52,10 +53,16 @@
 .reviewExport button:disabled { cursor: not-allowed; opacity: .45; }
 .reviewExport output { max-width: 240px; color: #17654e; font-size: 11px; font-weight: 800; text-align: center; }
 
+.reviewGuide { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(260px,.5fr); gap: 28px; width: min(1180px,100%); margin: 0 auto 20px; padding: 22px 26px; border: 1px solid #dedbec; border-radius: 20px; background: rgba(255,255,255,.88); }
+.reviewGuide h2 { margin: 0 0 12px; color: #302b4c; font-size: 18px; }
+.reviewGuide ol { display: grid; gap: 7px; margin: 0; padding-left: 20px; color: #59556b; font-size: 13px; line-height: 1.55; }
+.reviewGuide p { align-self: stretch; margin: 0; padding: 16px; border-radius: 14px; color: #4c466a; background: #f0eeff; font-size: 13px; font-weight: 720; line-height: 1.58; }
+
 .inspectionTools { display: flex; align-items: center; justify-content: space-between; gap: 18px; width: min(1180px,100%); margin: 0 auto 12px; }
 .legend { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; color: #666178; font-size: 11px; }
 .legend > strong { color: #38334f; font-size: 12px; }
 .legend > span { display: inline-flex; align-items: center; gap: 7px; }
+.legend > small { flex-basis: 100%; color: #80543c; font-size: 12px; font-weight: 700; line-height: 1.5; }
 .legend i { display: inline-block; width: 22px; height: 14px; border-radius: 4px; }
 .legendDraft { border: 2px solid #42ba91; background: rgba(85,220,172,.1); }
 .legendModel { border: 2px dashed #7b62ef; background: rgba(139,115,255,.1); }
@@ -78,7 +85,8 @@
 .frame i { position: absolute; display: block; pointer-events: none; }
 .groundTruth { z-index: 2; border: 2px solid #55dcac; background: rgba(85,220,172,.08); }
 .prediction { z-index: 3; border: 2px dashed #8b73ff; background: rgba(139,115,255,.08); }
-.reviewPlacement { z-index: 1; border: 2px solid #2f82d7; border-radius: 8px; background: rgba(47,130,215,.16); box-shadow: inset 0 0 0 1px rgba(255,255,255,.42); }
+.reviewPlacement { z-index: 1; border: 2px dashed #2f82d7; border-radius: 8px; background: rgba(47,130,215,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.42); }
+.reviewedCard .reviewPlacement { border-style: solid; background: rgba(47,130,215,.2); }
 .cardBody { position: relative; padding: 17px 18px 19px; }
 .cardTitle { display: flex; justify-content: space-between; gap: 12px; }
 .cardTitle strong { font-size: 15px; }
@@ -95,12 +103,12 @@
 
 .reviewForm { display: grid; gap: 14px; margin: 16px -18px -19px; padding: 18px; border-top: 1px solid #ebe8f5; background: #fbfaff; }
 .reviewForm fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
-.reviewForm legend,.reviewNote > span { display: block; margin-bottom: 8px; color: #45405d; font-size: 11px; font-weight: 900; }
+.reviewForm legend,.reviewNote > span { display: block; margin-bottom: 8px; color: #45405d; font-size: 13px; font-weight: 900; }
 .reviewChoices { display: flex; flex-wrap: wrap; gap: 7px; }
-.reviewChoices button { padding: 8px 10px; border: 1px solid #ddd9ec; border-radius: 10px; color: #625d73; background: white; font-size: 11px; font-weight: 800; cursor: pointer; }
+.reviewChoices button { padding: 9px 11px; border: 1px solid #ddd9ec; border-radius: 10px; color: #625d73; background: white; font-size: 13px; font-weight: 800; cursor: pointer; }
 .reviewChoices button[aria-pressed="true"] { border-color: #6d60dc; color: #443aa5; background: #eeebff; box-shadow: 0 5px 14px rgba(82,70,188,.1); }
 .reviewChoices button:disabled { cursor: default; opacity: .72; }
-.reviewNote textarea { box-sizing: border-box; width: 100%; resize: vertical; padding: 10px 11px; border: 1px solid #dcd8eb; border-radius: 11px; color: #322e49; background: white; font: inherit; font-size: 12px; line-height: 1.5; }
+.reviewNote textarea { box-sizing: border-box; width: 100%; resize: vertical; padding: 10px 11px; border: 1px solid #dcd8eb; border-radius: 11px; color: #322e49; background: white; font: inherit; font-size: 13px; line-height: 1.5; }
 .reviewNote textarea:focus { outline: 3px solid rgba(109,96,220,.15); border-color: #786be1; }
 .reviewNote textarea:disabled { color: #625e73; background: #f0eef7; }
 .reviewActions { display: flex; align-items: center; gap: 10px; }
@@ -112,6 +120,7 @@
 @media (max-width: 980px) {
   .metrics { grid-template-columns: repeat(3,1fr); }
   .reviewPanel { align-items: flex-start; }
+  .reviewGuide { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {

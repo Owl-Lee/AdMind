@@ -44,6 +44,8 @@ test("server-renders separate showcase and decision-method views", async () => {
   assert.match(html, /约束信号/);
   assert.match(html, /TwelveLabs API/);
   assert.match(html, /React \+ TypeScript/);
+  assert.match(html, /href="\/regression"/);
+  assert.match(html, /S2 视觉回归实验室/);
   assert.doesNotMatch(html, /180 CPM/);
   assert.doesNotMatch(html, />BLOCK</);
   assert.doesNotMatch(html, /决策后台/);
@@ -69,6 +71,8 @@ test("server-renders the bilingual S2 regression lab", async () => {
   assert.match(html, /S2 Vision Regression Lab/);
   assert.match(html, /Language \/ 语言/);
   assert.match(html, /Run fixed set/);
-  assert.match(html, /charge-001/);
-  assert.match(html, /charge-020/);
+  assert.match(html, /charge-002/);
+  assert.match(html, /charge-019/);
+  assert.match(html, /Priority review 13/);
+  assert.match(html, /not human ground truth/);
 });

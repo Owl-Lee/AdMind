@@ -130,6 +130,10 @@ export type RegressionProvenance = {
       faceCrop: number;
       subjectPrimary: number;
       subjectCrop: number;
+      subjectCropStandalone?: number;
+    };
+    filters?: {
+      weakCropRequiresFaceForLabels: readonly string[];
     };
   };
 };

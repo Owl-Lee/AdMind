@@ -35,7 +35,7 @@ const FACE_MODEL_PATH = "/models/blaze_face_full_range.tflite";
 const OBJECT_MODEL_PATH = "/models/efficientdet_lite0.tflite";
 
 export const PAUSE_VISION_CONFIG = {
-  configVersion: "s2-vision-v2",
+  configVersion: "s2-vision-v3",
   mediapipeTasksVision: MEDIAPIPE_TASKS_VISION_VERSION,
   wasmRoot: MEDIAPIPE_WASM_ROOT,
   faceModel: {
@@ -54,7 +54,12 @@ export const PAUSE_VISION_CONFIG = {
     subjectCrop: CROP_SUBJECT_MIN_CONFIDENCE,
     subjectCropStandalone: CROP_SUBJECT_STANDALONE_MIN_CONFIDENCE,
   },
+  filters: {
+    weakCropRequiresFaceForLabels: ["人物主体"],
+  },
 } as const;
+
+const WEAK_CROP_FACE_LABELS = new Set<string>(PAUSE_VISION_CONFIG.filters.weakCropRequiresFaceForLabels);
 
 type SourceRegion = {
   x: number;
@@ -326,7 +331,8 @@ function containsFaceCenter(subject: NormalizedRect, face: NormalizedRect, paddi
 export function filterUnsupportedCropSubjects(subjects: DetectedSubject[], faces: DetectedFace[]) {
   return subjects.filter((subject) => {
     const isWeakCropCandidate = subject.source.startsWith("subject-crop-")
-      && subject.confidence < CROP_SUBJECT_STANDALONE_MIN_CONFIDENCE;
+      && subject.confidence < CROP_SUBJECT_STANDALONE_MIN_CONFIDENCE
+      && WEAK_CROP_FACE_LABELS.has(subject.label);
     if (!isWeakCropCandidate) return true;
     return faces.some((face) => containsFaceCenter(subject, face));
   });

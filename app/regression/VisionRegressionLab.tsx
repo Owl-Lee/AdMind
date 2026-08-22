@@ -19,6 +19,7 @@ import {
   createReviewWorkspace,
   restoreReviewWorkspace,
   reviewExportFilename,
+  reviewableSamples,
   reviewStorageKey,
   revokeReview,
   toggleReviewPlacement,
@@ -28,7 +29,7 @@ import styles from "./VisionRegressionLab.module.css";
 
 const manifest = manifestJson as RegressionManifest;
 const APP_VERSION = "0.4.0";
-const reviewableSamples = manifest.samples.filter((sample) => sample.reviewStatus === "needs-user-review");
+const priorityReviewSamples = reviewableSamples(manifest);
 type SampleFilter = "all" | "needs-review" | "unsafe";
 
 declare global {
@@ -57,7 +58,7 @@ export function VisionRegressionLab() {
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [report, setReport] = useState<RegressionReport | null>(null);
-  const [sampleFilter, setSampleFilter] = useState<SampleFilter>("all");
+  const [sampleFilter, setSampleFilter] = useState<SampleFilter>("needs-review");
   const [showModelOutput, setShowModelOutput] = useState(false);
   const [reviewWorkspace, setReviewWorkspace] = useState(() => createReviewWorkspace(manifest));
   const [reviewReady, setReviewReady] = useState(false);
@@ -79,7 +80,7 @@ export function VisionRegressionLab() {
   );
 
   const visibleSamples = useMemo(() => {
-    if (sampleFilter === "needs-review") return reviewableSamples;
+    if (sampleFilter === "needs-review") return priorityReviewSamples;
     if (sampleFilter === "unsafe") return manifest.samples.filter((sample) => unsafeSampleIds.has(sample.id));
     return manifest.samples;
   }, [sampleFilter, unsafeSampleIds]);
@@ -189,14 +190,22 @@ export function VisionRegressionLab() {
 
   useEffect(() => {
     if (!reviewReady) return;
-    window.localStorage.setItem(reviewStorageKey(manifest), JSON.stringify(reviewWorkspace));
+    try {
+      window.localStorage.setItem(reviewStorageKey(manifest), JSON.stringify(reviewWorkspace));
+    } catch {
+      // The lab remains usable when browser privacy settings disable local storage.
+    }
   }, [reviewReady, reviewWorkspace]);
 
   useEffect(() => {
     if (!localeReady) return;
     document.documentElement.lang = locale === "zh" ? "zh-CN" : "en";
     document.title = locale === "zh" ? "AdMind · S2 视觉回归实验室" : "AdMind · S2 Vision Regression Lab";
-    window.localStorage.setItem("admind-locale", locale);
+    try {
+      window.localStorage.setItem("admind-locale", locale);
+    } catch {
+      // Language switching still works for this session without local storage.
+    }
   }, [locale, localeReady]);
 
   const exportReport = () => {
@@ -248,11 +257,11 @@ export function VisionRegressionLab() {
         caveat: "This is regression-set agreement, not a claim of general model accuracy.",
         run: running ? `Running ${progress}/${manifest.samples.length}` : report ? "Run again" : "Run fixed set",
         exportReport: "Export run JSON",
-        confirmed: "Rule-locked draft",
-        diagnostic: "Needs review",
+        confirmed: "blocking agent drafts",
+        diagnostic: "diagnostic drafts",
         result: "Model result",
         agentDraft: "Agent draft",
-        ruleDraft: "Rule draft",
+        ruleDraft: "Agent rule draft",
         fixedSamples: "Fixed samples",
         safeAgreement: "Safe-placement agreement",
         unsafePlacement: "Unsafe placement",
@@ -269,23 +278,34 @@ export function VisionRegressionLab() {
         missed: "FN",
         falsePositive: "FP",
         reviewTitle: "Product review queue",
-        reviewProgress: `${confirmedReviewCount}/${reviewableSamples.length} confirmed locally`,
+        reviewProgress: `${confirmedReviewCount}/${priorityReviewSamples.length} priority samples confirmed locally`,
+        reviewScope: "13 priority samples = 7 original subjective drafts + 6 rule drafts flagged during visual audit.",
         localOnly: "Review choices are saved only in this browser. Nothing is uploaded or written to the repository.",
-        baselineNotice: "Exported review JSON must be validated and committed separately before it can affect the manifest or baseline.",
-        exportReview: `Export review JSON (${confirmedReviewCount}/${reviewableSamples.length})`,
+        baselineNotice: "All green regions and all blocking labels are agent-authored drafts, not human ground truth. Exported review JSON must be validated and committed separately before it can affect the manifest or baseline.",
+        exportReview: `${confirmedReviewCount === priorityReviewSamples.length ? "Export complete" : "Export partial"} review JSON (${confirmedReviewCount}/${priorityReviewSamples.length})`,
         downloaded: "Downloaded locally. Nothing was uploaded.",
+        currentRun: report ? "Current browser candidate run · not saved as the accepted baseline" : "Run the fixed set to create a browser-local candidate result",
         filterLabel: "Filter samples",
         filterAll: `All ${manifest.samples.length}`,
-        filterReview: `Needs review ${reviewableSamples.length}`,
+        filterReview: `Priority review ${priorityReviewSamples.length}`,
         filterUnsafe: report ? `Unsafe placement ${unsafeSampleIds.size}` : "Unsafe placement · run first",
         legendTitle: "Overlay legend",
         legendDraft: "Agent-drafted target reference",
         legendModel: "Current model output",
-        legendChoice: "Your selected ad footprint",
+        legendChoice: "Review choice · prefilled from the agent draft until confirmed",
         showModel: "Show model boxes",
         hideModel: "Hide model boxes",
         modelHidden: "hidden",
-        targetStep: "1 · Check the green draft target",
+        anchoringNote: "Review green targets and blue placement choices first. Reveal purple model boxes afterward to avoid anchoring your answer to the model.",
+        guideTitle: "How to confirm a frame",
+        guideSteps: [
+          "Check whether green regions cover every face, hand, key object, and narrative subject that the ad must not cover.",
+          "Select every safe upper corner. If neither corner is safe, choose defer.",
+          "If a green region needs adjustment, describe the direction or missing subject in the note.",
+          "Confirm, export JSON, then let the maintainer validate and commit it before recalculating the baseline.",
+        ],
+        trainingNote: "Confirmation does not train the model by itself. It creates trustworthy labels used to diagnose misses, false positives, and unsafe placements, then verify general rule changes against regression and holdout sets.",
+        targetStep: "1 · Check the green agent-draft target",
         targetCorrect: "Target is correct",
         targetAdjust: "Target needs adjustment",
         placementStep: "2 · Choose every acceptable outcome",
@@ -296,7 +316,8 @@ export function VisionRegressionLab() {
         confirmReview: "Confirm decision",
         revokeReview: "Undo confirmation",
         confirmedLocally: "Confirmed locally · pending export",
-        awaitingReview: "Pending product review",
+        awaitingReview: "Priority product review",
+        agentRuleOnly: "Agent rule draft · not human-reviewed",
         incompleteReview: "Complete all three steps to confirm.",
         noSamples: "No samples match this filter.",
       }
@@ -307,11 +328,11 @@ export function VisionRegressionLab() {
         caveat: "这里报告的是固定回归集一致率，不代表模型的通用准确率。",
         run: running ? `运行中 ${progress}/${manifest.samples.length}` : report ? "重新运行" : "运行固定集",
         exportReport: "导出运行 JSON",
-        confirmed: "规则明确初标",
-        diagnostic: "待产品复核",
+        confirmed: "阻断统计初标",
+        diagnostic: "诊断初标",
         result: "模型结果",
         agentDraft: "代理初标",
-        ruleDraft: "规则初标",
+        ruleDraft: "代理规则初标",
         fixedSamples: "固定样本",
         safeAgreement: "安全位置一致率",
         unsafePlacement: "危险位置误投",
@@ -328,23 +349,34 @@ export function VisionRegressionLab() {
         missed: "漏检",
         falsePositive: "误检",
         reviewTitle: "产品负责人复核队列",
-        reviewProgress: `已在本地确认 ${confirmedReviewCount}/${reviewableSamples.length}`,
+        reviewProgress: `优先样本已在本地确认 ${confirmedReviewCount}/${priorityReviewSamples.length}`,
+        reviewScope: "13 张优先样本 = 原有 7 张主观初标 + 视觉审计新发现的 6 张争议规则初标。",
         localOnly: "审核选择只保存在当前浏览器，不会上传，也不会写入仓库。",
-        baselineNotice: "导出的审核 JSON 必须另行校验并提交，之后才可能影响 manifest 或基线。",
-        exportReview: `导出审核 JSON（${confirmedReviewCount}/${reviewableSamples.length}）`,
+        baselineNotice: "全部绿色区域和阻断标签都是代理起草的初标，不是人工标准答案。导出的审核 JSON 必须另行校验并提交，之后才可能影响 manifest 或基线。",
+        exportReview: `${confirmedReviewCount === priorityReviewSamples.length ? "导出完整" : "导出部分"}审核 JSON（${confirmedReviewCount}/${priorityReviewSamples.length}）`,
         downloaded: "已下载到本地，没有上传任何内容。",
+        currentRun: report ? "当前浏览器候选运行 · 尚未写入已接受基线" : "运行固定集后，会生成仅存在当前浏览器的候选结果",
         filterLabel: "筛选样本",
         filterAll: `全部 ${manifest.samples.length}`,
-        filterReview: `待复核 ${reviewableSamples.length}`,
+        filterReview: `优先复核 ${priorityReviewSamples.length}`,
         filterUnsafe: report ? `危险误投 ${unsafeSampleIds.size}` : "危险误投 · 请先运行",
         legendTitle: "框线图例",
         legendDraft: "代理起草的保护目标参考",
         legendModel: "当前模型输出",
-        legendChoice: "你选择的广告实际占位",
+        legendChoice: "当前复核选择 · 确认前由代理初标预填",
         showModel: "显示模型框",
         hideModel: "隐藏模型框",
         modelHidden: "已隐藏",
-        targetStep: "1 · 检查绿色初标保护框",
+        anchoringNote: "请先盲审绿色保护框和蓝色位置选择，之后再显示紫色模型框，避免模型结果锚定你的判断。",
+        guideTitle: "人工确认怎么做",
+        guideSteps: [
+          "检查绿色区域是否覆盖所有不应被广告遮挡的脸、手、关键物体和叙事主体。",
+          "勾选所有安全的上方角落；两个角落都不安全就选择顺延。",
+          "如果绿色框需要调整，在备注里写清方向或遗漏的主体。",
+          "确认并导出 JSON；维护者校验并提交后，才会重新计算正式基线。",
+        ],
+        trainingNote: "确认本身不会自动训练模型；它先建立可信标签，再用来定位漏检、误检和危险误投，并通过回归集与留出集验证通用规则改进。",
+        targetStep: "1 · 检查绿色代理初标保护框",
         targetCorrect: "保护框正确",
         targetAdjust: "保护框需要调整",
         placementStep: "2 · 选择全部可接受结果",
@@ -355,7 +387,8 @@ export function VisionRegressionLab() {
         confirmReview: "确认决定",
         revokeReview: "撤销确认",
         confirmedLocally: "已在本地确认 · 等待导出",
-        awaitingReview: "等待产品负责人复核",
+        awaitingReview: "优先等待产品负责人复核",
+        agentRuleOnly: "代理规则初标 · 尚未人工审核",
         incompleteReview: "完成三个步骤后才能确认。",
         noSamples: "没有符合当前筛选条件的样本。",
       };
@@ -404,11 +437,13 @@ export function VisionRegressionLab() {
         <article><span>{copy.targetPrecision}</span><strong>{report ? asPercent(report.metrics.targetPrecision) : "—"}</strong><small>{report ? `${report.metrics.targetFalsePositive} ${copy.falsePositive}` : "—"}</small></article>
         <article><span>{copy.inferenceLatency}</span><strong>{report ? `${report.metrics.inferenceP50Ms} ms` : "—"}</strong><small>{report ? `p95 ${report.metrics.inferenceP95Ms} ms` : "—"}</small></article>
       </section>
+      <p className={styles.runStatus}>{copy.currentRun}</p>
 
       <section className={styles.reviewPanel} aria-labelledby="review-heading">
         <div>
           <p>{copy.reviewProgress}</p>
           <h2 id="review-heading">{copy.reviewTitle}</h2>
+          <span>{copy.reviewScope}</span>
           <span>{copy.localOnly}</span>
           <small>{copy.baselineNotice}</small>
         </div>
@@ -418,12 +453,21 @@ export function VisionRegressionLab() {
         </div>
       </section>
 
+      <section className={styles.reviewGuide} aria-labelledby="review-guide-heading">
+        <div>
+          <h2 id="review-guide-heading">{copy.guideTitle}</h2>
+          <ol>{copy.guideSteps.map((step) => <li key={step}>{step}</li>)}</ol>
+        </div>
+        <p>{copy.trainingNote}</p>
+      </section>
+
       <section className={styles.inspectionTools}>
         <div className={styles.legend} aria-label={copy.legendTitle}>
           <strong>{copy.legendTitle}</strong>
           <span><i className={styles.legendDraft} />{copy.legendDraft}</span>
           <span><i className={styles.legendModel} />{copy.legendModel}</span>
           <span><i className={styles.legendChoice} />{copy.legendChoice}</span>
+          <small>{copy.anchoringNote}</small>
         </div>
         <button
           aria-pressed={showModelOutput}
@@ -514,7 +558,7 @@ export function VisionRegressionLab() {
                 <p>{locale === "en" ? sample.note : sample.noteZh}</p>
                 <dl>
                   <div>
-                    <dt>{sample.reviewStatus === "needs-user-review" ? copy.agentDraft : copy.ruleDraft}</dt>
+                    <dt>{reviewItem ? copy.agentDraft : copy.ruleDraft}</dt>
                     <dd>{sample.expectedAction === "defer" ? copy.defer : sample.acceptablePlacements.map(formatPlacement).join(" / ")}</dd>
                   </div>
                   <div>
@@ -522,8 +566,8 @@ export function VisionRegressionLab() {
                     <dd>{showModelOutput ? (prediction ? `${formatPlacement(prediction.placement)} · ${prediction.targets.length} ${copy.targets}` : "—") : copy.modelHidden}</dd>
                   </div>
                 </dl>
-                <span className={sample.reviewStatus === "rule-confirmed" ? styles.confirmed : reviewConfirmed ? styles.reviewed : styles.review}>
-                  {sample.reviewStatus === "rule-confirmed" ? copy.confirmed : reviewConfirmed ? copy.confirmedLocally : copy.awaitingReview}
+                <span className={reviewItem ? (reviewConfirmed ? styles.reviewed : styles.review) : styles.confirmed}>
+                  {reviewItem ? (reviewConfirmed ? copy.confirmedLocally : copy.awaitingReview) : copy.agentRuleOnly}
                 </span>
 
                 {reviewItem ? (
