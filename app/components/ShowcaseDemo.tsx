@@ -112,7 +112,7 @@ function HeroDecisionPreview({ demo }: { demo: ScenarioDemo }) {
           fill
           priority
           sizes="(max-width: 820px) min(100vw - 48px, 490px), 440px"
-          src="/game-ad-clean.png?v=v0.2.7"
+          src="/game-ad-clean.png?v=v0.3.0"
           unoptimized
         />
         <span className="hero-preview-signal"><i /> 广告已展示，任务已完成</span>

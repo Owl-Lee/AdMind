@@ -22,7 +22,7 @@ test("server-renders separate showcase and decision-method views", async () => {
   assert.match(html, /data-locale="en"/i);
   assert.match(html, /aria-label="Language \/ 语言"/i);
   assert.match(html, /广告必须出现/);
-  assert.match(html, /game-ad-clean\.png\?v=v0\.2\.7/);
+  assert.match(html, /game-ad-clean\.png\?v=v0\.3\.0/);
   assert.match(html, /广告已展示，任务已完成/);
   assert.match(html, /传统投放/);
   assert.match(html, /01 · 剧情高点/);
@@ -59,4 +59,16 @@ test("legacy decision-console route redirects into the decision-method view", as
   const response = await render("/console");
   assert.equal(response.status, 307);
   assert.equal(response.headers.get("location"), "/#decision");
+});
+
+test("server-renders the bilingual S2 regression lab", async () => {
+  const response = await render("/regression");
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+  const html = await response.text();
+  assert.match(html, /S2 Vision Regression Lab/);
+  assert.match(html, /Language \/ 语言/);
+  assert.match(html, /Run fixed set/);
+  assert.match(html, /charge-001/);
+  assert.match(html, /charge-020/);
 });

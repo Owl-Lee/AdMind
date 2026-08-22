@@ -13,13 +13,12 @@ AdMind is moving from a stable public portfolio prototype toward a calibrated, e
 - Ethical hard rules can block commercially valuable plans.
 - The project has a repeatable build, tests, CI, public source repository and hosted deployment.
 
-## Phase 1 · Calibrate S2 — next
+## Phase 1 · Calibrate S2 — in progress
 
-- Build a fixed set of 15–20 paused-frame regression samples.
-- Mark protected subjects and acceptable ad regions by hand.
-- Measure false negatives, false positives, position accuracy and reject accuracy.
-- Tune thresholds, box deduplication, minimum size and region risk against the complete set.
-- Convert the agreed behavior into regression tests.
+- **1A complete:** 20 immutable 1280×720 `CHARGE` frames, checksum-backed labels, a bilingual browser runner and the raw pre-tuning baseline are tracked. The project agent drafted the labels from explicit placement rules: 13 rule-clear samples are locked as `rule-confirmed`, while seven subjective frames remain diagnostic until the product owner reviews them.
+- **1A measured:** the v0.3.0 harness at `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` captured detector behavior configured from the v0.2.7 reference at `bdf66d1db7511f97feba49713f9995ea6ef13711`; the older commit did not run the new harness. Across the 13 rule-confirmed frames, safe-placement agreement is 6/13 (46.2%), unsafe placement is 4/13 (30.8%) and over-deferral is 3/13 (23.1%). Protected-target precision is 4/25 (16.0%), recall is 4/11 (36.4%), F1 is 22.2%, and latency is 318 ms p50 / 335 ms p95. These are fixed-set results, not general accuracy.
+- **1B next:** after product-owner review of the seven subjective drafts, tune thresholds, box deduplication, minimum size, actual creative footprint and region risk against the rule-confirmed set without adding unsafe placements.
+- **1C:** vendor the MediaPipe WASM runtime, add a dedicated browser benchmark job and convert the agreed behavior into a stable regression gate.
 
 Exit criterion: S2 results are reported from repeatable samples rather than visual intuition.
 
@@ -77,13 +76,12 @@ AdMind 正从稳定的公开作品集原型，继续走向经过校准、以证�
 - 伦理硬规则能够阻止商业价值较高但不合规的方案。
 - 项目具备可重复构建、测试、CI、公开源码仓库与线上部署。
 
-### 阶段 1 · 校准 S2 — 下一阶段
+### 阶段 1 · 校准 S2 — 进行中
 
-- 建立固定的 15–20 张暂停画面回归样本。
-- 人工标注应保护主体和允许出现广告的区域。
-- 测量漏检、误检、位置命中率和拒投准确率。
-- 根据完整样本调整阈值、检测框去重、最小尺寸和区域风险。
-- 把最终确定的行为固化为回归测试。
+- **1A 已完成：** 已保存 20 张不可变的 1280×720《CHARGE》固定帧、带校验和的规则初标、双语浏览器运行器和调参前原始基线。标准答案由项目代理依据明确位置规则起草：13 张规则明确样本锁定为 `rule-confirmed`，7 张主观样本继续作为诊断项，等待产品负责人复核。
+- **1A 已测量：** v0.3.0 harness 提交 `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` 运行了本次基线，检测配置行为参考 v0.2.7 提交 `bdf66d1db7511f97feba49713f9995ea6ef13711`；旧提交本身并未运行新 harness。13 张 `rule-confirmed` 样本中的安全位置一致率为 `6/13 = 46.2%`，危险位置误投为 `4/13 = 30.8%`，过度顺延为 `3/13 = 23.1%`；保护目标精确率为 `4/25 = 16.0%`，召回率为 `4/11 = 36.4%`，F1 为 `22.2%`，推理耗时为 P50 `318 ms` / P95 `335 ms`。这些属于固定回归集结果，不是通用准确率。
+- **1B 下一步：** 产品负责人先复核 7 张主观初标，再根据 `rule-confirmed` 集调整阈值、检测框去重、最小尺寸、真实广告占位和区域风险，并确保不新增危险误投。
+- **1C：** 把 MediaPipe WASM 固定到本地，增加独立浏览器基准任务，并把最终认可行为固化为稳定回归门。
 
 退出标准：S2 的结果来自可重复样本，而不是对单张截图的主观感觉。
 

@@ -54,7 +54,7 @@ Validated TwelveLabs runs under `analysis/runs/` currently cover:
 - Caminandes: Llamigos;
 - U.S. Coast Guard rescue footage;
 - USNS Comfort medical evacuation footage; and
-- FEMA hurricane recovery footage.
+- FEMA hurricane recovery output, retained as historical analysis evidence only; its source video is not distributed or selectable in the current public release.
 
 Original provider responses are retained under `analysis/raw/`. The product reads the normalized runs, which means the hosted demo does not perform paid inference per visitor.
 

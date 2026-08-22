@@ -1,10 +1,28 @@
 # Changelog
 
-[English](#changelog) · [中文（最新版本）](#027--2026-08-20)
+[English](#changelog) · [中文（最新版本）](#030--2026-08-21)
 
 Notable project changes are recorded here.
 
 ## Unreleased
+
+## 0.3.0 · 2026-08-21
+
+### Stage 1A evaluation baseline
+
+- Added a checksum-backed S2 regression set made from 20 fixed 1280×720 `CHARGE` frames, with protected regions, multiple acceptable placements and explicit `rule-confirmed` / `needs-user-review` states. The project agent drafted every label from explicit placement rules; 13 rule-clear drafts enter blocking metrics, while seven subjective frames await product-owner review.
+- Added a public bilingual `/regression` lab that runs the same frames through the in-browser MediaPipe pipeline, overlays rule-drafted and model boxes, separates unsafe delivery from conservative deferral and exports the raw report.
+- Captured the pre-tuning baseline with the v0.3.0 harness at `e3ceabe1eb401b89e9ff4307d093824b9e2b35da`, using detector configuration behavior referenced to v0.2.7 at `bdf66d1db7511f97feba49713f9995ea6ef13711`; the older commit did not run the new harness. Across 13 rule-confirmed frames, safe-placement agreement is 6/13 (46.2%), unsafe placement is 4/13 (30.8%) and over-deferral is 3/13 (23.1%). Protected-target precision is 4/25 (16.0%), recall is 4/11 (36.4%) and F1 is 22.2%; latency is 318 ms p50 and 335 ms p95. These are fixed-set results, not general model accuracy.
+- Added a deterministic offline regression gate that validates the manifest and frame hashes and recomputes every tracked metric and failure from raw predictions.
+- Retained detection confidence and pass provenance through face/subject deduplication so Stage 1B tuning can be evidence-based.
+
+### 0.3.0 中文说明
+
+- 使用 20 张 1280×720《CHARGE》固定画面建立带校验和的 S2 回归集，记录保护区域、多个可接受位置，以及明确的 `rule-confirmed` / `needs-user-review` 状态。所有答案均由项目代理依据明确位置规则起草；13 张规则明确初标进入阻断指标，7 张主观样本等待产品负责人复核。
+- 新增公开双语 `/regression` 实验室：在浏览器中用同一套 MediaPipe 链路运行固定帧，叠加规则初标框和模型框，区分危险误投与保守顺延，并可导出原始报告。
+- 调参前基线由 v0.3.0 harness 提交 `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` 运行，检测配置行为参考 v0.2.7 提交 `bdf66d1db7511f97feba49713f9995ea6ef13711`；旧提交本身并未运行新 harness。13 张 `rule-confirmed` 样本中的安全位置一致率为 `6/13 = 46.2%`，危险位置误投为 `4/13 = 30.8%`，过度顺延为 `3/13 = 23.1%`；保护目标精确率为 `4/25 = 16.0%`，召回率为 `4/11 = 36.4%`，F1 为 `22.2%`，推理耗时为 P50 `318 ms`、P95 `335 ms`。这些只属于固定回归集，不是通用模型准确率。
+- 新增确定性的离线回归质量门：校验标注清单和帧文件哈希，并从原始预测重算全部指标与失败案例。
+- 人脸和主体去重后继续保留置信度与检测来源，为阶段 1B 提供可追溯的调参证据。
 
 ## 0.2.7 · 2026-08-20
 

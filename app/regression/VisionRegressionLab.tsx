@@ -37,6 +37,7 @@ function asPercent(value: number) {
 
 export function VisionRegressionLab() {
   const [locale, setLocale] = useState<"en" | "zh">("en");
+  const [localeReady, setLocaleReady] = useState(false);
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [report, setReport] = useState<RegressionReport | null>(null);
@@ -129,8 +130,19 @@ export function VisionRegressionLab() {
   }, []);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setLocale(window.localStorage.getItem("admind-locale") === "zh" ? "zh" : "en");
+      setLocaleReady(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!localeReady) return;
     document.documentElement.lang = locale === "zh" ? "zh-CN" : "en";
-  }, [locale]);
+    document.title = locale === "zh" ? "AdMind · S2 视觉回归实验室" : "AdMind · S2 Vision Regression Lab";
+    window.localStorage.setItem("admind-locale", locale);
+  }, [locale, localeReady]);
 
   const exportReport = () => {
     if (!report) return;
@@ -253,7 +265,7 @@ export function VisionRegressionLab() {
               <div className={styles.frame}>
                 {/* A native image is required because MediaPipe consumes the decoded element directly. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img alt={`${sample.id} at ${sample.timeSec}s`} src={sample.frame} />
+                <img alt={locale === "zh" ? `${sample.id}，${sample.timeSec} 秒` : `${sample.id} at ${sample.timeSec}s`} src={sample.frame} />
                 {sample.protectionTargets.map((target) => (
                   <i
                     aria-hidden="true"
