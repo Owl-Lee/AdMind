@@ -9,7 +9,7 @@ This directory contains the machine-readable Stage 1A fixed-frame evaluation con
 - `manifest.json` defines 20 immutable 1280×720 `CHARGE` frames, protection targets, acceptable placements and review status.
 - The project agent drafted every target and placement label from explicit rules. None of the 20 labels is human ground truth. Thirteen rule-clear drafts enter blocking metrics as `rule-confirmed`; seven subjective drafts remain diagnostic.
 - `baselines/v0.2.7.json` preserves raw MediaPipe predictions, provenance and recomputable fixed-set metrics. The run was executed by the v0.3.0 harness commit `e3ceabe1eb401b89e9ff4307d093824b9e2b35da`; its detector configuration behavior references v0.2.7 commit `bdf66d1db7511f97feba49713f9995ea6ef13711`. The older commit did not run the new harness.
-- `candidates/v0.4.0.json` preserves the deployment-pending Stage 1B result. Both runner and configuration provenance point to commit `e0a033194ea04a9c926a822e4330355f41ddd152`.
+- `candidates/v0.4.0.json` preserves the Stage 1B result released with public v0.4.0. Both runner and configuration provenance point to commit `e0a033194ea04a9c926a822e4330355f41ddd152`.
 - The immutable frame files are served from `public/evaluation/s2/frames/` so the browser regression lab consumes the same bytes that CI verifies.
 
 The current 13-sample blocking baseline is:
@@ -48,7 +48,7 @@ Run `pnpm test:s2-regression` for deterministic validation. Run the site and ope
 - `manifest.json` 定义 20 张不可变的 1280×720《CHARGE》固定帧、保护目标、可接受位置和复核状态。
 - 所有保护目标与位置标签均由项目代理依据明确规则起草，20 张都不是人工标准答案。13 张规则明确初标以 `rule-confirmed` 身份进入阻断指标；7 张主观初标保持诊断状态。
 - `baselines/v0.2.7.json` 保存 MediaPipe 原始预测、provenance 和可重算的固定集指标。本次运行由 v0.3.0 harness 提交 `e3ceabe1eb401b89e9ff4307d093824b9e2b35da` 执行，检测配置行为参考 v0.2.7 提交 `bdf66d1db7511f97feba49713f9995ea6ef13711`；旧提交本身并未运行新 harness。
-- `candidates/v0.4.0.json` 保存待部署的阶段 1B 候选结果；运行器与配置 provenance 均指向提交 `e0a033194ea04a9c926a822e4330355f41ddd152`。
+- `candidates/v0.4.0.json` 保存随公开 v0.4.0 发布的阶段 1B 候选结果；运行器与配置 provenance 均指向提交 `e0a033194ea04a9c926a822e4330355f41ddd152`。
 - 不可变固定帧从 `public/evaluation/s2/frames/` 提供给浏览器回归实验室，保证浏览器使用的图片字节与 CI 校验对象一致。
 
 当前 13 张阻断样本的基线为：

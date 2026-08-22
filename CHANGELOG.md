@@ -8,11 +8,11 @@ Notable project changes are recorded here.
 
 ## 0.4.0 · 2026-08-21
 
-Public deployment pending.
+Released to the public site.
 
 ### Stage 1B fixed-set candidate
 
-- Added `evaluation/s2/candidates/v0.4.0.json`, generated at `2026-08-22T03:42:41.155Z` by the final `s2-vision-v4` browser run at runner/config commit `e0a033194ea04a9c926a822e4330355f41ddd152`, as a reproducible comparison against the historical v0.2.7-configuration baseline. All 20/20 fixed frames were available. Public deployment is pending; the live site remains v0.3.0.
+- Added `evaluation/s2/candidates/v0.4.0.json`, generated at `2026-08-22T03:42:41.155Z` by the final `s2-vision-v4` browser run at runner/config commit `e0a033194ea04a9c926a822e4330355f41ddd152`, as a reproducible comparison against the historical v0.2.7-configuration baseline. All 20/20 fixed frames were available. The result and review lab ship on the public v0.4.0 site.
 - On the same 13 rule-confirmed drafts, safe-placement agreement changed from 6/13 (46.2%) to 7/13 (53.8%), unsafe placement from 4/13 (30.8%) to 3/13 (23.1%), and over-deferral remained 3/13 (23.1%). Protected-target results changed from TP 4 / FP 21 / FN 7, 16.0% precision, 36.4% recall and 22.2% F1 to TP 5 / FP 16 / FN 6, 23.8% precision, 45.5% recall and 31.3% F1. These target P/R/F1 figures use exploratory, class-agnostic raw-box matching at IoU ≥ 0.25; they are not calibrated semantic detector accuracy. Recorded latency changed from 318/335 ms p50/p95 to 277/307 ms.
 - Confirmed one genuine behavior correction: `charge-012` no longer over-defers. Remaining over-deferrals are `charge-002/008/016`; remaining unsafe placements are `charge-005/013/018`.
 - Audited the remaining labels before further tuning. The accepted placement drafts for `charge-002/005/008/013/018` are disputable, so the project will not optimize against them blindly; `charge-016` remains the clear unresolved over-deferral case.
@@ -26,7 +26,7 @@ Public deployment pending.
 
 ### 0.4.0 中文说明
 
-- 新增 `evaluation/s2/candidates/v0.4.0.json`，它由最终 `s2-vision-v4` 浏览器复跑于 `2026-08-22T03:42:41.155Z` 生成，运行器/配置提交均为 `e0a033194ea04a9c926a822e4330355f41ddd152`，用于与历史 v0.2.7 配置参考基线做可重算对比；20/20 张固定帧均可用。公开部署仍待完成，线上站点仍是 v0.3.0。
+- 新增 `evaluation/s2/candidates/v0.4.0.json`，它由最终 `s2-vision-v4` 浏览器复跑于 `2026-08-22T03:42:41.155Z` 生成，运行器/配置提交均为 `e0a033194ea04a9c926a822e4330355f41ddd152`，用于与历史 v0.2.7 配置参考基线做可重算对比；20/20 张固定帧均可用。该结果与复核实验室已随公开站 v0.4.0 发布。
 - 同一组 13 张规则确认初标中，安全位置一致率由 `6/13 = 46.2%` 提升到 `7/13 = 53.8%`，危险误投由 `4/13 = 30.8%` 降至 `3/13 = 23.1%`，过度顺延保持 `3/13 = 23.1%`。保护目标从 TP 4 / FP 21 / FN 7、精确率 `16.0%`、召回率 `36.4%`、F1 `22.2%`，变为 TP 5 / FP 16 / FN 6、精确率 `23.8%`、召回率 `45.5%`、F1 `31.3%`。这些目标 P/R/F1 使用 IoU ≥ 0.25 的类别无关原始框探索性匹配，不是经过校准的语义检测准确率；已记录耗时由 P50/P95 `318/335 ms` 变为 `277/307 ms`。
 - 确认一项真实行为修复：`charge-012` 不再过度顺延。剩余过度顺延为 `charge-002/008/016`，剩余危险误投为 `charge-005/013/018`。
 - 在继续调参前审计了剩余标签。`charge-002/005/008/013/018` 的可接受位置初标存在争议，项目不会继续针对这些标签盲调；`charge-016` 仍是明确未解决的过度顺延案例。
