@@ -18,7 +18,7 @@ export function AdCreative({ scenarioId, fullscreen, remaining, onDismiss }: AdC
         fill
         priority
         sizes={fullscreen ? "(max-width: 900px) 100vw, 1000px" : "310px"}
-        src="/game-ad-clean.png?v=v0.3.0"
+        src="/game-ad-clean.png?v=v0.4.0"
         unoptimized
       />
       {fullscreen ? (

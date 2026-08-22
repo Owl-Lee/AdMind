@@ -27,13 +27,15 @@ const CROP_MIN_CONFIDENCE = 0.48;
 // Placement safety favors recall: an extra obstacle is less harmful than covering a missed character.
 const SUBJECT_MIN_CONFIDENCE = 0.34;
 const CROP_SUBJECT_MIN_CONFIDENCE = 0.34;
+// Weak crop-only object detections are retained only when a face corroborates the same region.
+const CROP_SUBJECT_STANDALONE_MIN_CONFIDENCE = 0.48;
 const MEDIAPIPE_TASKS_VISION_VERSION = "1.0.1";
 const MEDIAPIPE_WASM_ROOT = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_TASKS_VISION_VERSION}/wasm`;
 const FACE_MODEL_PATH = "/models/blaze_face_full_range.tflite";
 const OBJECT_MODEL_PATH = "/models/efficientdet_lite0.tflite";
 
 export const PAUSE_VISION_CONFIG = {
-  configVersion: "s2-vision-v1",
+  configVersion: "s2-vision-v2",
   mediapipeTasksVision: MEDIAPIPE_TASKS_VISION_VERSION,
   wasmRoot: MEDIAPIPE_WASM_ROOT,
   faceModel: {
@@ -50,6 +52,7 @@ export const PAUSE_VISION_CONFIG = {
     faceCrop: CROP_MIN_CONFIDENCE,
     subjectPrimary: SUBJECT_MIN_CONFIDENCE,
     subjectCrop: CROP_SUBJECT_MIN_CONFIDENCE,
+    subjectCropStandalone: CROP_SUBJECT_STANDALONE_MIN_CONFIDENCE,
   },
 } as const;
 
@@ -308,7 +311,25 @@ function deduplicateSubjects(subjects: DetectedSubject[]) {
       if (unique.some((candidate) => isSameFace(candidate, subject))) return unique;
       unique.push(subject);
       return unique;
-    }, []);
+  }, []);
+}
+
+function containsFaceCenter(subject: NormalizedRect, face: NormalizedRect, padding = 0.02) {
+  const centerX = face.x + face.width / 2;
+  const centerY = face.y + face.height / 2;
+  return centerX >= Math.max(0, subject.x - padding)
+    && centerX <= Math.min(1, subject.x + subject.width + padding)
+    && centerY >= Math.max(0, subject.y - padding)
+    && centerY <= Math.min(1, subject.y + subject.height + padding);
+}
+
+export function filterUnsupportedCropSubjects(subjects: DetectedSubject[], faces: DetectedFace[]) {
+  return subjects.filter((subject) => {
+    const isWeakCropCandidate = subject.source.startsWith("subject-crop-")
+      && subject.confidence < CROP_SUBJECT_STANDALONE_MIN_CONFIDENCE;
+    if (!isWeakCropCandidate) return true;
+    return faces.some((face) => containsFaceCenter(subject, face));
+  });
 }
 
 async function detectFacesInVisualSource(
@@ -354,8 +375,9 @@ async function detectFacesInVisualSource(
       region,
       index,
     ));
+    const faces = deduplicateFaces([...directFaces, ...mirroredFaces, ...detailFaces]);
     const subjects = objectDetector
-      ? deduplicateSubjects([
+      ? deduplicateSubjects(filterUnsupportedCropSubjects([
           ...normalizeSubjects(objectDetector.detect(visual).detections, sourceWidth, sourceHeight),
           ...DETAIL_REGIONS.flatMap((region, index) => detectSubjectsInRegion(
             objectDetector,
@@ -365,10 +387,9 @@ async function detectFacesInVisualSource(
             region,
             index,
           )),
-        ])
+        ], faces))
       : [];
     const inferenceMs = Math.round(performance.now() - startedAt);
-    const faces = deduplicateFaces([...directFaces, ...mirroredFaces, ...detailFaces]);
     return {
       status: "ready",
       faces,

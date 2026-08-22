@@ -50,6 +50,8 @@ pnpm dev
 
 Open `http://localhost:3000/regression`, then select **Run fixed set**. The page loads only repository-owned or documented local assets; image inference stays in the browser. Use **Export JSON** to capture a new candidate run.
 
+For product review, select **Needs review** to isolate the seven diagnostic drafts. Each card records three independent decisions: whether the green agent-drafted protection target is correct or needs adjustment, whether a muted card may use the upper-left and/or upper-right position or must be deferred, and a required review note. Review choices are stored only in that browser's `localStorage`. **Export review JSON** downloads a separate review artifact; it does not upload data, write to the repository, modify the manifest or change the tracked baseline. A confirmation can be undone before exporting. Purple dashed model boxes are hidden by default to reduce anchoring and can be revealed after a run.
+
 The deterministic offline gate is:
 
 ```bash
@@ -60,10 +62,10 @@ It validates manifest and prediction contracts, source/model/frame checksums, 12
 
 ### Tracked evidence
 
-- `evaluation/s2/manifest.json` — annotation policy and ground truth.
+- `evaluation/s2/manifest.json` — annotation policy, rule-drafted targets and placement answers.
 - `public/evaluation/s2/frames/*.jpg` — immutable 1280×720 regression frames.
 - `evaluation/s2/baselines/v0.2.7.json` — runner/config provenance, model hashes, raw predictions, metrics and failures.
-- `/regression` — bilingual visual runner with green ground-truth boxes and purple prediction boxes.
+- `/regression` — bilingual visual runner and local product-review queue. Green solid boxes are agent-drafted target references, purple dashed boxes are current model output and blue areas preview the reviewer's selected rendered-ad footprint.
 
 ### Next step
 
@@ -119,6 +121,8 @@ pnpm dev
 
 打开 `http://localhost:3000/regression`，点击 **Run fixed set / 运行固定集**。页面只加载仓库内自有或已经记录来源的本地素材，画面推理仍在浏览器中完成。点击 **Export JSON / 导出 JSON** 可以保存新的候选结果。
 
+产品负责人可选择 **Needs review / 待复核**，只查看 7 张诊断初稿。每张卡片分三步记录：绿色代理初标保护框正确或需要调整；静音卡片允许位于左上、右上、两个位置都可以，或必须顺延；以及必填的复核备注。选择只保存在当前浏览器的 `localStorage`。点击 **Export review JSON / 导出审核 JSON** 只会下载一份独立审核文件，不会上传数据、写入仓库、直接修改 manifest 或改变已保存基线；导出前也可以撤销确认。为减少模型结果对人工判断的锚定，紫色虚线模型框默认隐藏，运行后可手动显示。
+
 离线确定性质量门为：
 
 ```bash
@@ -129,10 +133,10 @@ pnpm test:s2-regression
 
 ### 已保存证据
 
-- `evaluation/s2/manifest.json`：标注规则和标准答案。
+- `evaluation/s2/manifest.json`：标注规则、规则起草的保护目标与位置初标。
 - `public/evaluation/s2/frames/*.jpg`：不可变的 1280×720 固定回归帧。
 - `evaluation/s2/baselines/v0.2.7.json`：运行器与配置来源、模型哈希、原始预测、指标和失败案例。
-- `/regression`：双语可视化运行器；绿色框是人工标准答案，紫色虚线框是当前预测。
+- `/regression`：双语可视化运行器与本地产品复核队列；绿色实线框是代理起草的保护目标参考，紫色虚线框是当前模型输出，蓝色区域预览审核者选择的实际广告占位。
 
 ### 下一步
 

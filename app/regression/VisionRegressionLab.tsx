@@ -11,9 +11,25 @@ import {
   type RegressionPrediction,
   type RegressionReport,
 } from "../lib/pause-regression";
+import {
+  buildReviewExport,
+  canConfirmReview,
+  chooseReviewAction,
+  confirmReview,
+  createReviewWorkspace,
+  restoreReviewWorkspace,
+  reviewExportFilename,
+  reviewStorageKey,
+  revokeReview,
+  toggleReviewPlacement,
+  type ReviewWorkspaceItem,
+} from "../lib/pause-review";
 import styles from "./VisionRegressionLab.module.css";
 
 const manifest = manifestJson as RegressionManifest;
+const APP_VERSION = "0.4.0";
+const reviewableSamples = manifest.samples.filter((sample) => sample.reviewStatus === "needs-user-review");
+type SampleFilter = "all" | "needs-review" | "unsafe";
 
 declare global {
   interface Window {
@@ -41,11 +57,32 @@ export function VisionRegressionLab() {
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [report, setReport] = useState<RegressionReport | null>(null);
+  const [sampleFilter, setSampleFilter] = useState<SampleFilter>("all");
+  const [showModelOutput, setShowModelOutput] = useState(false);
+  const [reviewWorkspace, setReviewWorkspace] = useState(() => createReviewWorkspace(manifest));
+  const [reviewReady, setReviewReady] = useState(false);
+  const [reviewDownloaded, setReviewDownloaded] = useState(false);
 
   const predictionById = useMemo(
     () => new Map(report?.predictions.map((prediction) => [prediction.sampleId, prediction]) ?? []),
     [report],
   );
+
+  const unsafeSampleIds = useMemo(
+    () => new Set(report?.failures.filter((failure) => failure.kind === "unsafe-placement").map((failure) => failure.sampleId) ?? []),
+    [report],
+  );
+
+  const confirmedReviewCount = useMemo(
+    () => Object.values(reviewWorkspace.items).filter((item) => item.confirmedAt !== null).length,
+    [reviewWorkspace],
+  );
+
+  const visibleSamples = useMemo(() => {
+    if (sampleFilter === "needs-review") return reviewableSamples;
+    if (sampleFilter === "unsafe") return manifest.samples.filter((sample) => unsafeSampleIds.has(sample.id));
+    return manifest.samples;
+  }, [sampleFilter, unsafeSampleIds]);
 
   const runRegression = async () => {
     if (running) return;
@@ -97,13 +134,13 @@ export function VisionRegressionLab() {
     const nextReport = scoreVisionRegression(manifest, predictions, {
       provenance: {
         runner: {
-          appVersion: "0.3.0",
+          appVersion: APP_VERSION,
           gitCommit: process.env.NEXT_PUBLIC_GIT_COMMIT_SHA ?? "working-tree",
           platform: navigator.userAgent,
         },
         configurationReference: {
-          appVersion: "0.2.7",
-          gitCommit: "bdf66d1db7511f97feba49713f9995ea6ef13711",
+          appVersion: APP_VERSION,
+          gitCommit: process.env.NEXT_PUBLIC_GIT_COMMIT_SHA ?? "working-tree",
         },
         input: {
           kind: "fixed-jpeg",
@@ -138,6 +175,24 @@ export function VisionRegressionLab() {
   }, []);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      try {
+        const saved = window.localStorage.getItem(reviewStorageKey(manifest));
+        setReviewWorkspace(restoreReviewWorkspace(manifest, saved ? JSON.parse(saved) : null));
+      } catch {
+        setReviewWorkspace(createReviewWorkspace(manifest));
+      }
+      setReviewReady(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!reviewReady) return;
+    window.localStorage.setItem(reviewStorageKey(manifest), JSON.stringify(reviewWorkspace));
+  }, [reviewReady, reviewWorkspace]);
+
+  useEffect(() => {
     if (!localeReady) return;
     document.documentElement.lang = locale === "zh" ? "zh-CN" : "en";
     document.title = locale === "zh" ? "AdMind · S2 视觉回归实验室" : "AdMind · S2 Vision Regression Lab";
@@ -155,18 +210,49 @@ export function VisionRegressionLab() {
     URL.revokeObjectURL(url);
   };
 
+  const updateReviewItem = (
+    sampleId: string,
+    update: (item: ReviewWorkspaceItem) => ReviewWorkspaceItem,
+  ) => {
+    setReviewDownloaded(false);
+    setReviewWorkspace((current) => {
+      const item = current.items[sampleId];
+      if (!item) return current;
+      return { ...current, items: { ...current.items, [sampleId]: update(item) } };
+    });
+  };
+
+  const exportReview = () => {
+    if (confirmedReviewCount === 0) return;
+    const generatedAt = new Date().toISOString();
+    const review = buildReviewExport(manifest, reviewWorkspace, {
+      generatedAt,
+      appVersion: APP_VERSION,
+      gitCommit: process.env.NEXT_PUBLIC_GIT_COMMIT_SHA ?? "working-tree",
+    });
+    const blob = new Blob([`${JSON.stringify(review, null, 2)}\n`], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.download = reviewExportFilename(manifest, generatedAt);
+    anchor.href = url;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setReviewDownloaded(true);
+  };
+
   const copy = locale === "en"
     ? {
-        kicker: "STAGE 1A · FIXED-FRAME EVALUATION",
+        kicker: "STAGE 1B · REVIEW & CALIBRATION",
         title: "S2 Vision Regression Lab",
         intro: "Replay the same 20 paused frames, compare local MediaPipe output with rule-based draft labels, and separate unsafe placement from conservative deferral.",
         caveat: "This is regression-set agreement, not a claim of general model accuracy.",
         run: running ? `Running ${progress}/${manifest.samples.length}` : report ? "Run again" : "Run fixed set",
-        export: "Export JSON",
+        exportReport: "Export run JSON",
         confirmed: "Rule-locked draft",
         diagnostic: "Needs review",
-        result: "Current result",
-        expected: "Expected",
+        result: "Model result",
+        agentDraft: "Agent draft",
+        ruleDraft: "Rule draft",
         fixedSamples: "Fixed samples",
         safeAgreement: "Safe-placement agreement",
         unsafePlacement: "Unsafe placement",
@@ -182,18 +268,50 @@ export function VisionRegressionLab() {
         matched: "TP",
         missed: "FN",
         falsePositive: "FP",
+        reviewTitle: "Product review queue",
+        reviewProgress: `${confirmedReviewCount}/${reviewableSamples.length} confirmed locally`,
+        localOnly: "Review choices are saved only in this browser. Nothing is uploaded or written to the repository.",
+        baselineNotice: "Exported review JSON must be validated and committed separately before it can affect the manifest or baseline.",
+        exportReview: `Export review JSON (${confirmedReviewCount}/${reviewableSamples.length})`,
+        downloaded: "Downloaded locally. Nothing was uploaded.",
+        filterLabel: "Filter samples",
+        filterAll: `All ${manifest.samples.length}`,
+        filterReview: `Needs review ${reviewableSamples.length}`,
+        filterUnsafe: report ? `Unsafe placement ${unsafeSampleIds.size}` : "Unsafe placement · run first",
+        legendTitle: "Overlay legend",
+        legendDraft: "Agent-drafted target reference",
+        legendModel: "Current model output",
+        legendChoice: "Your selected ad footprint",
+        showModel: "Show model boxes",
+        hideModel: "Hide model boxes",
+        modelHidden: "hidden",
+        targetStep: "1 · Check the green draft target",
+        targetCorrect: "Target is correct",
+        targetAdjust: "Target needs adjustment",
+        placementStep: "2 · Choose every acceptable outcome",
+        allowTopLeft: "Allow top left",
+        allowTopRight: "Allow top right",
+        noteStep: "3 · Add a review note",
+        notePlaceholder: "Briefly explain the decision or required target adjustment.",
+        confirmReview: "Confirm decision",
+        revokeReview: "Undo confirmation",
+        confirmedLocally: "Confirmed locally · pending export",
+        awaitingReview: "Pending product review",
+        incompleteReview: "Complete all three steps to confirm.",
+        noSamples: "No samples match this filter.",
       }
     : {
-        kicker: "阶段 1A · 固定帧评估",
+        kicker: "阶段 1B · 人工复核与校准",
         title: "S2 视觉回归实验室",
         intro: "重复运行同一组 20 张暂停画面，将本地 MediaPipe 输出与按产品规则起草的初标对比，并区分不安全投放和保守顺延。",
         caveat: "这里报告的是固定回归集一致率，不代表模型的通用准确率。",
         run: running ? `运行中 ${progress}/${manifest.samples.length}` : report ? "重新运行" : "运行固定集",
-        export: "导出 JSON",
+        exportReport: "导出运行 JSON",
         confirmed: "规则明确初标",
-        diagnostic: "待确认",
-        result: "当前结果",
-        expected: "标准答案",
+        diagnostic: "待产品复核",
+        result: "模型结果",
+        agentDraft: "代理初标",
+        ruleDraft: "规则初标",
         fixedSamples: "固定样本",
         safeAgreement: "安全位置一致率",
         unsafePlacement: "危险位置误投",
@@ -209,6 +327,37 @@ export function VisionRegressionLab() {
         matched: "命中",
         missed: "漏检",
         falsePositive: "误检",
+        reviewTitle: "产品负责人复核队列",
+        reviewProgress: `已在本地确认 ${confirmedReviewCount}/${reviewableSamples.length}`,
+        localOnly: "审核选择只保存在当前浏览器，不会上传，也不会写入仓库。",
+        baselineNotice: "导出的审核 JSON 必须另行校验并提交，之后才可能影响 manifest 或基线。",
+        exportReview: `导出审核 JSON（${confirmedReviewCount}/${reviewableSamples.length}）`,
+        downloaded: "已下载到本地，没有上传任何内容。",
+        filterLabel: "筛选样本",
+        filterAll: `全部 ${manifest.samples.length}`,
+        filterReview: `待复核 ${reviewableSamples.length}`,
+        filterUnsafe: report ? `危险误投 ${unsafeSampleIds.size}` : "危险误投 · 请先运行",
+        legendTitle: "框线图例",
+        legendDraft: "代理起草的保护目标参考",
+        legendModel: "当前模型输出",
+        legendChoice: "你选择的广告实际占位",
+        showModel: "显示模型框",
+        hideModel: "隐藏模型框",
+        modelHidden: "已隐藏",
+        targetStep: "1 · 检查绿色初标保护框",
+        targetCorrect: "保护框正确",
+        targetAdjust: "保护框需要调整",
+        placementStep: "2 · 选择全部可接受结果",
+        allowTopLeft: "允许左上",
+        allowTopRight: "允许右上",
+        noteStep: "3 · 填写复核备注",
+        notePlaceholder: "简要说明决定，或描述保护框需要如何调整。",
+        confirmReview: "确认决定",
+        revokeReview: "撤销确认",
+        confirmedLocally: "已在本地确认 · 等待导出",
+        awaitingReview: "等待产品负责人复核",
+        incompleteReview: "完成三个步骤后才能确认。",
+        noSamples: "没有符合当前筛选条件的样本。",
       };
 
   const formatPlacement = (placement: string) => {
@@ -239,7 +388,7 @@ export function VisionRegressionLab() {
         <strong>{copy.caveat}</strong>
         <div className={styles.actions}>
           <button disabled={running} onClick={() => void runRegression()}>{copy.run}</button>
-          <button disabled={!report || running} onClick={exportReport}>{copy.export}</button>
+          <button disabled={!report || running} onClick={exportReport}>{copy.exportReport}</button>
         </div>
         <div className={styles.progress} aria-label={copy.run}>
           <i style={{ width: `${(progress / manifest.samples.length) * 100}%` }} />
@@ -256,12 +405,59 @@ export function VisionRegressionLab() {
         <article><span>{copy.inferenceLatency}</span><strong>{report ? `${report.metrics.inferenceP50Ms} ms` : "—"}</strong><small>{report ? `p95 ${report.metrics.inferenceP95Ms} ms` : "—"}</small></article>
       </section>
 
+      <section className={styles.reviewPanel} aria-labelledby="review-heading">
+        <div>
+          <p>{copy.reviewProgress}</p>
+          <h2 id="review-heading">{copy.reviewTitle}</h2>
+          <span>{copy.localOnly}</span>
+          <small>{copy.baselineNotice}</small>
+        </div>
+        <div className={styles.reviewExport}>
+          <button disabled={confirmedReviewCount === 0} onClick={exportReview}>{copy.exportReview}</button>
+          {reviewDownloaded ? <output aria-live="polite">{copy.downloaded}</output> : null}
+        </div>
+      </section>
+
+      <section className={styles.inspectionTools}>
+        <div className={styles.legend} aria-label={copy.legendTitle}>
+          <strong>{copy.legendTitle}</strong>
+          <span><i className={styles.legendDraft} />{copy.legendDraft}</span>
+          <span><i className={styles.legendModel} />{copy.legendModel}</span>
+          <span><i className={styles.legendChoice} />{copy.legendChoice}</span>
+        </div>
+        <button
+          aria-pressed={showModelOutput}
+          className={styles.modelToggle}
+          disabled={!report}
+          onClick={() => setShowModelOutput((visible) => !visible)}
+        >
+          {showModelOutput ? copy.hideModel : copy.showModel}
+        </button>
+      </section>
+
+      <nav className={styles.filters} aria-label={copy.filterLabel}>
+        <button aria-pressed={sampleFilter === "all"} onClick={() => setSampleFilter("all")}>{copy.filterAll}</button>
+        <button aria-pressed={sampleFilter === "needs-review"} onClick={() => setSampleFilter("needs-review")}>{copy.filterReview}</button>
+        <button
+          aria-pressed={sampleFilter === "unsafe"}
+          disabled={!report}
+          onClick={() => setSampleFilter("unsafe")}
+        >
+          {copy.filterUnsafe}
+        </button>
+      </nav>
+
       <section className={styles.grid}>
-        {manifest.samples.map((sample) => {
+        {visibleSamples.map((sample) => {
           const prediction = predictionById.get(sample.id);
           const failed = report?.failures.some((failure) => failure.sampleId === sample.id);
+          const reviewItem = reviewWorkspace.items[sample.id];
+          const reviewConfirmed = reviewItem?.confirmedAt !== null;
           return (
-            <article className={`${styles.card} ${failed ? styles.failed : ""}`} key={sample.id}>
+            <article
+              className={`${styles.card} ${failed ? styles.failed : ""} ${reviewConfirmed ? styles.reviewedCard : ""}`}
+              key={sample.id}
+            >
               <div className={styles.frame}>
                 {/* A native image is required because MediaPipe consumes the decoded element directly. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -279,7 +475,7 @@ export function VisionRegressionLab() {
                     }}
                   />
                 ))}
-                {prediction?.targets.map((target, index) => (
+                {showModelOutput ? prediction?.targets.map((target, index) => (
                   <i
                     aria-hidden="true"
                     className={styles.prediction}
@@ -291,22 +487,127 @@ export function VisionRegressionLab() {
                       height: `${target.height * 100}%`,
                     }}
                   />
-                ))}
+                )) : null}
+                {reviewItem?.action === "show-card" ? reviewItem.acceptablePlacements.map((placement) => {
+                  const footprint = manifest.annotationPolicy.renderedCreativeFootprint;
+                  const x = placement === "top-left" ? 0.025 : 1 - 0.025 - footprint.width;
+                  return (
+                    <i
+                      aria-hidden="true"
+                      className={styles.reviewPlacement}
+                      key={placement}
+                      style={{
+                        left: `${x * 100}%`,
+                        top: "5.5%",
+                        width: `${footprint.width * 100}%`,
+                        height: `${footprint.height * 100}%`,
+                      }}
+                    />
+                  );
+                }) : null}
               </div>
               <div className={styles.cardBody}>
-                <div className={styles.cardTitle}><strong>{sample.id}</strong><span>{sample.timeSec.toFixed(1)}s</span></div>
+                <div className={styles.cardTitle}>
+                  <strong>{sample.id}</strong>
+                  <span>{sample.timeSec.toFixed(1)}{locale === "zh" ? " 秒" : "s"}</span>
+                </div>
                 <p>{locale === "en" ? sample.note : sample.noteZh}</p>
                 <dl>
-                  <div><dt>{copy.expected}</dt><dd>{sample.expectedAction === "defer" ? copy.defer : sample.acceptablePlacements.map(formatPlacement).join(" / ")}</dd></div>
-                  <div><dt>{copy.result}</dt><dd>{prediction ? `${formatPlacement(prediction.placement)} · ${prediction.targets.length} ${copy.targets}` : "—"}</dd></div>
+                  <div>
+                    <dt>{sample.reviewStatus === "needs-user-review" ? copy.agentDraft : copy.ruleDraft}</dt>
+                    <dd>{sample.expectedAction === "defer" ? copy.defer : sample.acceptablePlacements.map(formatPlacement).join(" / ")}</dd>
+                  </div>
+                  <div>
+                    <dt>{copy.result}</dt>
+                    <dd>{showModelOutput ? (prediction ? `${formatPlacement(prediction.placement)} · ${prediction.targets.length} ${copy.targets}` : "—") : copy.modelHidden}</dd>
+                  </div>
                 </dl>
-                <span className={sample.reviewStatus === "rule-confirmed" ? styles.confirmed : styles.review}>
-                  {sample.reviewStatus === "rule-confirmed" ? copy.confirmed : copy.diagnostic}
+                <span className={sample.reviewStatus === "rule-confirmed" ? styles.confirmed : reviewConfirmed ? styles.reviewed : styles.review}>
+                  {sample.reviewStatus === "rule-confirmed" ? copy.confirmed : reviewConfirmed ? copy.confirmedLocally : copy.awaitingReview}
                 </span>
+
+                {reviewItem ? (
+                  <section className={styles.reviewForm} aria-label={`${sample.id} ${copy.reviewTitle}`}>
+                    <fieldset disabled={reviewConfirmed}>
+                      <legend>{copy.targetStep}</legend>
+                      <div className={styles.reviewChoices}>
+                        <button
+                          aria-pressed={reviewItem.targetAssessment === "correct"}
+                          onClick={() => updateReviewItem(sample.id, (item) => ({ ...item, targetAssessment: "correct", confirmedAt: null }))}
+                          type="button"
+                        >
+                          {copy.targetCorrect}
+                        </button>
+                        <button
+                          aria-pressed={reviewItem.targetAssessment === "needs-adjustment"}
+                          onClick={() => updateReviewItem(sample.id, (item) => ({ ...item, targetAssessment: "needs-adjustment", confirmedAt: null }))}
+                          type="button"
+                        >
+                          {copy.targetAdjust}
+                        </button>
+                      </div>
+                    </fieldset>
+
+                    <fieldset disabled={reviewConfirmed}>
+                      <legend>{copy.placementStep}</legend>
+                      <div className={styles.reviewChoices}>
+                        <button
+                          aria-pressed={reviewItem.action === "show-card" && reviewItem.acceptablePlacements.includes("top-left")}
+                          onClick={() => updateReviewItem(sample.id, (item) => toggleReviewPlacement(item, "top-left"))}
+                          type="button"
+                        >
+                          {copy.allowTopLeft}
+                        </button>
+                        <button
+                          aria-pressed={reviewItem.action === "show-card" && reviewItem.acceptablePlacements.includes("top-right")}
+                          onClick={() => updateReviewItem(sample.id, (item) => toggleReviewPlacement(item, "top-right"))}
+                          type="button"
+                        >
+                          {copy.allowTopRight}
+                        </button>
+                        <button
+                          aria-pressed={reviewItem.action === "defer"}
+                          onClick={() => updateReviewItem(sample.id, (item) => chooseReviewAction(item, "defer"))}
+                          type="button"
+                        >
+                          {copy.defer}
+                        </button>
+                      </div>
+                    </fieldset>
+
+                    <label className={styles.reviewNote}>
+                      <span>{copy.noteStep}</span>
+                      <textarea
+                        disabled={reviewConfirmed}
+                        maxLength={500}
+                        onChange={(event) => updateReviewItem(sample.id, (item) => ({ ...item, note: event.target.value, confirmedAt: null }))}
+                        placeholder={copy.notePlaceholder}
+                        rows={3}
+                        value={reviewItem.note}
+                      />
+                    </label>
+
+                    <div className={styles.reviewActions}>
+                      {reviewConfirmed ? (
+                        <button onClick={() => updateReviewItem(sample.id, revokeReview)} type="button">{copy.revokeReview}</button>
+                      ) : (
+                        <button
+                          disabled={!canConfirmReview(reviewItem)}
+                          onClick={() => updateReviewItem(sample.id, (item) => confirmReview(item, new Date().toISOString()))}
+                          type="button"
+                        >
+                          {copy.confirmReview}
+                        </button>
+                      )}
+                      {!reviewConfirmed && !canConfirmReview(reviewItem) ? <small>{copy.incompleteReview}</small> : null}
+                    </div>
+                  </section>
+                ) : null}
               </div>
             </article>
           );
         })}
+        {visibleSamples.length === 0 ? <p className={styles.empty}>{copy.noSamples}</p> : null}
       </section>
       {report ? <output data-regression-report hidden>{JSON.stringify(report)}</output> : null}
     </main>
