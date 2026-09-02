@@ -10,6 +10,6 @@
     "@admind/contracts": "workspace:*",
     "@admind/decision-engine": "workspace:*",
     "@fastify/cors": "11.3.0",
-    "fastify": "5.11.3"
+    "fastify": "5.12.1"
   }
 }
