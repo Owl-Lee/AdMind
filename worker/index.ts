@@ -48,7 +48,9 @@ async function serveMedia(request: Request, env: Env, assetPath: string): Promis
   const upstreamRequest = new Request(new URL(assetPath, request.url), {
     headers: request.headers.get("range") ? { range: request.headers.get("range")! } : undefined,
   });
-  const upstream = env.ASSETS
+  // `vinext start` (local runs and CI) calls the worker without a Cloudflare
+  // env object, so fall back to the static file server when it is absent.
+  const upstream = env?.ASSETS
     ? await env.ASSETS.fetch(upstreamRequest)
     : await fetch(upstreamRequest);
   const headers = new Headers(upstream.headers);
