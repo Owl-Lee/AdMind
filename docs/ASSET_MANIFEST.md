@@ -43,6 +43,7 @@ Required non-endorsement notice: **The appearance of U.S. Department of War (DoW
 | --- | --- | --- | --- | --- |
 | `public/models/blaze_face_full_range.tflite` | [MediaPipe BlazeFace full range](https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_full_range/float16/1/blaze_face_full_range.tflite) | Google MediaPipe | [Apache License 2.0](https://github.com/google-ai-edge/mediapipe/blob/master/LICENSE) and upstream model terms | `3698b18f063835bc609069ef052228fbe86d9c9a6dc8dcb7c7c2d69aed2b181b` |
 | `public/models/efficientdet_lite0.tflite` | [MediaPipe EfficientDet-Lite0 int8](https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/1/efficientdet_lite0.tflite) | Google MediaPipe | [Apache License 2.0](https://github.com/google-ai-edge/mediapipe/blob/master/LICENSE) and upstream model terms | `0720bf247bd76e6594ea28fa9c6f7c5242be774818997dbbeffc4da460c723bb` |
+| `public/models/deeplab_v3.tflite` | [MediaPipe DeepLab v3 float32](https://storage.googleapis.com/mediapipe-models/image_segmenter/deeplab_v3/float32/1/deeplab_v3.tflite) | Google MediaPipe | [Apache License 2.0](https://github.com/google-ai-edge/mediapipe/blob/master/LICENSE) and upstream model terms | `ff36e24d40547fe9e645e2f4e8745d1876d6e38b332d39a82f0bf0f5d1d561b3` |
 
 ## Browser-side MediaPipe runtime
 

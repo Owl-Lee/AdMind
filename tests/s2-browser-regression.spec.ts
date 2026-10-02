@@ -25,9 +25,15 @@ type BrowserReport = {
   datasetId: string;
   generatedAt: string;
   provenance: {
-    runner: { appVersion: string; gitCommit: string; platform: string };
+    runner: { appVersion: string; gitCommit: string; platform: string; visionTransport?: string };
     configurationReference: { appVersion: string; gitCommit: string };
-    vision: { configVersion: string; wasmRoot: string; wasmAssets?: { path: string; sha256: string }[] };
+    vision: {
+      configVersion: string;
+      wasmRoot: string;
+      wasmAssets?: { path: string; sha256: string }[];
+      segmentationModel?: { path: string; sha256: string };
+      availability?: { requiredDetectors: string[] };
+    };
   };
   metrics: {
     sampleCount: number;
@@ -120,6 +126,9 @@ test("runs the fixed S2 set with the local MediaPipe runtime", async ({ page }) 
   expect(report.provenance.vision.configVersion).toBe("s2-vision-v5");
   expect(report.provenance.vision.wasmRoot).toBe("/mediapipe/wasm");
   expect(report.provenance.vision.wasmAssets).toHaveLength(6);
+  // Paused-frame inference runs off the main thread; a silent main-thread
+  // fallback in a capable browser would hide a worker regression.
+  expect(report.provenance.runner.visionTransport).toBe("worker");
   expect(report.metrics.sampleCount).toBe(20);
   expect(report.metrics.availableSampleCount).toBe(20);
   expect(report.metrics.unavailableCount).toBe(0);
@@ -133,6 +142,50 @@ test("runs the fixed S2 set with the local MediaPipe runtime", async ({ page }) 
     expect(report.provenance.runner.gitCommit).toBe(process.env.GITHUB_SHA);
     expect(report.provenance.configurationReference.gitCommit).toBe(process.env.GITHUB_SHA);
   }
+});
+
+test("runs the opt-in s2-vision-v6 person-mask candidate without new unsafe placements", async ({ page }) => {
+  const requestedUrls: string[] = [];
+  const criticalRequestFailures: string[] = [];
+  page.on("request", (request) => requestedUrls.push(request.url()));
+  page.on("requestfailed", (request) => {
+    if (/\/mediapipe\/wasm\/|\/models\//.test(request.url())) {
+      criticalRequestFailures.push(`${request.url()} :: ${request.failure()?.errorText ?? "unknown failure"}`);
+    }
+  });
+  await page.goto("/regression?autorun=1&vision=s2-vision-v6", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("[data-regression-report]")).toHaveCount(1);
+  const report = await page.evaluate(() => window.__ADMIND_VISION_REGRESSION__ as BrowserReport | undefined);
+  if (!report) throw new Error("The regression lab did not expose a v6 report");
+
+  const artifactDir = resolve("artifacts/s2-browser-regression");
+  await mkdir(artifactDir, { recursive: true });
+  await writeFile(resolve(artifactDir, "candidate-s2-vision-v6.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
+
+  const historicalCandidate = JSON.parse(
+    await readFile(resolve("evaluation/s2/candidates/v0.4.0.json"), "utf8"),
+  ) as BrowserReport;
+  const allowedUnsafeIds = new Set([
+    ...historicalCandidate.failures.filter((failure) => failure.kind === "unsafe-placement").map((failure) => failure.sampleId),
+    "charge-005",
+    "charge-008",
+    "charge-013",
+    "charge-016",
+    "charge-018",
+  ]);
+  expect(criticalRequestFailures).toEqual([]);
+  expect(requestedUrls.some((url) => url.includes("cdn.jsdelivr.net"))).toBe(false);
+  expect(requestedUrls.some((url) => url.endsWith("/models/deeplab_v3.tflite"))).toBe(true);
+  expect(report.provenance.vision.configVersion).toBe("s2-vision-v6");
+  expect(report.provenance.vision.segmentationModel?.path).toBe("/models/deeplab_v3.tflite");
+  expect(report.provenance.vision.availability?.requiredDetectors).toEqual(["face", "object", "segmentation"]);
+  expect(report.provenance.runner.visionTransport).toBe("worker");
+  expect(report.metrics.availableSampleCount).toBe(20);
+  expect(report.metrics.unavailableCount).toBe(0);
+  expect(report.metrics.overDeferralCount).toBeLessThanOrEqual(historicalCandidate.metrics.overDeferralCount);
+  expect(report.failures
+    .filter((failure) => failure.kind === "unsafe-placement")
+    .every((failure) => allowedUnsafeIds.has(failure.sampleId))).toBe(true);
 });
 
 test("keeps every public evidence route responsive and bilingual", async ({ page }) => {

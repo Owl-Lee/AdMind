@@ -4,11 +4,13 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import baselineJson from "../../evaluation/s2/baselines/v0.2.7.json";
 import candidateJson from "../../evaluation/s2/candidates/v0.4.0.json";
+import v5ControlJson from "../../evaluation/s2/candidates/2026-10-02-s2-vision-v5-control.json";
+import v6CandidateJson from "../../evaluation/s2/candidates/2026-10-02-s2-vision-v6.json";
 import manifestJson from "../../evaluation/s2/manifest.json";
-import { PAUSE_VISION_CONFIG } from "./face-detector";
+import { PAUSE_VISION_CANDIDATES, PAUSE_VISION_CONFIG } from "./face-detector";
 import { choosePauseAdPlacement } from "./pause-decision";
 import type { RegressionManifest, RegressionPrediction, RegressionProvenance, RegressionReport } from "./pause-regression";
-import { intersectionOverUnion, scoreVisionRegression, validateRegressionManifest, validateRegressionPredictions } from "./pause-regression";
+import { intersectionOverUnion, mergeMaskGroupTargets, scoreVisionRegression, validateRegressionManifest, validateRegressionPredictions } from "./pause-regression";
 
 const manifest = manifestJson as RegressionManifest;
 const baseline = baselineJson as unknown as RegressionReport;
@@ -79,6 +81,32 @@ describe("S2 fixed-frame regression scorer", () => {
     }
   });
 
+  it("locks every selectable vision candidate, including the v6 segmentation model, to tracked bytes", () => {
+    for (const config of Object.values(PAUSE_VISION_CANDIDATES)) {
+      const models = [config.faceModel, config.objectModel, ...("segmentationModel" in config ? [config.segmentationModel] : [])];
+      for (const model of models) {
+        expect(model.path, config.configVersion).toMatch(/^\/models\//);
+        expect(createHash("sha256").update(readFileSync(model.path.replace(/^\//, "public/"))).digest("hex"), model.path)
+          .toBe(model.sha256);
+      }
+      expect(config.wasmRoot, config.configVersion).toBe("/mediapipe/wasm");
+    }
+    expect(PAUSE_VISION_CANDIDATES["s2-vision-v6"].availability.requiredDetectors).toEqual(["face", "object", "segmentation"]);
+  });
+
+  it("matches the bands of one segmented silhouette as a single predicted target", () => {
+    const band = { confidence: 0.9, kind: "subject" as const, label: "人物主体", source: "segment-person" };
+    const merged = mergeMaskGroupTargets([
+      { ...band, x: 0.4, y: 0.1, width: 0.1, height: 0.1, maskGroup: "person-mask-1" },
+      { ...band, x: 0.3, y: 0.2, width: 0.3, height: 0.6, maskGroup: "person-mask-1", label: "人物轮廓" },
+      { ...band, x: 0.8, y: 0.1, width: 0.1, height: 0.2, source: "face-direct", kind: "face" as const },
+    ]);
+    expect(merged).toHaveLength(2);
+    expect(merged[0]).toMatchObject({ x: 0.3, y: 0.1, maskGroup: "person-mask-1" });
+    expect(merged[0].width).toBeCloseTo(0.3);
+    expect(merged[0].height).toBeCloseTo(0.7);
+    expect(merged[1].source).toBe("face-direct");
+  });
   it("recomputes the tracked v0.2.7 baseline from raw predictions", () => {
     expect(validateRegressionPredictions(manifest, baseline.predictions)).toEqual([]);
     const recomputed = scoreVisionRegression(manifest, baseline.predictions, {
@@ -114,6 +142,39 @@ describe("S2 fixed-frame regression scorer", () => {
     expect(candidate.failures
       .filter((failure) => failure.kind === "unsafe-placement")
       .every((failure) => baselineUnsafe.has(failure.sampleId))).toBe(true);
+  });
+
+  it("recomputes the fresh v5 control and v6 candidate diagnostics from their raw predictions", () => {
+    const control = v5ControlJson as unknown as RegressionReport;
+    const v6 = v6CandidateJson as unknown as RegressionReport;
+    for (const report of [control, v6]) {
+      expect(validateRegressionPredictions(manifest, report.predictions)).toEqual([]);
+      const recomputed = scoreVisionRegression(manifest, report.predictions, {
+        generatedAt: report.generatedAt,
+        provenance: report.provenance,
+      });
+      expect(recomputed.metrics).toEqual(report.metrics);
+      expect(recomputed.failures).toEqual(report.failures);
+      // Saved placements must replay exactly through the unchanged scorer.
+      const replayed = report.predictions.map((prediction) => (prediction.status === "ready"
+        ? choosePauseAdPlacement(prediction.targets).placement
+        : "none"));
+      expect(replayed).toEqual(report.predictions.map((prediction) => prediction.placement));
+      expect(report.provenance.runner.gitCommit).toBe("f173477e075f68ece3a5ba5ba1e8cea7c73d8c6a");
+      expect(report.provenance.runner.visionTransport).toBe("worker");
+      expect(report.metrics.availableSampleCount).toBe(20);
+    }
+    expect(control.provenance.vision.configVersion).toBe("s2-vision-v5");
+    expect(v6.provenance.vision.configVersion).toBe("s2-vision-v6");
+    // Diagnostic comparison against agent-draft labels only: v6 may trade
+    // over-deferral for placements, but never add a blocking unsafe sample
+    // relative to the same-run v5 control.
+    const unsafe = (report: RegressionReport) => new Set(report.failures
+      .filter((failure) => failure.kind === "unsafe-placement")
+      .map((failure) => failure.sampleId));
+    const controlUnsafe = unsafe(control);
+    expect([...unsafe(v6)].every((sampleId) => controlUnsafe.has(sampleId))).toBe(true);
+    expect(v6.metrics.overDeferralCount).toBeLessThanOrEqual(control.metrics.overDeferralCount);
   });
 
   it("keeps scorer, review and rendered creative footprints on one geometry contract", () => {
