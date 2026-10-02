@@ -72,6 +72,9 @@ jobs:
       - name: Run fresh S2 browser regression
         run: pnpm test:s2-browser
 
+      - name: Run showcase browser regression
+        run: pnpm test:showcase-browser
+
       - name: Upload S2 browser evidence
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v5

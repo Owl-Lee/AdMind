@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import type { ChangeEvent } from "react";
 import candidateJson from "../../../evaluation/s2/candidates/v0.4.0.json";
@@ -18,6 +17,7 @@ import {
   type ReviewedRegressionComparison,
   type S2ReviewIntakeResult,
 } from "../../lib/s2-review-intake";
+import { LabHeader } from "../LabHeader";
 import styles from "./ReviewIntakeLab.module.css";
 
 const manifest = manifestJson as RegressionManifest;
@@ -357,19 +357,17 @@ export function ReviewIntakeLab() {
   })();
 
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <Link className={styles.brand} href="/">AdMind</Link>
-        <nav>
-          <Link href="/regression">{copy.regression}</Link>
-          <Link href="/regression/calibrate">{copy.calibration}</Link>
-          <Link href="/">{copy.home}</Link>
-        </nav>
-        <div className={styles.locale} role="group" aria-label="Language / 语言">
-          <button aria-pressed={locale === "en"} onClick={() => setLocale("en")}>EN</button>
-          <button aria-pressed={locale === "zh"} onClick={() => setLocale("zh")}>中</button>
-        </div>
-      </header>
+    <main className={`am-labs ${styles.page}`}>
+      <LabHeader
+        home={copy.home}
+        links={[
+          { href: "/regression", label: copy.regression },
+          { href: "/regression/calibrate", label: copy.calibration },
+        ]}
+        locale={locale}
+        navLabel={locale === "zh" ? "证据实验室" : "Evidence labs"}
+        onLocaleChange={setLocale}
+      />
 
       <section className={styles.hero}>
         <p>{copy.eyebrow}</p>

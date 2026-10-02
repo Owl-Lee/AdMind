@@ -38,6 +38,9 @@ describe("UI localization", () => {
       "../page.tsx",
       "./pause-decision.ts",
       "./face-detector.ts",
+      "./vision-pipeline.ts",
+      "./person-mask.ts",
+      "./vision.worker.ts",
     ];
     const untranslated = new Set<string>();
     const literalPattern = /"([^"\r\n]*[\u3400-\u9fff][^"\r\n]*)"|'([^'\r\n]*[\u3400-\u9fff][^'\r\n]*)'|`([^`\r\n]*[\u3400-\u9fff][^`\r\n]*)`/gu;

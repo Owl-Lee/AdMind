@@ -111,6 +111,7 @@ It runs pinned Chromium against the production server, loads the six local runti
 - `public/evaluation/s2/frames/*.jpg` — immutable 1280×720 regression frames.
 - `evaluation/s2/baselines/v0.2.7.json` — runner/config provenance, model hashes, raw predictions, metrics and failures.
 - `evaluation/s2/candidates/v0.4.0.json` — Stage 1B candidate provenance, raw predictions, metrics and failures.
+- `evaluation/s2/candidates/2026-10-02-s2-vision-{v5-control,v6}.json` — unreleased same-run worker diagnostics for the default v5 pipeline and the opt-in DeepLab person-mask candidate; agent-draft agreement only. See the CHANGELOG Unreleased section for the comparison and the reason v5 stays default.
 - `evaluation/s2/reviews/2026-08-22-product-owner.json` — immutable schema-v1 first-pass evidence and its SHA-256-bound identity.
 - `evaluation/s2/holdout/manifest.json` and `public/evaluation/s2/holdout/*.jpg` — six sealed, unlabeled, tuning-prohibited holdout frames with a four-primary/two-supplemental split.
 - `/regression` — bilingual visual runner and first-pass review history. Green solid boxes are AI-assisted project-agent drafts, purple dashed boxes are hidden-by-default browser-local MediaPipe output, and blue areas are review choices. TwelveLabs generates neither box type.
@@ -232,6 +233,7 @@ pnpm test:s2-browser
 - `public/evaluation/s2/frames/*.jpg`：不可变的 1280×720 固定回归帧。
 - `evaluation/s2/baselines/v0.2.7.json`：运行器与配置来源、模型哈希、原始预测、指标和失败案例。
 - `evaluation/s2/candidates/v0.4.0.json`：阶段 1B 候选的来源、原始预测、指标和失败案例。
+- `evaluation/s2/candidates/2026-10-02-s2-vision-{v5-control,v6}.json`：默认 v5 管线与可选 DeepLab 人物 mask 候选的未发布同次 worker 诊断，仅表示与代理初稿的一致程度；对比与“v5 仍为默认”的理由见 CHANGELOG 未发布部分。
 - `evaluation/s2/reviews/2026-08-22-product-owner.json`：不可变 schema v1 第一轮证据及其 SHA-256 身份。
 - `evaluation/s2/holdout/manifest.json` 与 `public/evaluation/s2/holdout/*.jpg`：6 张密封、无标签、禁止调参的留出帧，采用 4 张主要 / 2 张补充分组。
 - `/regression`：双语可视化运行器与第一轮复核历史；绿色实线框是 AI 辅助的项目代理初标，紫色虚线框是默认隐藏的浏览器本地 MediaPipe 输出，蓝色区域是复核选择。TwelveLabs 不生成这两类框。

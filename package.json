@@ -40,6 +40,7 @@
     "test:s2-regression": "vitest run app/lib/pause-regression.test.ts",
     "test:s2-holdout": "node scripts/extract-s2-holdout.mjs --verify-only",
     "test:s2-browser": "playwright test tests/s2-browser-regression.spec.ts --project=chromium",
+    "test:showcase-browser": "playwright test tests/showcase-browser.spec.ts --project=chromium",
     "test:rendered": "pnpm build && node --test tests/rendered-html.test.mjs tests/dependency-patches.test.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "db:generate": "drizzle-kit generate",

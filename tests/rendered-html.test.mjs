@@ -29,7 +29,13 @@ test("server-renders separate showcase and decision-method views", async () => {
   assert.match(html, /02 · 用户暂停/);
   assert.match(html, /暂停后，系统判断是否展示广告/);
   assert.match(html, /简单角色画面/);
-  assert.match(html, /传统暂停广告：立即全屏覆盖/);
+  // The showcase opens on AdMind; the traditional strategy is one click away
+  // and its fixed slot is drawn on every timeline.
+  assert.match(html, /AdMind：判断交互状态，保留画面/);
+  assert.match(html, /剧情张力时间线/);
+  assert.match(html, /内容风险时间线/);
+  assert.match(html, /受保护内容 · 全程不投放/);
+  assert.match(html, /点击画面暂停，体验实时判断/);
   assert.match(html, /03 · 伦理边界/);
   assert.match(html, /正在加载视频/);
   assert.match(html, /救援、医疗与灾后内容始终优先保护/);

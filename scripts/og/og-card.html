@@ -1,0 +1,150 @@
+<!doctype html>
+<!--
+  Source for public/og.png (1536 × 1024). Rendered only by scripts/og/render-og.mjs;
+  it is not served by the app. The video frame is decoded live from
+  public/admind-charge-demo-720p.mp4 (CHARGE, Blender Studio, CC BY 4.0) at the
+  timestamp given by ?t= (default 86 s = 01:26). The decision timeline is an
+  illustrative summary of the homepage S1 example, not measured data.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AdMind OG card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Noto+Sans+SC:wght@500;700&display=block">
+<style>
+  :root {
+    --bg: #0b0a12; --surface: #16141f; --line: rgba(255,255,255,.08); --line-2: rgba(255,255,255,.14);
+    --text: #efeef7; --text-2: #cac8db; --muted: #9c99b4;
+    --purple: #9583ff; --mint: #44dba4; --coral: #ff7171;
+    --sans: "Manrope", "Noto Sans SC", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1536px; height: 1024px; overflow: hidden; }
+  body {
+    position: relative; color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased;
+    background:
+      radial-gradient(900px 620px at 92% -8%, rgba(109,78,246,.30), transparent 62%),
+      radial-gradient(760px 520px at -6% 70%, rgba(68,219,164,.10), transparent 62%),
+      var(--bg);
+  }
+  .card { position: absolute; inset: 0; padding: 72px 80px 64px; display: grid; grid-template-rows: auto 1fr auto; }
+
+  .top { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 16px; }
+  .mark { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 17px; color: #fff;
+    background: linear-gradient(135deg, #a593ff, #6d4ef6); box-shadow: 0 16px 34px -12px rgba(109,78,246,.95), inset 0 1px rgba(255,255,255,.3); }
+  .mark svg { width: 32px; height: 32px; }
+  .brand strong { font-size: 40px; font-weight: 800; letter-spacing: -.035em; }
+  .kicker { display: inline-flex; align-items: center; gap: 12px; padding: 10px 20px 10px 16px; border: 1px solid var(--line-2);
+    border-radius: 999px; background: rgba(255,255,255,.03); color: var(--text-2); font: 600 18px var(--mono); letter-spacing: .1em; }
+  .kicker i { width: 11px; height: 11px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 0 6px rgba(68,219,164,.16); }
+
+  .main { display: grid; grid-template-columns: 660px 1fr; gap: 48px; align-items: center; }
+  h1 { font-size: 80px; font-weight: 800; line-height: 1.02; letter-spacing: -.05em; }
+  h1 .nowrap { white-space: nowrap; }
+  h1 .grad { background: linear-gradient(100deg, #b6a9ff 8%, #6ee7bd 92%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .zh { margin-top: 26px; color: var(--text-2); font: 700 30px "Noto Sans SC", var(--sans); letter-spacing: .02em; }
+  .lead { margin-top: 18px; color: var(--muted); font-size: 25px; line-height: 1.5; font-weight: 600; }
+
+  .frame-wrap { padding: 14px; border-radius: 28px; border: 1px solid var(--line-2);
+    background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02)); box-shadow: 0 50px 110px -40px rgba(0,0,0,.95); }
+  .screen { position: relative; aspect-ratio: 2.1 / 1; overflow: hidden; border-radius: 16px; background: #000; }
+  .screen video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .screen::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.4), transparent 32%, transparent 62%, rgba(0,0,0,.6)); }
+  .chip { position: absolute; z-index: 2; display: inline-flex; align-items: center; gap: 10px; padding: 9px 15px; border-radius: 11px;
+    background: rgba(10,10,18,.76); color: #fff; font-size: 19px; font-weight: 700; }
+  .chip.time { left: 20px; top: 18px; font-family: var(--mono); color: #c9fbe6; }
+  .chip.state { left: 20px; bottom: 18px; }
+  .chip.state i { width: 10px; height: 10px; border-radius: 50%; background: var(--mint); }
+  .ad { position: absolute; z-index: 2; top: 18px; right: 18px; width: 33%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.35); box-shadow: 0 18px 34px -12px rgba(0,0,0,.85); }
+  .ad img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ad span { position: absolute; right: 7px; bottom: 7px; padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,.6); color: #fff; font: 600 13px var(--mono); }
+
+  .timeline { padding: 26px 30px 24px; border-radius: 24px; border: 1px solid var(--line); background: rgba(22,20,31,.82); }
+  .tl-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 76px; }
+  .tl-head b { color: var(--text); font-size: 22px; font-weight: 700; }
+  .tl-head span { color: var(--muted); font: 600 16px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  .track { position: relative; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.035); }
+  .seg { position: absolute; top: 0; bottom: 0; border-right: 1px solid rgba(11,10,18,.7);
+    background: linear-gradient(180deg, rgba(255,113,113,calc(var(--l) * .9)), rgba(149,131,255,calc(var(--l) * .55))); }
+  .seg:first-child { border-radius: 9px 0 0 9px; } .seg:last-child { border-radius: 0 9px 9px 0; border-right: 0; }
+  .marker { position: absolute; top: -18px; bottom: -8px; width: 3px; border-radius: 3px; transform: translateX(-50%); }
+  .marker em { position: absolute; bottom: calc(100% + 0px); left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 6px 13px; border-radius: 9px;
+    font: 700 20px var(--mono); font-style: normal; }
+  .marker.trad { left: 50.3%; background: var(--coral); }
+  .marker.trad em { color: #ffb3b3; background: rgba(255,113,113,.14); border: 1px solid rgba(255,113,113,.45); }
+  .marker.ours { left: 95%; background: var(--mint); }
+  .marker.ours em { left: auto; right: -14px; transform: none; color: #8ff0c8; background: rgba(68,219,164,.14); border: 1px solid rgba(68,219,164,.45); }
+  .tl-foot { display: flex; justify-content: space-between; margin-top: 14px; color: var(--muted); font: 600 16px var(--mono); }
+  .tl-foot .mid { display: flex; gap: 28px; font-family: var(--sans); font-size: 18px; }
+  .tl-foot .mid i { display: inline-block; width: 16px; height: 10px; margin-right: 8px; border-radius: 3px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="top">
+      <div class="brand">
+        <span class="mark"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 1.4 4.1L18 9l-4.6 1.9L12 15l-1.4-4.1L6 9l4.6-1.9L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m18 15 .7 2.1L21 18l-2.3.9L18 21l-.7-2.1L15 18l2.3-.9L18 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+        <strong>AdMind</strong>
+      </div>
+      <span class="kicker"><i></i>AI AD DECISION ENGINE</span>
+    </div>
+
+    <div class="main">
+      <div>
+        <h1><span class="nowrap">Ads must appear—</span><br><span class="grad">without ruining the story.</span></h1>
+        <p class="zh">广告必须出现，也不必毁掉剧情。</p>
+        <p class="lead">Explainable AI decisions for less disruptive long-form video ads.</p>
+      </div>
+      <div class="frame-wrap">
+        <div class="screen">
+          <video id="frame" muted playsinline preload="auto" src="../../public/admind-charge-demo-720p.mp4"></video>
+          <span class="chip time" id="stamp">01:26 · Safe window</span>
+          <div class="ad"><img src="../../public/game-ad-clean.png" alt=""><span>AD</span></div>
+          <span class="chip state"><i></i>Low-occlusion card · story intact</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-head"><b>Same ad, same episode — different moment</b><span>Illustrative · CHARGE</span></div>
+      <div class="track">
+        <i class="seg" style="left:0;width:9%;--l:.14"></i>
+        <i class="seg" style="left:9%;width:12%;--l:.3"></i>
+        <i class="seg" style="left:21%;width:14%;--l:.55"></i>
+        <i class="seg" style="left:35%;width:13%;--l:.8"></i>
+        <i class="seg" style="left:48%;width:13%;--l:1"></i>
+        <i class="seg" style="left:61%;width:14%;--l:.85"></i>
+        <i class="seg" style="left:75%;width:13%;--l:.6"></i>
+        <i class="seg" style="left:88%;width:12%;--l:.2"></i>
+        <span class="marker trad"><em>Traditional 00:45 · story climax</em></span>
+        <span class="marker ours"><em>AdMind 01:25 · story recovery</em></span>
+      </div>
+      <div class="tl-foot">
+        <span>00:00</span>
+        <span class="mid"><span><i style="background:rgba(149,131,255,.35)"></i>Calm</span><span><i style="background:linear-gradient(90deg,#ff7171,#b06cc4)"></i>High tension</span></span>
+        <span>01:29</span>
+      </div>
+    </div>
+  </div>
+<script>
+  const params = new URLSearchParams(location.search);
+  const t = Number(params.get("t") ?? 86);
+  const video = document.getElementById("frame");
+  const mmss = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  document.getElementById("stamp").textContent = `${mmss(t)} · Safe window`;
+  video.addEventListener("seeked", async () => {
+    await document.fonts.ready;
+    await Promise.all([...document.images].map((img) => img.decode().catch(() => {})));
+    document.body.dataset.ready = "1";
+  }, { once: true });
+  video.addEventListener("error", () => { document.body.dataset.ready = "error"; });
+  const seek = () => { video.currentTime = t; };
+  if (video.readyState >= 2) seek();
+  else video.addEventListener("loadeddata", seek, { once: true });
+</script>
+</body>
+</html>

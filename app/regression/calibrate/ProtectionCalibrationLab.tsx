@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import manifestJson from "../../../evaluation/s2/manifest.json";
@@ -40,6 +39,7 @@ import {
   calibrationWorkspaceExportSignature,
   isCalibrationWorkspaceExportCurrent,
 } from "./calibration-export-state";
+import { LabHeader } from "../LabHeader";
 import styles from "./ProtectionCalibrationLab.module.css";
 
 const manifest = manifestJson as RegressionManifest;
@@ -364,19 +364,17 @@ export function ProtectionCalibrationLab() {
   };
 
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <Link className={styles.brand} href="/">AdMind</Link>
-        <nav>
-          <Link href="/regression">{copy.back}</Link>
-          <Link href="/regression/intake">{copy.intake}</Link>
-          <Link href="/">{copy.home}</Link>
-        </nav>
-        <div className={styles.locale} role="group" aria-label="Language / 语言">
-          <button aria-pressed={locale === "en"} onClick={() => setLocale("en")}>EN</button>
-          <button aria-pressed={locale === "zh"} onClick={() => setLocale("zh")}>中</button>
-        </div>
-      </header>
+    <main className={`am-labs ${styles.page}`}>
+      <LabHeader
+        home={copy.home}
+        links={[
+          { href: "/regression", label: copy.back },
+          { href: "/regression/intake", label: copy.intake },
+        ]}
+        locale={locale}
+        navLabel={locale === "zh" ? "证据实验室" : "Evidence labs"}
+        onLocaleChange={setLocale}
+      />
 
       <section className={styles.hero}>
         <p>{copy.eyebrow}</p>

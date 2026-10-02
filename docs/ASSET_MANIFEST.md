@@ -8,7 +8,7 @@ This file records the provenance and release basis for binary assets distributed
 | --- | --- | --- | --- |
 | `public/game-ad-clean.png` | AdMind project owner | Project-owned portfolio asset | The owner confirmed on 2026-08-19 that this image may remain in the public project. It is used as the fictional ad creative. SHA-256: `473ff1ee2a2eae70fe6ee06c7e615b7fb0f565ae5acabaef2e8b0947fb9d29ca`. |
 | `docs/images/admind-showcase.png` | AdMind project | Project screenshot | Captured from the AdMind interface; contains only assets already listed in this manifest. |
-| `public/og.png` | AdMind project | Project social-preview artwork | Created for the AdMind repository and deployment. |
+| `public/og.png` | AdMind project; embeds one `CHARGE` frame (Blender Foundation / Blender Studio, CC BY 4.0) and `public/game-ad-clean.png` | Project social-preview artwork; the embedded frame remains a CC BY 4.0 derivative with the `CHARGE` attribution below | 1536×1024 PNG regenerated on 2026-10-01 for the dark showcase redesign by `node scripts/og/render-og.mjs` (layout `scripts/og/og-card.html`; headless Playwright Chromium decodes `public/admind-charge-demo-720p.mp4` at 86.0 s = 01:26, then sharp writes a lossless max-compression PNG, 361,624 bytes). The 00:45 / 01:25 decision timeline is an illustrative summary of the homepage S1 example, not measured data. SHA-256: `ec2dc21076333e413bdccea33f87ac3fa479cba74bf9f851a9cddb824f326f68`. |
 
 ## Blender open movies
 
@@ -43,6 +43,7 @@ Required non-endorsement notice: **The appearance of U.S. Department of War (DoW
 | --- | --- | --- | --- | --- |
 | `public/models/blaze_face_full_range.tflite` | [MediaPipe BlazeFace full range](https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_full_range/float16/1/blaze_face_full_range.tflite) | Google MediaPipe | [Apache License 2.0](https://github.com/google-ai-edge/mediapipe/blob/master/LICENSE) and upstream model terms | `3698b18f063835bc609069ef052228fbe86d9c9a6dc8dcb7c7c2d69aed2b181b` |
 | `public/models/efficientdet_lite0.tflite` | [MediaPipe EfficientDet-Lite0 int8](https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/1/efficientdet_lite0.tflite) | Google MediaPipe | [Apache License 2.0](https://github.com/google-ai-edge/mediapipe/blob/master/LICENSE) and upstream model terms | `0720bf247bd76e6594ea28fa9c6f7c5242be774818997dbbeffc4da460c723bb` |
+| `public/models/deeplab_v3.tflite` | [MediaPipe DeepLab v3 float32](https://storage.googleapis.com/mediapipe-models/image_segmenter/deeplab_v3/float32/1/deeplab_v3.tflite) | Google MediaPipe | [Apache License 2.0](https://github.com/google-ai-edge/mediapipe/blob/master/LICENSE) and upstream model terms | `ff36e24d40547fe9e645e2f4e8745d1876d6e38b332d39a82f0bf0f5d1d561b3` |
 
 ## Browser-side MediaPipe runtime
 
