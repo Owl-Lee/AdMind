@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import type { AnalysisConsensus, DecisionResponse, Scenario, Strategy, VideoAnalysis } from "@admind/contracts";
 import { ChevronIcon, PlayIcon, ShieldIcon, SparkIcon, VolumeIcon } from "./icons";
 import { AdCreative } from "./AdCreative";
@@ -10,6 +10,7 @@ import { detectFacesInPausedFrame, type FaceDetectionEvidence } from "../lib/fac
 import { choosePauseAdPlacement, choosePauseAdPlacementForEvidence, type PlacementDecision } from "../lib/pause-decision";
 import { createPauseSessionGuard, type PauseSessionToken } from "../lib/pause-session";
 import { observeUiLocalization, type UiLocale } from "../lib/ui-localization";
+import { deliveryQueue, pendingCount } from "../lib/delivery-queue";
 
 export type DemoMedia = {
   id: string;
@@ -106,6 +107,106 @@ function timelineSegments(media: DemoMedia, protectedScenario = false): Timeline
   }));
 }
 
+function tensionAt(media: DemoMedia, time: number, protectedScenario = false) {
+  const segment = media.analysis?.segments.find((item) => item.startSec <= time && time < item.endSec)
+    ?? media.analysis?.segments.at(-1);
+  if (!segment) return null;
+  return protectedScenario ? segment.interruptionRisk ?? segment.narrativeIntensity : segment.narrativeIntensity;
+}
+
+function breakAt(media: DemoMedia, time: number) {
+  return media.analysis?.candidateBreaks
+    .filter((item) => Math.abs(item.timeSec - time) <= 2)
+    .sort((left, right) => Math.abs(left.timeSec - time) - Math.abs(right.timeSec - time))[0];
+}
+
+function recommendationName(value?: string) {
+  return value === "block" ? "模型：不要打断"
+    : value === "delay" ? "模型：建议再等等"
+      : value === "allow" ? "模型：可以投放"
+        : value === "uncertain" ? "模型：不确定"
+          : "";
+}
+
+function formatName(format?: string) {
+  return format === "fullscreen" ? "全屏广告"
+    : format === "muted_card" ? "静音卡片"
+      : format === "pause_card" ? "暂停卡片"
+        : format === "lower_third" ? "底部横条"
+          : "其他形式";
+}
+
+function AnalysisProvenance({ media }: { media: DemoMedia }) {
+  const analysis = media.analysis;
+  if (!analysis) return null;
+  return (
+    <details className="am-provenance">
+      <summary>
+        <span>分析来源</span>
+        <b>{analysis.provider === "twelvelabs" ? "TwelveLabs" : analysis.provider} · {analysis.model}</b>
+        <span>{analysis.generatedAt.slice(0, 10)} · 缓存结果，非实时</span>
+      </summary>
+      <p>以上张力与风险来自视频理解模型的片段级评分；投放决定由 AdMind 的确定性规则计算，两者分开记录。</p>
+      {analysis.limitations.length ? (
+        <ul>{analysis.limitations.map((item) => <li key={item}>{item}</li>)}</ul>
+      ) : null}
+    </details>
+  );
+}
+
+function OutcomeBoard({ variant }: { variant: ScenarioDemoVariant }) {
+  const { scenario, baseline, admind, media } = variant;
+  const isPause = scenario.id === "S2";
+  const isProtected = scenario.id === "S3";
+  if (isPause) {
+    return (
+      <div className="am-outcome" aria-label="两种策略的结果对比">
+        <article className="baseline"><span>传统投放</span><strong>一暂停就全屏</strong><small>不看暂停是否稳定，也不看画面里的人物。</small></article>
+        <article className="admind"><span>AdMind</span><strong>稳定 1.5 秒后再判断</strong><small>避开人脸与主体；没有安全位置就顺延，不遮挡。</small></article>
+      </div>
+    );
+  }
+  const fixed = baseline.selected?.timeSec ?? scenario.nominalOpportunitySec;
+  const planned = admind.selected?.timeSec;
+  const fixedScore = tensionAt(media, fixed, isProtected);
+  const plannedScore = planned === undefined ? null : tensionAt(media, planned, isProtected);
+  const scoreLabel = isProtected ? "内容风险" : "剧情张力";
+  const drop = fixedScore && plannedScore !== null ? Math.round(((fixedScore - plannedScore) / fixedScore) * 100) : null;
+  const verdict = isProtected
+    ? "伦理规则优先：受保护内容里一次都不插播，商业价值不能越过这条线。"
+    : admind.outcome === "blocked"
+      ? "允许的延后范围内没有安全窗口：宁可记录交付缺口，也不在情绪最紧的段落插播。"
+      : drop !== null && drop > 0
+        ? isProtected ? `同一条广告照常交付，打断时的内容风险降低 ${drop}%。` : `同一条广告照常交付，打断时的剧情张力降低 ${drop}%。`
+        : breakAt(media, fixed)?.recommendation === "block"
+          ? `同一条广告照常交付：避开模型判定“不要打断”的时刻，换成${formatName(admind.selected?.format)}。`
+          : "同一条广告照常交付，并换成遮挡更少的形式。";
+  const fixedBreak = breakAt(media, fixed);
+  const plannedBreak = planned === undefined ? undefined : breakAt(media, planned);
+  const describe = (moment: typeof fixedBreak, score: number | null, format?: string) => moment
+    ? `${localizeAnalysisLabel(moment.label)} · ${recommendationName(moment.recommendation)} · ${formatName(format)}`
+    : `${score === null ? "" : `${scoreLabel} ${asTenPoint(score)} / 10 · `}${formatName(format)}`;
+  const fixedDetail = describe(fixedBreak, fixedScore, baseline.selected?.format);
+  const plannedDetail = admind.outcome === "blocked"
+    ? isProtected ? "伦理硬规则拦截" : "记录交付缺口"
+    : describe(plannedBreak, plannedScore, admind.selected?.format);
+  return (
+    <div className="am-outcome" aria-label="两种策略的结果对比">
+      <article className="baseline">
+        <span>传统投放</span>
+        <strong>{formatTime(fixed)} 打断</strong>
+        <small>{fixedDetail}</small>
+      </article>
+      <article className="admind">
+        <span>AdMind</span>
+        <strong>{admind.outcome === "blocked" ? isProtected ? "整段不投放" : "窗口内不投放" : `${formatTime(planned ?? 0)} 投放`}</strong>
+        <small>{plannedDetail}</small>
+      </article>
+      <p>{verdict}</p>
+    </div>
+  );
+}
+
 function HeroDecisionPreview({ demo }: { demo: ScenarioDemo }) {
   const planned = demo.admind.selected;
   const plannedTime = planned?.timeSec ?? demo.scenario.safeOpportunitySec;
@@ -154,8 +255,8 @@ function HeroDecisionPreview({ demo }: { demo: ScenarioDemo }) {
         durationSec={demo.scenario.durationSec}
         legend={{ low: "平缓", high: "高张力" }}
         markers={[
-          { kind: "baseline", timeSec: fixedTime, label: `传统 ${formatTime(fixedTime)}`, caption: "剧情高潮" },
-          ...(demo.admind.outcome === "blocked" ? [] : [{ kind: "admind" as const, timeSec: plannedTime, label: `AdMind ${formatTime(plannedTime)}`, caption: "剧情恢复" }]),
+          { kind: "baseline", timeSec: fixedTime, label: `传统 ${formatTime(fixedTime)}`, caption: localizeAnalysisLabel(breakAt(demo.media, fixedTime)?.label ?? "剧情高潮") },
+          ...(demo.admind.outcome === "blocked" ? [] : [{ kind: "admind" as const, timeSec: plannedTime, label: `AdMind ${formatTime(plannedTime)}`, caption: localizeAnalysisLabel(breakAt(demo.media, plannedTime)?.label ?? "剧情恢复") }]),
         ]}
         segments={timelineSegments(demo.media)}
       />
@@ -385,6 +486,10 @@ function ScenarioExperience({ demo, copy }: { demo: ScenarioDemo; copy: StorySte
   const [volume, setVolume] = useState(0.65);
   const [volumeOpen, setVolumeOpen] = useState(false);
   const [adResult, setAdResult] = useState<"idle" | "shown" | "completed" | "skipped">("idle");
+  const queue = useSyncExternalStore(deliveryQueue.subscribe, deliveryQueue.getSnapshot, deliveryQueue.getServerSnapshot);
+  const queuePending = pendingCount(queue);
+  const lastDelivered = queue.tasks.find((task) => task.status === "delivered");
+  const pauseAttemptRef = useRef(0);
 
   const variants: ScenarioDemoVariant[] = [demo, ...(demo.alternatives ?? [])];
   const activeDemo = variants[variantIndex] ?? variants[0];
@@ -403,6 +508,28 @@ function ScenarioExperience({ demo, copy }: { demo: ScenarioDemo; copy: StorySte
   const blockedNoticeActive = strategy === "admind"
     && decision.outcome === "blocked"
     && time >= scenario.nominalOpportunitySec - 0.5;
+
+  // Deferred S2 tasks become durable queue entries; the next stable pause or an
+  // S1 low-disruption window delivers them. S3 never fulfils the queue.
+  useEffect(() => {
+    if (!isPauseScenario || strategy !== "admind" || pausePhase !== "deferred" || !selected) return;
+    deliveryQueue.enqueue({
+      id: `s2-pause-${pauseAttemptRef.current}`,
+      campaign: "game-ad",
+      durationSec: selected.durationSec,
+      reason: deferredReason,
+    });
+  }, [deferredReason, isPauseScenario, pausePhase, selected, strategy]);
+
+  useEffect(() => {
+    if (!isPauseScenario || strategy !== "admind" || pausePhase !== "delivered" || adResult !== "shown") return;
+    deliveryQueue.fulfil("s2-stable-pause");
+  }, [adResult, isPauseScenario, pausePhase, strategy]);
+
+  useEffect(() => {
+    if (scenario.id !== "S1" || strategy !== "admind" || !adActive) return;
+    deliveryQueue.fulfil("s1-low-disruption");
+  }, [adActive, scenario.id, strategy]);
 
   const invalidatePauseSession = useCallback(() => {
     pauseSessionGuard.invalidate();
@@ -428,6 +555,7 @@ function ScenarioExperience({ demo, copy }: { demo: ScenarioDemo; copy: StorySte
   }, [invalidatePauseSession]);
 
   const startPauseObservation = () => {
+    pauseAttemptRef.current += 1;
     const token = pauseSessionGuard.beginIfIdle();
     if (token === null) return;
     pauseSessionTokenRef.current = token;
@@ -1024,6 +1152,9 @@ function ScenarioExperience({ demo, copy }: { demo: ScenarioDemo; copy: StorySte
               <strong>点击画面暂停，体验实时判断</strong>
               <small>暂停超过 1.5 秒，AdMind 才会分析画面并决定广告放在哪里。</small>
             </div>
+          ) : null}
+          {isPauseScenario ? (
+            <div className="am-timeline-wrap"><OutcomeBoard variant={activeDemo} /></div>
           ) : (
             <div className="am-timeline-wrap">
               <div className="am-timeline-head">
@@ -1043,6 +1174,8 @@ function ScenarioExperience({ demo, copy }: { demo: ScenarioDemo; copy: StorySte
                 time={time}
               />
               <p className="am-timeline-tip">点击时间线上的标记，直接跳到该策略的投放时刻。</p>
+              <OutcomeBoard variant={activeDemo} />
+              <AnalysisProvenance media={media} />
             </div>
           )}
         </div>
@@ -1124,10 +1257,23 @@ function ScenarioExperience({ demo, copy }: { demo: ScenarioDemo; copy: StorySte
             </div>
           )}
 
-          {showPauseEvidence && pausePhase === "deferred" ? (
-            <div className="pause-queue-note">
-              <strong>广告任务已顺延</strong>
-              <span>等待下一次稳定暂停；仍无安全位置，再交给 S1 的低打断窗口。S3 保护场景绝不补量。</span>
+          {strategy === "admind" && (isPauseScenario || queuePending > 0) ? (
+            <div className={`am-queue${queuePending ? " has-pending" : ""}`} aria-live="polite">
+              <div>
+                <span>待交付队列</span>
+                <strong>{queuePending
+                  ? isProtectedScenario ? `${queuePending} 个任务继续等待` : `${queuePending} 个广告任务等待补投`
+                  : "没有待补投的任务"}</strong>
+              </div>
+              <small>{queuePending
+                ? isProtectedScenario
+                  ? "保护场景绝不补量：任务不会在这里投放，会留给其他安全时机。"
+                  : isPauseScenario
+                    ? "下一次稳定暂停，或剧情场景里的低打断窗口，会优先补投；任务 30 分钟后过期。"
+                    : `来自暂停场景的任务，将在 ${formatTime(admind.selected?.timeSec ?? scenario.safeOpportunitySec)} 的低打断窗口一起补投。`
+                : lastDelivered
+                  ? lastDelivered.deliveredVia === "s1-low-disruption" ? "最近一次已通过剧情低打断窗口补投。" : "最近一次已通过稳定暂停补投。"
+                  : "暂停被打断或画面没有安全位置时，广告任务会进入这里，而不是直接丢掉。"}</small>
             </div>
           ) : null}
         </aside>

@@ -6,7 +6,19 @@ Notable project changes are recorded here.
 
 ## Unreleased
 
-No unreleased changes are documented yet.
+- Showcase: a durable pending-delivery queue (`app/lib/delivery-queue.ts`). A deferred S2 ad becomes a stored task (one per campaign, 30-minute expiry, bounded, localStorage best-effort); the next stable S2 pause or an S1 low-disruption window delivers it, and S3 never does.
+- Showcase: an outcome scoreboard per scenario that compares both strategies from the cached analysis — the model’s judgement at each slot (for example CHARGE 00:45 *Mid-fight · do not interrupt* vs 01:25 *Post-fight recovery · wait longer*) — without inventing a metric.
+- Showcase: each timeline shows its analysis provenance (provider, model, run date, cached-not-live, limitations), keeping model evidence separate from deterministic decisions.
+- Tests: `tests/showcase-browser.spec.ts` (6 Playwright cases: timeline jumps, clip switching, S2 short-pause deferral into the queue and S1 delivery, S2 stable-pause vision, S3 blocking, 360–1440px layout in both languages), wired into CI as `pnpm test:showcase-browser`.
+- Fix: `/media/*` returned 500 under `vinext start` because the worker read `env.ASSETS` when `env` is undefined; it now falls back to the static server, so local and CI runs can play the clips.
+
+### 未发布（中文）
+
+- 展示页：新增可持久化的待交付队列。S2 顺延的广告会变成一条任务（同一广告只保留一条、30 分钟过期、有上限，localStorage 尽力保存）；下一次稳定暂停或 S1 的低打断窗口会补投，S3 永不补量。
+- 展示页：每个场景新增结果对比，直接引用缓存分析里模型在每个时刻的判断（例如 CHARGE 00:45「战斗进行中 · 不要打断」对 01:25「战斗后恢复 · 建议再等等」），不编造新指标。
+- 展示页：时间线下标注分析来源（服务商、模型、运行日期、缓存非实时、已知局限），继续把模型证据与确定性决策分开。
+- 测试：新增 6 个 Playwright 展示页浏览器用例，并以 `pnpm test:showcase-browser` 接入 CI。
+- 修复：`vinext start` 下 `/media/*` 返回 500（worker 在 `env` 为空时读取 `env.ASSETS`），现在回退到静态文件服务，本地与 CI 都能播放视频。
 
 ## 0.5.0 · 2026-08-22
 
