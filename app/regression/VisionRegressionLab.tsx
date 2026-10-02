@@ -25,6 +25,7 @@ import {
   toggleReviewPlacement,
   type ReviewWorkspaceItem,
 } from "../lib/pause-review";
+import { LabHeader } from "./LabHeader";
 import styles from "./VisionRegressionLab.module.css";
 
 const manifest = manifestJson as RegressionManifest;
@@ -323,6 +324,10 @@ export function VisionRegressionLab() {
         agentRuleOnly: "Agent rule draft · not human-reviewed",
         incompleteReview: "Complete all three steps to confirm.",
         noSamples: "No samples match this filter.",
+        navLabel: "Evidence labs",
+        navCalibration: "Calibration workspace",
+        navIntake: "Label intake",
+        home: "Main site",
       }
     : {
         kicker: "阶段 1B · 人工复核与校准",
@@ -397,6 +402,10 @@ export function VisionRegressionLab() {
         agentRuleOnly: "代理规则初标 · 尚未人工审核",
         incompleteReview: "完成三个步骤后才能确认。",
         noSamples: "没有符合当前筛选条件的样本。",
+        navLabel: "证据实验室",
+        navCalibration: "校准工作区",
+        navIntake: "标签接收",
+        home: "返回主站",
       };
 
   const formatPlacement = (placement: string) => {
@@ -411,14 +420,17 @@ export function VisionRegressionLab() {
   };
 
   return (
-    <main className={styles.page}>
-      <header className={styles.header}>
-        <Link className={styles.brand} href="/">AdMind</Link>
-        <div className={styles.locale} role="group" aria-label="Language / 语言">
-          <button aria-pressed={locale === "en"} onClick={() => setLocale("en")}>EN</button>
-          <button aria-pressed={locale === "zh"} onClick={() => setLocale("zh")}>中</button>
-        </div>
-      </header>
+    <main className={`am-labs ${styles.page}`}>
+      <LabHeader
+        home={copy.home}
+        links={[
+          { href: "/regression/calibrate", label: copy.navCalibration },
+          { href: "/regression/intake", label: copy.navIntake },
+        ]}
+        locale={locale}
+        navLabel={copy.navLabel}
+        onLocaleChange={setLocale}
+      />
 
       <section className={styles.hero}>
         <p>{copy.kicker}</p>
