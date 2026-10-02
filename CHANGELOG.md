@@ -6,7 +6,15 @@ Notable project changes are recorded here.
 
 ## Unreleased
 
-No unreleased changes are documented yet.
+### S2 off-main-thread inference and the opt-in `s2-vision-v6` candidate
+
+- Paused-frame MediaPipe inference now runs in a dedicated module worker. The main thread only captures the paused frame with `createImageBitmap` and transfers it; `detectFacesInPausedFrame` keeps its signature and return type, so `ShowcaseDemo.tsx` is unchanged and its pause-session token still discards late results. Measured in headless Chrome on one Windows workstation (3 runs each): before, every stable S2 pause produced one main-thread long task of 347–395 ms on the first pause and 226–240 ms afterwards; after, no long task ≥ 50 ms was observed, while in-worker inference took 298–313 ms / 228–243 ms. A full 20-frame `/regression` run went from 20 main-thread long tasks (max 310–398 ms) to none. These are single-machine diagnostics, not a cross-device guarantee.
+- Fallback contract: no `Worker`/`OffscreenCanvas`/`createImageBitmap` support, a worker that does not boot within 10 s, or a worker that cannot create its detectors falls back to the identical main-thread pipeline before any worker inference starts. A worker crash or a 30 s response timeout during an in-flight frame fails closed for that pause (no ad, task deferred) and later pauses use the main thread. If the main-thread pipeline also fails, the frame remains `unavailable`. The fail-closed vision gate is unchanged.
+- The refactored `s2-vision-v5` pipeline produced byte-identical targets and placements to the unmodified v0.5.0 build on all 20 fixed frames, on both the worker and main-thread paths.
+- Added the opt-in `s2-vision-v6` candidate (`/regression?vision=s2-vision-v6`). It self-hosts MediaPipe DeepLab v3 (`/models/deeplab_v3.tflite`, SHA-256 `ff36e24d40547fe9e645e2f4e8745d1876d6e38b332d39a82f0bf0f5d1d561b3`) and turns its person mask into horizontal silhouette bands. A detector `人物主体` box is replaced only when at least 25% of it is person mask; robots, animals, faceless characters and weakly supported boxes are kept. Segmentation is a required detector, the placement scorer and 0.30×0.30 footprint are unchanged, and no threshold was lowered.
+- Diagnostic result against the **agent-draft** labels (not human ground truth), fresh runs at commit `f173477e075f68ece3a5ba5ba1e8cea7c73d8c6a`, tracked under `evaluation/s2/candidates/2026-10-02-*.json`: the same-run v5 control scored 7/13 safe, 4/13 unsafe, 2/13 over-deferral; v6 scored 9/13 safe, 4/13 unsafe (the same four samples) and 0/13 over-deferral. Raw target matching fell from TP 5 / FP 16 / FN 6 (23.8% / 45.5% / 31.3%) to TP 4 / FP 18 / FN 7 (18.2% / 36.4% / 24.2%); latency was 222/267 ms vs 289/297 ms p50/p95 in the worker. On the seven diagnostic drafts v6 newly places a card on `charge-015`, whose draft expects deferral. The historical v0.4.0/v4 figures (7/13, 3/13, 3/13) are unchanged; the unmodified v0.5.0 build on this machine also places `charge-008` top-right, so that difference is runtime drift rather than an effect of this change.
+- `s2-vision-v5` remains the default. v6 removes two over-deferrals without changing blocking unsafe samples, but it adds a diagnostic placement against a defer draft and lowers raw target matching. It should be re-scored once a reviewed manifest exists instead of being promoted on agent-draft agreement. The sealed holdout was not opened.
+- The browser gate now also requires the default run to use the worker transport and runs the v6 candidate with the same no-CDN, 20/20-availability and no-new-unsafe rules. Unit tests cover the mask geometry, mask-group target matching, every candidate's model hashes and all worker fallback paths.
 
 ## 0.5.0 · 2026-08-22
 
@@ -26,6 +34,16 @@ v0.5.0 is the public S2 evidence-intake and browser-reproducibility release. It 
 - Post-deployment Playwright passed 3/3 suites: fresh 20-frame local MediaPipe inference, complete bilingual responsive coverage at 360/430/768/1440 CSS pixels, and the full browser-local schema-v2 file-intake/hash-validation path. Stage 1C browser reproducibility is therefore complete, without creating or publishing a new v5 model metric.
 - Branch protection now strictly requires `quality` and `s2-browser-regression` before merge. Administrator enforcement remains disabled and is documented as a repository-governance limitation.
 - The v0.5.0 annotated tag and GitHub Release are intentionally deferred until the project owner decides how to handle historical media-redistribution records and the personal email present in old commit metadata. Public `main` and Sites v67 are deployed facts, not a claim that repository history is rights-clean.
+
+### 未发布 中文说明
+
+- 暂停帧 MediaPipe 推理改在独立 module worker 中运行。主线程只用 `createImageBitmap` 截取暂停帧并转移给 worker；`detectFacesInPausedFrame` 的签名与返回类型不变，`ShowcaseDemo.tsx` 无需修改，pause-session token 仍会丢弃迟到结果。在同一台 Windows 工作站的无头 Chrome 中各测 3 次：迁移前，每次稳定暂停都会产生一个主线程长任务，首次 347–395 ms、之后 226–240 ms；迁移后未观察到任何 ≥ 50 ms 的长任务，worker 内推理为 298–313 ms / 228–243 ms。完整 20 帧 `/regression` 运行从 20 个主线程长任务（最长 310–398 ms）降为 0 个。以上只是单机诊断，不是跨设备承诺。
+- 回退合同：浏览器不支持 `Worker`/`OffscreenCanvas`/`createImageBitmap`、worker 10 秒内未启动或无法创建检测器时，在 worker 开始推理前回退到完全相同的主线程管线；若某一帧推理进行中 worker 崩溃或 30 秒未返回，该次暂停 fail-closed（不投放、任务顺延），之后的暂停改用主线程。主线程管线也失败时，该帧仍为 `unavailable`。视觉门 fail-closed 语义不变。
+- 重构后的 `s2-vision-v5` 在 20 张固定帧上，worker 与主线程两条路径的目标框与位置都与未修改的 v0.5.0 构建逐项一致。
+- 新增可选候选 `s2-vision-v6`（`/regression?vision=s2-vision-v6`）：自托管 MediaPipe DeepLab v3（`/models/deeplab_v3.tflite`，SHA-256 `ff36e24d40547fe9e645e2f4e8745d1876d6e38b332d39a82f0bf0f5d1d561b3`），把人物 mask 转为若干水平轮廓条。只有当检测器的 `人物主体` 框内至少 25% 被人物 mask 覆盖时才替换该框；机器人、动物、无脸角色和 mask 支持不足的框全部保留。分割是必需检测器，评分器与 0.30×0.30 footprint 不变，没有降低任何阈值。
+- 对照**代理初稿标签**（不是人工真值）的诊断结果，提交 `f173477e075f68ece3a5ba5ba1e8cea7c73d8c6a` 新鲜运行，保存在 `evaluation/s2/candidates/2026-10-02-*.json`：同次 v5 对照为安全一致 7/13、危险误投 4/13、过度顺延 2/13；v6 为 9/13、4/13（同样 4 张）、0/13。原始框匹配由 TP 5 / FP 16 / FN 6（23.8% / 45.5% / 31.3%）降为 TP 4 / FP 18 / FN 7（18.2% / 36.4% / 24.2%）；worker 内 P50/P95 为 222/267 ms 对 289/297 ms。7 张诊断初稿中，v6 新增在 `charge-015`（初稿期望顺延）投放卡片。历史 v0.4.0/v4 数字（7/13、3/13、3/13）保持不变；本机未修改的 v0.5.0 构建同样把 `charge-008` 放到右上角，因此该差异来自运行时漂移，而不是本次改动。
+- 默认仍为 `s2-vision-v5`。v6 在不改变阻断危险误投样本的前提下消除了 2 个过度顺延，但在诊断集上新增一次与“顺延”初稿相悖的投放，且原始框匹配下降；应在复核 manifest 建立后重评分，而不是凭代理初稿一致率升级。密封 holdout 未打开。
+- 浏览器质量门新增：默认运行必须走 worker；v6 候选按同样的无 CDN、20/20 可用、不得新增危险误投规则运行。单元测试覆盖 mask 几何、mask 分组目标匹配、所有候选的模型哈希以及 worker 的全部回退路径。
 
 ### 0.5.0 中文说明
 

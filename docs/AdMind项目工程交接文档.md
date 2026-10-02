@@ -537,3 +537,25 @@ English summary: public v0.5.0 adds a local-only `/regression/intake` validator/
 3. 继续维持 `quality`、`s2-browser-regression` 与线上回归双绿；新增功能必须覆盖对应双语和断点，不得根据工程门通过推导新指标。
 4. 模型候选冻结后再为 holdout 建立独立产品复核文件；原 sealed manifest 不覆盖、不用于调参。
 5. 由项目负责人决定历史素材再分发权与旧提交个人邮箱的处理方式，再决定是否创建 v0.5.0 annotated tag / GitHub Release。
+
+## 二十五、S2 worker 推理与可选 v6 候选（2026-10-02，未发布，分支 `feat/s2-vision-worker`）
+
+### 完成
+
+- 暂停帧推理移入 module worker（`app/lib/vision.worker.ts`），共享管线在 `app/lib/vision-pipeline.ts`；`detectFacesInPausedFrame` 签名与返回类型不变，`ShowcaseDemo.tsx` 未改。worker 不支持/启动失败/无法创建检测器 → 回退到相同主线程管线；推理中崩溃或 30 秒超时 → 该次暂停 fail-closed。
+- 新增可选候选 `s2-vision-v6`（`/regression?vision=s2-vision-v6`）：自托管 DeepLab v3 人物 mask 转为轮廓条，替换 mask 支持度 ≥ 25% 的检测器人物框，保留机器人/动物/无脸角色。默认仍为 `s2-vision-v5`。
+
+### 验证
+
+- 无头 Chrome 稳定暂停：迁移前每次暂停一个 226–395 ms 主线程长任务；迁移后无 ≥ 50 ms 长任务。重构后 v5 在 20 帧上与未修改 v0.5.0 构建逐项一致。
+- 对照代理初稿（非人工真值）：同次 v5 对照 7/13 安全、4/13 危险、2/13 顺延；v6 为 9/13、4/13（同样样本）、0/13；原始框 F1 31.3% → 24.2%；诊断样本 `charge-015` 新增投放。证据见 `evaluation/s2/candidates/2026-10-02-*.json`。
+
+### 遗留
+
+- 本机未修改的 v0.5.0 也把 `charge-008` 放在右上角（历史 v4 为顺延），属于运行时漂移；`charge-008` 仍在待 schema v2 裁决的诊断例外中。
+- v6 是否升级为默认，取决于复核 manifest 下的重评分，尤其是 `charge-015` 与 5 张争议样本。holdout 未打开。
+
+### 下一步
+
+1. 产品负责人完成 schema v2 后建立版本化复核 manifest，用 `scoreVisionRegression` 对两份 2026-10-02 已保存预测做标签重评分（不是新推理），比较 v5 与 v6。
+2. 若 v6 在复核标签下危险误投不增加，再冻结候选、开启 holdout 产品复核，最后才切换默认。

@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import baselineJson from "../../evaluation/s2/baselines/v0.2.7.json";
 import candidateJson from "../../evaluation/s2/candidates/v0.4.0.json";
+import v5ControlJson from "../../evaluation/s2/candidates/2026-10-02-s2-vision-v5-control.json";
+import v6CandidateJson from "../../evaluation/s2/candidates/2026-10-02-s2-vision-v6.json";
 import manifestJson from "../../evaluation/s2/manifest.json";
 import { PAUSE_VISION_CANDIDATES, PAUSE_VISION_CONFIG } from "./face-detector";
 import { choosePauseAdPlacement } from "./pause-decision";
@@ -140,6 +142,39 @@ describe("S2 fixed-frame regression scorer", () => {
     expect(candidate.failures
       .filter((failure) => failure.kind === "unsafe-placement")
       .every((failure) => baselineUnsafe.has(failure.sampleId))).toBe(true);
+  });
+
+  it("recomputes the fresh v5 control and v6 candidate diagnostics from their raw predictions", () => {
+    const control = v5ControlJson as unknown as RegressionReport;
+    const v6 = v6CandidateJson as unknown as RegressionReport;
+    for (const report of [control, v6]) {
+      expect(validateRegressionPredictions(manifest, report.predictions)).toEqual([]);
+      const recomputed = scoreVisionRegression(manifest, report.predictions, {
+        generatedAt: report.generatedAt,
+        provenance: report.provenance,
+      });
+      expect(recomputed.metrics).toEqual(report.metrics);
+      expect(recomputed.failures).toEqual(report.failures);
+      // Saved placements must replay exactly through the unchanged scorer.
+      const replayed = report.predictions.map((prediction) => (prediction.status === "ready"
+        ? choosePauseAdPlacement(prediction.targets).placement
+        : "none"));
+      expect(replayed).toEqual(report.predictions.map((prediction) => prediction.placement));
+      expect(report.provenance.runner.gitCommit).toBe("f173477e075f68ece3a5ba5ba1e8cea7c73d8c6a");
+      expect(report.provenance.runner.visionTransport).toBe("worker");
+      expect(report.metrics.availableSampleCount).toBe(20);
+    }
+    expect(control.provenance.vision.configVersion).toBe("s2-vision-v5");
+    expect(v6.provenance.vision.configVersion).toBe("s2-vision-v6");
+    // Diagnostic comparison against agent-draft labels only: v6 may trade
+    // over-deferral for placements, but never add a blocking unsafe sample
+    // relative to the same-run v5 control.
+    const unsafe = (report: RegressionReport) => new Set(report.failures
+      .filter((failure) => failure.kind === "unsafe-placement")
+      .map((failure) => failure.sampleId));
+    const controlUnsafe = unsafe(control);
+    expect([...unsafe(v6)].every((sampleId) => controlUnsafe.has(sampleId))).toBe(true);
+    expect(v6.metrics.overDeferralCount).toBeLessThanOrEqual(control.metrics.overDeferralCount);
   });
 
   it("keeps scorer, review and rendered creative footprints on one geometry contract", () => {
