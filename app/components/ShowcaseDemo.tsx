@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import type { AnalysisConsensus, DecisionResponse, Scenario, Strategy, VideoAnalysis } from "@admind/contracts";
 import { ChevronIcon, PlayIcon, ShieldIcon, SparkIcon, VolumeIcon } from "./icons";
 import { AdCreative } from "./AdCreative";
+import { DecisionTimeline, type TimelineSegment } from "./DecisionTimeline";
 import { detectFacesInPausedFrame, type FaceDetectionEvidence } from "../lib/face-detector";
 import { choosePauseAdPlacement, choosePauseAdPlacementForEvidence, type PlacementDecision } from "../lib/pause-decision";
 import { createPauseSessionGuard, type PauseSessionToken } from "../lib/pause-session";
@@ -95,35 +96,69 @@ function formatPlacement(value: PlacementDecision["placement"]) {
     .replace("none", "无安全位置");
 }
 
+function timelineSegments(media: DemoMedia, protectedScenario = false): TimelineSegment[] {
+  return (media.analysis?.segments ?? []).map((segment) => ({
+    startSec: segment.startSec,
+    endSec: segment.endSec,
+    intensity: protectedScenario
+      ? segment.interruptionRisk ?? segment.narrativeIntensity
+      : segment.narrativeIntensity,
+  }));
+}
+
 function HeroDecisionPreview({ demo }: { demo: ScenarioDemo }) {
   const planned = demo.admind.selected;
   const plannedTime = planned?.timeSec ?? demo.scenario.safeOpportunitySec;
+  const fixedTime = demo.baseline.selected?.timeSec ?? demo.scenario.nominalOpportunitySec;
   const outcome = demo.admind.outcome === "blocked" ? "本段不投放" : `计划 ${formatTime(plannedTime)}`;
 
   return (
-    <aside className="hero-decision-preview" aria-label="AdMind 实时决策快照">
-      <div className="hero-preview-windowbar">
-        <span aria-hidden="true" /><span aria-hidden="true" /><span aria-hidden="true" />
-        <b>ADMIND · LIVE DECISION</b>
-      </div>
-      <div className="hero-preview-stage">
-        <Image
-          alt="冰蓝色奇幻游戏广告画面"
-          className="hero-preview-ad"
-          fill
-          priority
-          sizes="(max-width: 820px) min(100vw - 48px, 490px), 440px"
-          src="/game-ad-clean.png?v=v0.5.0"
-          unoptimized
+    <aside className="am-hero-preview" aria-label="AdMind 实时决策快照">
+      <div className="am-hero-screen">
+        <video
+          aria-hidden="true"
+          className="am-hero-frame"
+          muted
+          playsInline
+          preload="metadata"
+          src={`${demo.media.src}#t=${Math.max(0, plannedTime + 1)}`}
+          tabIndex={-1}
         />
-        <span className="hero-preview-signal"><i /> 广告已展示，任务已完成</span>
-        <span className="hero-preview-plan">广告 · 6s<small>安全窗口</small></span>
+        <div className="am-hero-ad">
+          <Image
+            alt="冰蓝色奇幻游戏广告画面"
+            fill
+            priority
+            sizes="220px"
+            src="/game-ad-clean.png?v=v0.5.0"
+            unoptimized
+          />
+          <span>广告 · 6s</span>
+        </div>
+        <span className="am-hero-signal"><i /> 广告已展示，任务已完成</span>
+        <span className="am-hero-time">{formatTime(plannedTime)} · 安全窗口</span>
       </div>
-      <div className="hero-preview-evidence">
-        <div><span>模型观察</span><strong>{demo.media.modelFinding}</strong></div>
-        <div className="hero-preview-rule"><span>规则决定</span><strong>{outcome}</strong></div>
+      <div className="am-hero-readout">
+        <div>
+          <span>模型观察</span>
+          <strong>{demo.media.modelFinding}</strong>
+        </div>
+        <div className="am-hero-verdict">
+          <span>规则决定</span>
+          <strong>{outcome}</strong>
+          <small>证据评分 {asEvidenceScore(demo.media.analysis?.segments[0]?.confidence ?? 0)}</small>
+        </div>
       </div>
-      <span className="hero-preview-chip">证据评分 <b>{asEvidenceScore(demo.media.analysis?.segments[0]?.confidence ?? 0)}</b></span>
+      <DecisionTimeline
+        animated
+        durationSec={demo.scenario.durationSec}
+        legend={{ low: "平缓", high: "高张力" }}
+        markers={[
+          { kind: "baseline", timeSec: fixedTime, label: `传统 ${formatTime(fixedTime)}`, caption: "剧情高潮" },
+          ...(demo.admind.outcome === "blocked" ? [] : [{ kind: "admind" as const, timeSec: plannedTime, label: `AdMind ${formatTime(plannedTime)}`, caption: "剧情恢复" }]),
+        ]}
+        segments={timelineSegments(demo.media)}
+      />
     </aside>
   );
 }
@@ -318,7 +353,7 @@ function ScenarioDecisionEvidence({
   );
 }
 
-function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolean }) {
+function ScenarioExperience({ demo, copy }: { demo: ScenarioDemo; copy: StoryStepCopy }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const triggeredRef = useRef<Record<Strategy, boolean>>({ baseline: false, admind: false });
   const resumeAfterAdRef = useRef(false);
@@ -327,7 +362,7 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
   const [pauseSessionGuard] = useState(createPauseSessionGuard);
   const pauseSessionTokenRef = useRef<PauseSessionToken | null>(null);
   const volumeControlRef = useRef<HTMLDivElement>(null);
-  const [strategy, setStrategy] = useState<Strategy>("baseline");
+  const [strategy, setStrategy] = useState<Strategy>("admind");
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
   const [adRemaining, setAdRemaining] = useState<number | null>(null);
@@ -732,301 +767,383 @@ function ScenarioExperience({ demo, first }: { demo: ScenarioDemo; first: boolea
     ? [placementDecision.assessments[0], placementDecision.assessments.at(-1)!]
     : placementDecision.assessments;
 
+  // Jump straight to a strategy's decision point from the timeline, so the two
+  // outcomes can be compared without replaying the clip from the start.
+  const previewStrategy = (target: Strategy) => {
+    const targetDecision = target === "baseline" ? baseline : admind;
+    const targetTime = targetDecision.selected?.timeSec ?? scenario.nominalOpportunitySec;
+    const video = videoRef.current;
+    if (!video || !mediaReady) return;
+    if (target !== strategy) switchStrategy(target);
+    // Seek after the strategy switch has reset playback; a macrotask (unlike
+    // requestAnimationFrame) still runs when the tab is in the background.
+    window.setTimeout(() => {
+      triggeredRef.current[target] = false;
+      const previewTime = Math.max(0, targetTime - 2.5);
+      video.currentTime = previewTime;
+      setTime(previewTime);
+      video.play().catch(() => setPlaying(false));
+    }, 0);
+  };
+
+  const fixedTime = baseline.selected?.timeSec ?? scenario.nominalOpportunitySec;
+  const plannedTime = admind.selected?.timeSec ?? scenario.safeOpportunitySec;
+  const timelineMarkers = [
+    {
+      kind: "baseline" as const,
+      timeSec: fixedTime,
+      label: `传统 ${formatTime(fixedTime)}`,
+      caption: isProtectedScenario ? "到点即播" : "固定插播",
+      onSelect: mediaReady ? () => previewStrategy("baseline") : undefined,
+    },
+    ...(admind.outcome === "blocked" ? [] : [{
+      kind: "admind" as const,
+      timeSec: plannedTime,
+      label: `AdMind ${formatTime(plannedTime)}`,
+      caption: admind.selected?.format === "muted_card" ? "低遮挡卡片" : "自然转场",
+      onSelect: mediaReady ? () => previewStrategy("admind") : undefined,
+    }]),
+  ];
+
+  const statusTitle = isPauseScenario
+    ? strategy === "baseline" ? "传统暂停广告：立即全屏覆盖" : "AdMind：判断交互状态，保留画面"
+    : strategy === "baseline"
+      ? "传统投放：固定时间触发"
+      : decision.outcome === "blocked"
+        ? isProtectedScenario ? "AdMind：伦理规则阻止投放" : "AdMind：窗口内不投放"
+        : selected?.format === "muted_card" ? "AdMind：延后并降低遮挡" : "AdMind：等待自然转场";
+  const statusDetail = isPauseScenario && strategy === "admind" && pausePhase === "observing"
+    ? "正在确认稳定暂停；恢复播放、拖动或离开页面都会取消…"
+    : isPauseScenario && strategy === "admind" && pausePhase === "analyzing"
+      ? "正在用本地 MediaPipe 分析当前暂停帧…"
+      : isPauseScenario && strategy === "admind" && pausePhase === "deferred"
+        ? deferredReason
+        : isProtectedScenario && strategy === "baseline"
+          ? `${formatTime(scenario.nominalOpportunitySec)} 到点即播，不读取伦理信号`
+          : media.modelFinding;
+  const summary = isPauseScenario
+    ? "暂停后，系统判断是否展示广告，并避开用户正在查看的主体内容。"
+    : isProtectedScenario
+      ? "救援、医疗与灾后内容始终优先保护，系统不插入广告。"
+      : "比较固定插播与 AdMind 的低打断投放。";
+
   return (
-    <section className={first ? "showcase-demo" : "showcase-demo showcase-demo-following"} id={`scenario-${scenario.id.toLowerCase()}`}>
-      <div className="showcase-section-heading">
-        <div>
-          <h2>{isPauseScenario ? "保留用户的查看任务。" : isProtectedScenario ? "有些边界，价格不能越过。" : "只改变投放决策。"}</h2>
-          <p className="showcase-scene-summary">{isPauseScenario
-            ? "暂停后，系统判断是否展示广告，并避开用户正在查看的主体内容。"
-            : isProtectedScenario
-                ? "救援、医疗与灾后内容始终优先保护，系统不插入广告。"
-              : "比较固定插播与 AdMind 的低打断投放。"}</p>
-        </div>
-      </div>
+    <section className="am-chapter" data-scenario-id={scenario.id} id={`story-${scenario.id.toLowerCase()}`}>
+      <header className="am-chapter-head">
+        <p>{copy.eyebrow}</p>
+        <h3>{copy.title}</h3>
+        <span>{summary}</span>
+      </header>
 
-      {variants.length > 1 ? (
-        <div className={`showcase-material-switcher ${isPauseScenario ? "pause-material-switcher" : ""}`} role="group" aria-label="切换分析素材">
-          {variants.map((variant, index) => (
-            <button
-              aria-label={variant.media.category}
-              aria-pressed={variantIndex === index}
-              className={variantIndex === index ? "active" : ""}
-              key={variant.media.id}
-              onClick={() => switchVariant(index)}
+      <div className={`am-lab ${strategy === "admind" ? "is-admind" : "is-baseline"}`} id={`scenario-${scenario.id.toLowerCase()}`}>
+        <div className="am-lab-player">
+          {variants.length > 1 ? (
+            <div className="am-variants" role="group" aria-label="切换分析素材">
+              <span>素材</span>
+              {variants.map((variant, index) => (
+                <button
+                  aria-label={variant.media.category}
+                  aria-pressed={variantIndex === index}
+                  className={variantIndex === index ? "active" : ""}
+                  key={variant.media.id}
+                  onClick={() => switchVariant(index)}
+                  type="button"
+                >
+                  <span>{variant.media.category}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="video-stage am-stage">
+            <video
+              className="content-video"
+              onEnded={() => setPlaying(false)}
+              onClick={togglePlayback}
+              key={media.id}
+              onCanPlay={() => setMediaReady(true)}
+              onError={() => setMediaReady(false)}
+              onLoadedMetadata={() => setMediaReady(true)}
+              onPause={handlePause}
+              onPlay={handlePlay}
+              onSeeking={() => {
+                seekingRef.current = true;
+                setSeeking(true);
+                if (isPauseScenario && pauseSessionGuard.hasActiveSession()) stopPauseObservation("用户正在拖动进度，广告任务已顺延。");
+              }}
+              onSeeked={() => {
+                seekingRef.current = false;
+                setSeeking(false);
+                if (!scrubbingRef.current) syncPlayback();
+              }}
+              onTimeUpdate={syncPlayback}
+              muted={silentPlayback || volume === 0}
+              playsInline
+              preload="metadata"
+              ref={videoRef}
+              src={media.src}
             >
-              <span>{variant.media.category}</span>
-            </button>
-          ))}
-        </div>
-      ) : null}
+              <track default kind="captions" label="字幕" src={media.captionsSrc ?? "/empty.vtt"} srcLang={media.captionsSrc ? "zh" : "zxx"} />
+            </video>
 
-      <article className={`showcase-player-card ${showAdMindEvidence ? "signal-player-card signal-detail-open pause-detail-open" : ""}`}>
-        <div className="showcase-player-meta">
-          <div className="showcase-status-copy">
-            <span className={strategy === "baseline" ? "showcase-state baseline" : "showcase-state smart"} />
-            <div>
-              <strong>{isPauseScenario
-                ? strategy === "baseline" ? "传统暂停广告：立即全屏覆盖" : "AdMind：判断交互状态，保留画面"
+            <div className="am-stage-badge">
+              <span className={strategy === "baseline" ? "dot baseline" : "dot admind"} />
+              {isPauseScenario
+                ? "暂停 · 拖动 · 页面可见性"
                 : strategy === "baseline"
-                  ? "传统投放：固定时间触发"
+                  ? `${formatTime(scenario.nominalOpportunitySec)} 固定投放`
                   : decision.outcome === "blocked"
-                    ? isProtectedScenario ? "AdMind：伦理规则阻止投放" : "AdMind：窗口内不投放"
-                    : selected?.format === "muted_card" ? "AdMind：延后并降低遮挡" : "AdMind：等待自然转场"}</strong>
-              <small>{isPauseScenario && strategy === "admind" && pausePhase === "observing"
-                ? "正在确认稳定暂停；恢复播放、拖动或离开页面都会取消…"
-                : isPauseScenario && strategy === "admind" && pausePhase === "analyzing"
-                  ? "正在用本地 MediaPipe 分析当前暂停帧…"
-                  : isPauseScenario && strategy === "admind" && pausePhase === "deferred"
-                    ? deferredReason
-                : isProtectedScenario && strategy === "baseline"
-                  ? `${formatTime(scenario.nominalOpportunitySec)} 到点即播，不读取伦理信号`
-                  : media.modelFinding}</small>
+                    ? isProtectedScenario ? "受保护内容中禁止投放" : "未找到安全窗口"
+                    : `${formatTime(selected?.timeSec ?? scenario.safeOpportunitySec)} AI 计划`}
             </div>
-          </div>
-          <div className="showcase-player-actions">
-            {isPauseScenario ? (
-              <span className="pause-interaction-hint">点击画面暂停，体验实时判断</span>
-            ) : (
-              <button disabled={!mediaReady} onClick={jumpToDecision}>{mediaReady
-                ? isProtectedScenario
-                    ? "查看规则触发点"
-                    : "查看广告投放点"
-                : "正在加载视频…"}</button>
-            )}
-            <div className="showcase-toggle player-strategy-toggle" role="group" aria-label={`${isPauseScenario ? "暂停状态" : isProtectedScenario ? "敏感场景" : "高潮插播"}投放策略`}>
-              <button aria-pressed={strategy === "baseline"} className={strategy === "baseline" ? "active" : ""} onClick={() => switchStrategy("baseline")}>传统投放</button>
-              <button aria-pressed={strategy === "admind"} className={strategy === "admind" ? "active" : ""} onClick={() => switchStrategy("admind")}><SparkIcon />AdMind</button>
-            </div>
-          </div>
-        </div>
 
-        <div className="video-stage showcase-video-stage">
-          <video
-            className="content-video"
-            onEnded={() => setPlaying(false)}
-            onClick={togglePlayback}
-            key={media.id}
-            onCanPlay={() => setMediaReady(true)}
-            onError={() => setMediaReady(false)}
-            onLoadedMetadata={() => setMediaReady(true)}
-            onPause={handlePause}
-            onPlay={handlePlay}
-            onSeeking={() => {
-              seekingRef.current = true;
-              setSeeking(true);
-              if (isPauseScenario && pauseSessionGuard.hasActiveSession()) stopPauseObservation("用户正在拖动进度，广告任务已顺延。");
-            }}
-            onSeeked={() => {
-              seekingRef.current = false;
-              setSeeking(false);
-              if (!scrubbingRef.current) syncPlayback();
-            }}
-            onTimeUpdate={syncPlayback}
-            muted={silentPlayback || volume === 0}
-            playsInline
-            preload="metadata"
-            ref={videoRef}
-            src={media.src}
-          >
-            <track default kind="captions" label="字幕" src={media.captionsSrc ?? "/empty.vtt"} srcLang={media.captionsSrc ? "zh" : "zxx"} />
-          </video>
-
-          <div className="video-topline showcase-video-topline">
-            <span>{isPauseScenario
-              ? "暂停 · 拖动 · 页面可见性"
-              : strategy === "baseline"
-                ? `${formatTime(scenario.nominalOpportunitySec)} 固定投放`
-                : decision.outcome === "blocked"
-                  ? isProtectedScenario ? "受保护内容中禁止投放" : "未找到安全窗口"
-                  : `${formatTime(selected?.timeSec ?? scenario.safeOpportunitySec)} AI 计划`}</span>
-          </div>
-
-          {isPauseScenario && strategy === "admind" && faceEvidence?.status === "ready" && pauseSeconds < 3.3 ? faceEvidence.faces.map((face, index) => (
-            <span
-              aria-hidden="true"
-              className="pause-face-box"
-              key={`${face.x}-${face.y}-${index}`}
-              style={{
-                left: `${face.x * 100}%`,
-                top: `${face.y * 100}%`,
-                width: `${face.width * 100}%`,
-                height: `${face.height * 100}%`,
-              }}
-            />
-          )) : null}
-
-          {isPauseScenario && strategy === "admind" && faceEvidence?.status === "ready" && pauseSeconds < 3.3 ? faceEvidence.subjects.map((subject, index) => (
-            <span
-              aria-hidden="true"
-              className="pause-subject-box"
-              data-label={subject.label}
-              key={`${subject.x}-${subject.y}-${index}`}
-              style={{
-                left: `${subject.x * 100}%`,
-                top: `${subject.y * 100}%`,
-                width: `${subject.width * 100}%`,
-                height: `${subject.height * 100}%`,
-              }}
-            />
-          )) : null}
-
-          {adVisible && selected ? (
-            <div
-              className={`${fullscreenAd ? "ad-overlay fullscreen real-ad" : "ad-overlay card real-ad-card"} ${isPauseScenario && strategy === "admind" && !pauseAdFullscreen ? placementClass : ""} ${pauseAdFullscreen ? "pause-fullscreen" : ""}`}
-              data-ad-state="visible"
-              style={isPauseScenario && strategy === "admind" && !pauseAdFullscreen && placementRegion
-                ? {
-                    bottom: "auto",
-                    height: `${placementRegion.height * 100}%`,
-                    left: `${placementRegion.x * 100}%`,
-                    right: "auto",
-                    top: `${placementRegion.y * 100}%`,
-                    width: `${placementRegion.width * 100}%`,
-                  }
-                : undefined}
-            >
-              <AdCreative
-                fullscreen={fullscreenAd}
-                onDismiss={dismissAd}
-                remaining={adRemaining ?? selected.durationSec}
-                scenarioId={scenario.id}
-              />
-            </div>
-          ) : null}
-
-          {blockedNoticeActive ? (
-            <div className="showcase-protection-note"><ShieldIcon /><div>
-              <strong>{isProtectedScenario ? "广告已阻止" : "本段不投放"}</strong>
-              <span>{isProtectedScenario
-                ? `${media.category}处于受保护区间；高价保量活动不得越过伦理边界。`
-                : "允许的延后范围内没有低打断窗口；系统记录交付缺口。"}</span>
-            </div></div>
-          ) : null}
-
-          <div className="video-controls showcase-controls">
-            <button aria-label={playing ? "暂停" : "播放"} onClick={togglePlayback}>
-              {playing ? <span className="pause-icon">Ⅱ</span> : <PlayIcon />}
-            </button>
-            <span>{formatTime(time)}</span>
-            <input
-              className="video-progress"
-              aria-label="视频进度"
-              disabled={!mediaReady}
-              max={scenario.durationSec}
-              min={0}
-              onInput={(event) => seek(Number(event.currentTarget.value))}
-              onKeyDown={(event) => {
-                if (["ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"].includes(event.key)) beginScrub();
-              }}
-              onKeyUp={finishScrub}
-              onPointerCancel={finishScrub}
-              onPointerDown={beginScrub}
-              onPointerUp={finishScrub}
-              step="0.1"
-              type="range"
-              value={time}
-            />
-            <div className={`volume-control ${volumeOpen ? "open" : ""}`} ref={volumeControlRef}>
-              <button
-                aria-expanded={volumeOpen}
-                aria-label={volumeOpen ? "收起音量调节" : "打开音量调节"}
-                className="volume-toggle"
-                onClick={() => setVolumeOpen((open) => !open)}
-                type="button"
-              >
-                <VolumeIcon level={volumeLevel} />
+            {!playing && time < 0.5 && !adVisible ? (
+              <button className="am-stage-play" disabled={!mediaReady} onClick={togglePlayback} type="button" aria-label="播放">
+                <PlayIcon />
               </button>
-              <div className="volume-popover" hidden={!volumeOpen}>
-                <input
-                  aria-label={`视频音量 ${Math.round(volume * 100)}%`}
-                  className="volume-slider"
-                  max="1"
-                  min="0"
-                  onInput={(event) => updateVolume(Number(event.currentTarget.value))}
-                  step="0.01"
-                  style={{ "--volume-level": `${volume * 100}%` } as CSSProperties}
-                  type="range"
-                  value={volume}
+            ) : null}
+
+            {isPauseScenario && strategy === "admind" && faceEvidence?.status === "ready" && pauseSeconds < 3.3 ? faceEvidence.faces.map((face, index) => (
+              <span
+                aria-hidden="true"
+                className="pause-face-box"
+                key={`${face.x}-${face.y}-${index}`}
+                style={{
+                  left: `${face.x * 100}%`,
+                  top: `${face.y * 100}%`,
+                  width: `${face.width * 100}%`,
+                  height: `${face.height * 100}%`,
+                }}
+              />
+            )) : null}
+
+            {isPauseScenario && strategy === "admind" && faceEvidence?.status === "ready" && pauseSeconds < 3.3 ? faceEvidence.subjects.map((subject, index) => (
+              <span
+                aria-hidden="true"
+                className="pause-subject-box"
+                data-label={subject.label}
+                key={`${subject.x}-${subject.y}-${index}`}
+                style={{
+                  left: `${subject.x * 100}%`,
+                  top: `${subject.y * 100}%`,
+                  width: `${subject.width * 100}%`,
+                  height: `${subject.height * 100}%`,
+                }}
+              />
+            )) : null}
+
+            {adVisible && selected ? (
+              <div
+                className={`${fullscreenAd ? "ad-overlay fullscreen real-ad" : "ad-overlay card real-ad-card"} ${isPauseScenario && strategy === "admind" && !pauseAdFullscreen ? placementClass : ""} ${pauseAdFullscreen ? "pause-fullscreen" : ""}`}
+                data-ad-state="visible"
+                style={isPauseScenario && strategy === "admind" && !pauseAdFullscreen && placementRegion
+                  ? {
+                      bottom: "auto",
+                      height: `${placementRegion.height * 100}%`,
+                      left: `${placementRegion.x * 100}%`,
+                      right: "auto",
+                      top: `${placementRegion.y * 100}%`,
+                      width: `${placementRegion.width * 100}%`,
+                    }
+                  : undefined}
+              >
+                <AdCreative
+                  fullscreen={fullscreenAd}
+                  onDismiss={dismissAd}
+                  remaining={adRemaining ?? selected.durationSec}
+                  scenarioId={scenario.id}
                 />
               </div>
+            ) : null}
+
+            {blockedNoticeActive ? (
+              <div className="am-protection-note"><ShieldIcon /><div>
+                <strong>{isProtectedScenario ? "广告已阻止" : "本段不投放"}</strong>
+                <span>{isProtectedScenario
+                  ? `${media.category}处于受保护区间；高价保量活动不得越过伦理边界。`
+                  : "允许的延后范围内没有低打断窗口；系统记录交付缺口。"}</span>
+              </div></div>
+            ) : null}
+
+            <div className="video-controls am-controls">
+              <button aria-label={playing ? "暂停" : "播放"} onClick={togglePlayback} type="button">
+                {playing ? <span className="pause-icon">Ⅱ</span> : <PlayIcon />}
+              </button>
+              <span className="am-clock">{formatTime(time)}</span>
+              <input
+                className="video-progress"
+                aria-label="视频进度"
+                disabled={!mediaReady}
+                max={scenario.durationSec}
+                min={0}
+                onInput={(event) => seek(Number(event.currentTarget.value))}
+                onKeyDown={(event) => {
+                  if (["ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"].includes(event.key)) beginScrub();
+                }}
+                onKeyUp={finishScrub}
+                onPointerCancel={finishScrub}
+                onPointerDown={beginScrub}
+                onPointerUp={finishScrub}
+                step="0.1"
+                style={{ "--progress": `${(time / Math.max(1, scenario.durationSec)) * 100}%` } as CSSProperties}
+                type="range"
+                value={time}
+              />
+              <span className="am-clock">{formatTime(scenario.durationSec)}</span>
+              <div className={`volume-control ${volumeOpen ? "open" : ""}`} ref={volumeControlRef}>
+                <button
+                  aria-expanded={volumeOpen}
+                  aria-label={volumeOpen ? "收起音量调节" : "打开音量调节"}
+                  className="volume-toggle"
+                  onClick={() => setVolumeOpen((open) => !open)}
+                  type="button"
+                >
+                  <VolumeIcon level={volumeLevel} />
+                </button>
+                <div className="volume-popover" hidden={!volumeOpen}>
+                  <input
+                    aria-label={`视频音量 ${Math.round(volume * 100)}%`}
+                    className="volume-slider"
+                    max="1"
+                    min="0"
+                    onInput={(event) => updateVolume(Number(event.currentTarget.value))}
+                    step="0.01"
+                    style={{ "--volume-level": `${volume * 100}%` } as CSSProperties}
+                    type="range"
+                    value={volume}
+                  />
+                </div>
+              </div>
+              <span className="am-quality">{media.quality ?? "720p"}</span>
             </div>
-            <span>{formatTime(scenario.durationSec)}</span>
-            <span className="showcase-quality">{media.quality ?? "720p"}</span>
           </div>
+
+          {isPauseScenario ? (
+            <div className="am-pause-hint">
+              <span className="am-pulse" aria-hidden="true" />
+              <strong>点击画面暂停，体验实时判断</strong>
+              <small>暂停超过 1.5 秒，AdMind 才会分析画面并决定广告放在哪里。</small>
+            </div>
+          ) : (
+            <div className="am-timeline-wrap">
+              <div className="am-timeline-head">
+                <span>{isProtectedScenario ? "内容风险时间线" : "剧情张力时间线"}</span>
+                <button disabled={!mediaReady} onClick={jumpToDecision} type="button">
+                  {mediaReady
+                    ? isProtectedScenario ? "查看规则触发点" : "查看广告投放点"
+                    : "正在加载视频…"}
+                </button>
+              </div>
+              <DecisionTimeline
+                durationSec={scenario.durationSec}
+                legend={isProtectedScenario ? { low: "低风险", high: "高风险" } : { low: "平缓", high: "高张力" }}
+                markers={timelineMarkers}
+                protectedLabel={isProtectedScenario && admind.outcome === "blocked" ? "受保护内容 · 全程不投放" : undefined}
+                segments={timelineSegments(media, isProtectedScenario)}
+                time={time}
+              />
+              <p className="am-timeline-tip">点击时间线上的标记，直接跳到该策略的投放时刻。</p>
+            </div>
+          )}
         </div>
 
-        {showPauseEvidence ? (
-          <section className="pause-evidence" aria-live="polite">
-            <div className="pause-evidence-heading">
-              <div>
-                <span>实时播放器信号</span>
-                <strong>这一次暂停，系统实际看到了什么？</strong>
-              </div>
-              <b className={`pause-phase ${pausePhase}`}>{pausePhase === "observing" ? "确认暂停"
-                  : pausePhase === "analyzing" ? "分析画面"
-                    : pausePhase === "delivered" ? adResult === "skipped" ? "广告已关闭" : "已安全展示"
-                      : pausePhase === "deferred" ? "已顺延"
-                        : "等待暂停"}</b>
-            </div>
-            <div className="pause-signal-grid">
-              <article><span>暂停时长</span><strong>{pauseStartedAt === null ? "—" : `${pauseSeconds.toFixed(1)} 秒`}</strong><small>{pauseSeconds >= 1.5 ? "已达到稳定阈值" : "1.5 秒后才进入视觉判断"}</small></article>
-              <article><span>播放器动作</span><strong>{seeking ? "正在拖动" : playing ? "播放中" : "已暂停"}</strong><small>本次会话已拖动 {seekCount} 次</small></article>
-              <article><span>页面状态</span><strong>{pageVisible ? pageFocused ? "可见且有焦点" : "可见但失焦" : "页面已隐藏"}</strong><small>hidden 取消；visible + blur 暂缓</small></article>
-              <article><span>当前帧视觉</span><strong>{faceEvidence?.status === "ready" ? `${faceEvidence.faces.length + faceEvidence.subjects.length} 个避让目标` : faceEvidence?.status === "unavailable" ? "模型回退" : "尚未分析"}</strong><small>{faceEvidence?.status === "ready" ? `人脸 ${faceEvidence.faces.length} · 主体 ${faceEvidence.subjects.length} · ${faceEvidence.inferenceMs} ms` : "只在稳定暂停后运行一次"}</small></article>
-            </div>
-            <div className="pause-placement-result">
-              <div>
-                <span>最终决定</span>
-                <strong>{pausePhase === "deferred" ? "这次不投，进入待交付队列"
-                    : pausePhase === "delivered" ? adResult === "skipped" ? "广告已展示，现已关闭"
-                      : adResult === "completed" ? "广告已展示，任务已完成"
-                        : `${pauseAdFullscreen ? "全屏广告" : `${formatPlacement(placementDecision.placement)} · 静音小卡片`}`
-                      : "等待有效暂停信号"}</strong>
-                <p>{pausePhase === "deferred" ? deferredReason
-                  : adResult === "skipped" ? "本次已经产生展示记录；用户主动关闭后，不再进入待交付队列。"
-                    : adResult === "completed" ? "本次广告任务已经完成，不会因截图、失焦或继续播放而重新顺延。"
-                      : pauseAdFullscreen ? "稳定暂停已超过 8 秒：完成一次完整曝光；恢复播放会立即关闭广告。" : placementDecision.reason}</p>
-              </div>
-              <div className="pause-risk-bars">
-                {riskRows.map((assessment, index) => (
-                  <p key={assessment.placement}>
-                    <span>{index === 0 ? "推荐位置" : "风险最高"}：{formatPlacement(assessment.placement)}</span>
-                    <i><b style={{ width: `${Math.round(assessment.risk * 100)}%` }} /></i>
-                    <strong>{Math.round(assessment.risk * 100)}%</strong>
-                  </p>
-                ))}
-              </div>
-            </div>
-          </section>
-        ) : showAdMindEvidence ? (
-          <ScenarioDecisionEvidence
-            decision={decision}
-            isProtectedScenario={isProtectedScenario}
-            media={media}
-            scenario={scenario}
-            time={time}
-          />
-        ) : isPauseScenario ? (
-          <div className="pause-compact-note">
-            <strong>{strategy === "baseline" ? "传统模式：不参与判断" : "基础暂停素材：保留播放器画面"}</strong>
-            <span>{strategy === "baseline" ? "一旦暂停便直接全屏展示广告，不读取拖动、页面状态或画面主体。" : "切换到“复杂角色画面”可查看完整的实时信号与避让过程。"}</span>
+        <aside className="am-lab-panel">
+          <div className="am-strategy" role="group" aria-label={`${isPauseScenario ? "暂停状态" : isProtectedScenario ? "敏感场景" : "高潮插播"}投放策略`}>
+            <button aria-pressed={strategy === "baseline"} className={strategy === "baseline" ? "active" : ""} onClick={() => switchStrategy("baseline")} type="button">传统投放</button>
+            <button aria-pressed={strategy === "admind"} className={strategy === "admind" ? "active" : ""} onClick={() => switchStrategy("admind")} type="button"><SparkIcon />AdMind</button>
           </div>
-        ) : null}
 
-        {showPauseEvidence && pausePhase === "deferred" ? (
-          <div className="pause-queue-note">
-            <strong>广告任务已顺延</strong>
-            <span>等待下一次稳定暂停；仍无安全位置，再交给 S1 的低打断窗口。S3 保护场景绝不补量。</span>
+          <div className="am-status">
+            <span className={strategy === "baseline" ? "am-status-dot baseline" : "am-status-dot admind"} aria-hidden="true" />
+            <div>
+              <strong>{statusTitle}</strong>
+              <small>{statusDetail}</small>
+            </div>
           </div>
-        ) : null}
 
-      </article>
+          {showPauseEvidence ? (
+            <section className="pause-evidence am-evidence" aria-live="polite">
+              <div className="pause-evidence-heading">
+                <div>
+                  <span>实时播放器信号</span>
+                  <strong>这一次暂停，系统实际看到了什么？</strong>
+                </div>
+                <b className={`pause-phase ${pausePhase}`}>{pausePhase === "observing" ? "确认暂停"
+                    : pausePhase === "analyzing" ? "分析画面"
+                      : pausePhase === "delivered" ? adResult === "skipped" ? "广告已关闭" : "已安全展示"
+                        : pausePhase === "deferred" ? "已顺延"
+                          : "等待暂停"}</b>
+              </div>
+              <div className="pause-signal-grid">
+                <article><span>暂停时长</span><strong>{pauseStartedAt === null ? "—" : `${pauseSeconds.toFixed(1)} 秒`}</strong><small>{pauseSeconds >= 1.5 ? "已达到稳定阈值" : "1.5 秒后才进入视觉判断"}</small></article>
+                <article><span>播放器动作</span><strong>{seeking ? "正在拖动" : playing ? "播放中" : "已暂停"}</strong><small>本次会话已拖动 {seekCount} 次</small></article>
+                <article><span>页面状态</span><strong>{pageVisible ? pageFocused ? "可见且有焦点" : "可见但失焦" : "页面已隐藏"}</strong><small>hidden 取消；visible + blur 暂缓</small></article>
+                <article><span>当前帧视觉</span><strong>{faceEvidence?.status === "ready" ? `${faceEvidence.faces.length + faceEvidence.subjects.length} 个避让目标` : faceEvidence?.status === "unavailable" ? "模型回退" : "尚未分析"}</strong><small>{faceEvidence?.status === "ready" ? `人脸 ${faceEvidence.faces.length} · 主体 ${faceEvidence.subjects.length} · ${faceEvidence.inferenceMs} ms` : "只在稳定暂停后运行一次"}</small></article>
+              </div>
+              <div className="pause-placement-result">
+                <div>
+                  <span>最终决定</span>
+                  <strong>{pausePhase === "deferred" ? "这次不投，进入待交付队列"
+                      : pausePhase === "delivered" ? adResult === "skipped" ? "广告已展示，现已关闭"
+                        : adResult === "completed" ? "广告已展示，任务已完成"
+                          : `${pauseAdFullscreen ? "全屏广告" : `${formatPlacement(placementDecision.placement)} · 静音小卡片`}`
+                        : "等待有效暂停信号"}</strong>
+                  <p>{pausePhase === "deferred" ? deferredReason
+                    : adResult === "skipped" ? "本次已经产生展示记录；用户主动关闭后，不再进入待交付队列。"
+                      : adResult === "completed" ? "本次广告任务已经完成，不会因截图、失焦或继续播放而重新顺延。"
+                        : pauseAdFullscreen ? "稳定暂停已超过 8 秒：完成一次完整曝光；恢复播放会立即关闭广告。" : placementDecision.reason}</p>
+                </div>
+                <div className="pause-risk-bars">
+                  {riskRows.map((assessment, index) => (
+                    <p key={assessment.placement}>
+                      <span>{index === 0 ? "推荐位置" : "风险最高"}：{formatPlacement(assessment.placement)}</span>
+                      <i><b style={{ width: `${Math.round(assessment.risk * 100)}%` }} /></i>
+                      <strong>{Math.round(assessment.risk * 100)}%</strong>
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </section>
+          ) : showAdMindEvidence ? (
+            <ScenarioDecisionEvidence
+              decision={decision}
+              isProtectedScenario={isProtectedScenario}
+              media={media}
+              scenario={scenario}
+              time={time}
+            />
+          ) : (
+            <div className="am-baseline-note">
+              <strong>{isPauseScenario ? "传统模式：不参与判断" : isProtectedScenario ? "传统模式：不读取伦理信号" : "传统模式：只看时间"}</strong>
+              <span>{isPauseScenario
+                ? "一旦暂停便直接全屏展示广告，不读取拖动、页面状态或画面主体。"
+                : isProtectedScenario
+                  ? "到了预定时间就插播，不管画面里是否正在进行救援或医疗任务。"
+                  : "到了预定时间就插播，不管画面正处在剧情高潮还是情绪最紧的时刻。"}</span>
+              <button onClick={() => switchStrategy("admind")} type="button">切换到 AdMind，看看它怎么判断 →</button>
+            </div>
+          )}
+
+          {showPauseEvidence && pausePhase === "deferred" ? (
+            <div className="pause-queue-note">
+              <strong>广告任务已顺延</strong>
+              <span>等待下一次稳定暂停；仍无安全位置，再交给 S1 的低打断窗口。S3 保护场景绝不补量。</span>
+            </div>
+          ) : null}
+        </aside>
+      </div>
     </section>
   );
 }
 
-const storyStepCopy = [
+type StoryStepCopy = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  nav: string;
+};
+
+const storyStepCopy: StoryStepCopy[] = [
   {
     eyebrow: "01 · 剧情高点",
     title: "避开剧情高点。",
@@ -1051,7 +1168,7 @@ function NarrativeJourney({ scenarios }: { scenarios: ScenarioDemo[] }) {
   const [activeId, setActiveId] = useState(scenarios[0]?.scenario.id ?? "");
 
   useEffect(() => {
-    const sections = Array.from(document.querySelectorAll<HTMLElement>(".attio-story-chapter[data-scenario-id]"));
+    const sections = Array.from(document.querySelectorAll<HTMLElement>(".am-chapter[data-scenario-id]"));
     if (!sections.length) return;
 
     const observer = new IntersectionObserver((entries) => {
@@ -1062,7 +1179,7 @@ function NarrativeJourney({ scenarios }: { scenarios: ScenarioDemo[] }) {
         const scenarioId = (mostVisible.target as HTMLElement).dataset.scenarioId;
         if (scenarioId) setActiveId(scenarioId);
       }
-    }, { rootMargin: "-24% 0px -46%", threshold: [0.1, 0.35, 0.65] });
+    }, { rootMargin: "-30% 0px -50%", threshold: [0, 0.2, 0.5] });
 
     sections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
@@ -1073,38 +1190,22 @@ function NarrativeJourney({ scenarios }: { scenarios: ScenarioDemo[] }) {
   };
 
   return (
-    <section className="attio-story" id="demo" aria-label="AdMind 产品演示">
-      <div className="attio-story-layout">
-        <nav className="attio-story-nav" aria-label="AdMind 三段决策旅程">
-          <div className="attio-story-progress" aria-hidden="true"><i style={{ height: `${Math.max(34, (scenarios.findIndex((demo) => demo.scenario.id === activeId) + 1) * 33)}%` }} /></div>
-          {scenarios.map((demo, index) => {
-            const copy = storyStepCopy[index] ?? storyStepCopy.at(-1)!;
-            const active = demo.scenario.id === activeId;
-            return (
-              <button aria-current={active ? "location" : undefined} className={active ? "active" : ""} key={demo.scenario.id} onClick={() => goToScenario(demo.scenario.id)}>
-                <b>0{index + 1}</b>
-                <span>{copy.nav}</span>
-                <small>{active ? "正在演示" : "跳转查看"}</small>
-              </button>
-            );
-          })}
-        </nav>
-        <div className="attio-story-stage">
-          {scenarios.map((demo, index) => {
-            const copy = storyStepCopy[index] ?? storyStepCopy.at(-1)!;
-            return (
-              <div className="attio-story-chapter" data-scenario-id={demo.scenario.id} id={`story-${demo.scenario.id.toLowerCase()}`} key={demo.scenario.id}>
-                <div className="attio-story-copy">
-                  <p>{copy.eyebrow}</p>
-                  <h3>{copy.title}</h3>
-                  <span>{copy.description}</span>
-                </div>
-                <ScenarioExperience demo={demo} first={index === 0} />
-              </div>
-            );
-          })}
-        </div>
-      </div>
+    <section className="am-journey" id="demo" aria-label="AdMind 产品演示">
+      <nav className="am-chapter-nav" aria-label="AdMind 三段决策旅程">
+        {scenarios.map((demo, index) => {
+          const copy = storyStepCopy[index] ?? storyStepCopy.at(-1)!;
+          const active = demo.scenario.id === activeId;
+          return (
+            <button aria-current={active ? "location" : undefined} className={active ? "active" : ""} key={demo.scenario.id} onClick={() => goToScenario(demo.scenario.id)} type="button">
+              <b>0{index + 1}</b>
+              <span>{copy.nav}</span>
+            </button>
+          );
+        })}
+      </nav>
+      {scenarios.map((demo, index) => (
+        <ScenarioExperience copy={storyStepCopy[index] ?? storyStepCopy.at(-1)!} demo={demo} key={demo.scenario.id} />
+      ))}
     </section>
   );
 }
@@ -1149,62 +1250,60 @@ export function ShowcaseDemo({ scenarios, analysisRuns, consensus }: ShowcaseDem
 
   return (
     <div
-      className="showcase-page"
+      className="am-page"
       data-locale={locale}
       data-locale-ready={localeReady ? "true" : "false"}
       ref={pageRef}
     >
-      <header className="showcase-nav">
-        <button className="showcase-brand" onClick={() => switchView("demo")} aria-label="AdMind 首页">
-          <span className="showcase-brand-mark"><SparkIcon /></span>
+      <header className="am-nav">
+        <button className="am-brand" onClick={() => switchView("demo")} aria-label="AdMind 首页" type="button">
+          <span className="am-brand-mark"><SparkIcon /></span>
           <strong>AdMind</strong>
         </button>
-        <div className="showcase-nav-actions">
+        <div className="am-nav-actions">
           <nav aria-label="页面切换">
-            <button aria-current={view === "demo" ? "page" : undefined} className={view === "demo" ? "active" : ""} onClick={() => switchView("demo")}>体验演示</button>
-            <button aria-current={view === "decision" ? "page" : undefined} className={view === "decision" ? "active" : ""} onClick={() => switchView("decision")}>决策方式</button>
+            <button aria-current={view === "demo" ? "page" : undefined} className={view === "demo" ? "active" : ""} onClick={() => switchView("demo")} type="button">体验演示</button>
+            <button aria-current={view === "decision" ? "page" : undefined} className={view === "decision" ? "active" : ""} onClick={() => switchView("decision")} type="button">决策方式</button>
           </nav>
-          <div className="language-toggle" aria-label="Language / 语言" role="group">
-            <button aria-pressed={locale === "en"} className={locale === "en" ? "active" : ""} onClick={() => setLocale("en")}>EN</button>
-            <button aria-pressed={locale === "zh"} className={locale === "zh" ? "active" : ""} onClick={() => setLocale("zh")}>中</button>
+          <div className="am-lang" aria-label="Language / 语言" role="group">
+            <button aria-pressed={locale === "en"} className={locale === "en" ? "active" : ""} onClick={() => setLocale("en")} type="button">EN</button>
+            <button aria-pressed={locale === "zh"} className={locale === "zh" ? "active" : ""} onClick={() => setLocale("zh")} type="button">中</button>
           </div>
         </div>
       </header>
 
       <main id="top">
         <div hidden={view !== "demo"}>
-            <section className="showcase-hero">
-              <div className="showcase-hero-grid">
-                <div className="showcase-hero-copy">
-                  <p className="showcase-kicker"><i /> AI 广告决策引擎</p>
-                  <h1>广告必须出现，<br /><span>也不必毁掉剧情。</span></h1>
-                  <p className="showcase-lead">AdMind 理解内容与用户动作，在商业约束下决定广告何时出现、以什么形式出现，以及何时不该出现。</p>
-                  <div className="showcase-actions">
-                    <a className="showcase-primary" href={scenarios[0] ? `#story-${scenarios[0].scenario.id.toLowerCase()}` : "#demo"}>开始体验 <ChevronIcon /></a>
-                    <button className="showcase-secondary" onClick={() => switchView("decision")}>查看决策方式 <ChevronIcon /></button>
-                  </div>
-                  <div className="showcase-hero-facts" aria-label="AdMind 三类决策能力">
-                    <div><b>S1</b><span>避开剧情高点</span></div>
-                    <div><b>S2</b><span>保护暂停时刻</span></div>
-                    <div><b>S3</b><span>伦理优先拦截</span></div>
-                  </div>
-                </div>
-                <HeroDecisionPreview demo={scenarios[0]} />
+          <section className="am-hero">
+            <div className="am-hero-copy">
+              <p className="am-kicker"><i /> AI 广告决策引擎</p>
+              <h1>广告必须出现，<br /><span>也不必毁掉剧情。</span></h1>
+              <p className="am-lead">AdMind 理解内容与用户动作，在商业约束下决定广告何时出现、以什么形式出现，以及何时不该出现。</p>
+              <div className="am-actions">
+                <a className="am-primary" href={scenarios[0] ? `#story-${scenarios[0].scenario.id.toLowerCase()}` : "#demo"}>开始体验 <ChevronIcon /></a>
+                <button className="am-secondary" onClick={() => switchView("decision")} type="button">查看决策方式 <ChevronIcon /></button>
               </div>
-              <div className="hero-bubble-cluster" aria-hidden="true">
-                <span /><span /><span /><span />
+              <div className="am-hero-facts" aria-label="AdMind 三类决策能力">
+                {scenarios.map((demo, index) => (
+                  <a href={`#story-${demo.scenario.id.toLowerCase()}`} key={demo.scenario.id}>
+                    <b>S{index + 1}</b>
+                    <span>{["避开剧情高点", "保护暂停时刻", "伦理优先拦截"][index]}</span>
+                  </a>
+                ))}
               </div>
-            </section>
+            </div>
+            <HeroDecisionPreview demo={scenarios[0]} />
+          </section>
 
-            <NarrativeJourney scenarios={scenarios} />
+          <NarrativeJourney scenarios={scenarios} />
         </div>
         <div hidden={view !== "decision"}>
           <DecisionMethod analysisRuns={analysisRuns} consensus={consensus} />
         </div>
       </main>
 
-      <footer className="showcase-footer">
-        <strong>AdMind</strong>
+      <footer className="am-footer">
+        <div className="am-footer-brand"><span className="am-brand-mark"><SparkIcon /></span><strong>AdMind</strong></div>
         <p>视频素材：《CHARGE》《Coffee Run》© Blender Foundation / Blender Studio（CC BY 4.0）；《Caminandes: Llamigos》© Blender（CC BY 3.0）；美国政府视觉素材为 Public Domain，其出现不构成对 AdMind 的认可。广告画面为项目自有演示素材。</p>
       </footer>
     </div>
