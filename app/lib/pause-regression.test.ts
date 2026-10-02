@@ -5,10 +5,10 @@ import { resolve } from "node:path";
 import baselineJson from "../../evaluation/s2/baselines/v0.2.7.json";
 import candidateJson from "../../evaluation/s2/candidates/v0.4.0.json";
 import manifestJson from "../../evaluation/s2/manifest.json";
-import { PAUSE_VISION_CONFIG } from "./face-detector";
+import { PAUSE_VISION_CANDIDATES, PAUSE_VISION_CONFIG } from "./face-detector";
 import { choosePauseAdPlacement } from "./pause-decision";
 import type { RegressionManifest, RegressionPrediction, RegressionProvenance, RegressionReport } from "./pause-regression";
-import { intersectionOverUnion, scoreVisionRegression, validateRegressionManifest, validateRegressionPredictions } from "./pause-regression";
+import { intersectionOverUnion, mergeMaskGroupTargets, scoreVisionRegression, validateRegressionManifest, validateRegressionPredictions } from "./pause-regression";
 
 const manifest = manifestJson as RegressionManifest;
 const baseline = baselineJson as unknown as RegressionReport;
@@ -79,6 +79,32 @@ describe("S2 fixed-frame regression scorer", () => {
     }
   });
 
+  it("locks every selectable vision candidate, including the v6 segmentation model, to tracked bytes", () => {
+    for (const config of Object.values(PAUSE_VISION_CANDIDATES)) {
+      const models = [config.faceModel, config.objectModel, ...("segmentationModel" in config ? [config.segmentationModel] : [])];
+      for (const model of models) {
+        expect(model.path, config.configVersion).toMatch(/^\/models\//);
+        expect(createHash("sha256").update(readFileSync(model.path.replace(/^\//, "public/"))).digest("hex"), model.path)
+          .toBe(model.sha256);
+      }
+      expect(config.wasmRoot, config.configVersion).toBe("/mediapipe/wasm");
+    }
+    expect(PAUSE_VISION_CANDIDATES["s2-vision-v6"].availability.requiredDetectors).toEqual(["face", "object", "segmentation"]);
+  });
+
+  it("matches the bands of one segmented silhouette as a single predicted target", () => {
+    const band = { confidence: 0.9, kind: "subject" as const, label: "人物主体", source: "segment-person" };
+    const merged = mergeMaskGroupTargets([
+      { ...band, x: 0.4, y: 0.1, width: 0.1, height: 0.1, maskGroup: "person-mask-1" },
+      { ...band, x: 0.3, y: 0.2, width: 0.3, height: 0.6, maskGroup: "person-mask-1", label: "人物轮廓" },
+      { ...band, x: 0.8, y: 0.1, width: 0.1, height: 0.2, source: "face-direct", kind: "face" as const },
+    ]);
+    expect(merged).toHaveLength(2);
+    expect(merged[0]).toMatchObject({ x: 0.3, y: 0.1, maskGroup: "person-mask-1" });
+    expect(merged[0].width).toBeCloseTo(0.3);
+    expect(merged[0].height).toBeCloseTo(0.7);
+    expect(merged[1].source).toBe("face-direct");
+  });
   it("recomputes the tracked v0.2.7 baseline from raw predictions", () => {
     expect(validateRegressionPredictions(manifest, baseline.predictions)).toEqual([]);
     const recomputed = scoreVisionRegression(manifest, baseline.predictions, {

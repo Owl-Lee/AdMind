@@ -3,7 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import manifestJson from "../../evaluation/s2/manifest.json";
-import { detectFacesInRegressionFrame, PAUSE_VISION_CONFIG } from "../lib/face-detector";
+import {
+  DEFAULT_PAUSE_VISION_CANDIDATE,
+  PAUSE_VISION_CANDIDATES,
+  detectFacesInRegressionFrame,
+  getPauseVisionTransportStatus,
+  isPauseVisionCandidateId,
+  setPauseVisionTransportPreference,
+  type PauseVisionCandidateId,
+} from "../lib/face-detector";
 import { choosePauseAdPlacementForEvidence } from "../lib/pause-decision";
 import {
   scoreVisionRegression,
@@ -48,6 +56,12 @@ function loadImage(src: string) {
   });
 }
 
+/** `?vision=s2-vision-v5` replays the released pipeline for side-by-side comparison. */
+function selectedVisionCandidate(): PauseVisionCandidateId {
+  const requested = new URLSearchParams(window.location.search).get("vision");
+  return isPauseVisionCandidateId(requested) ? requested : DEFAULT_PAUSE_VISION_CANDIDATE;
+}
+
 function asPercent(value: number) {
   return `${Math.round(value * 100)}%`;
 }
@@ -90,11 +104,15 @@ export function VisionRegressionLab() {
     setRunning(true);
     setProgress(0);
     const predictions: RegressionPrediction[] = [];
+    const candidateId = selectedVisionCandidate();
+    if (new URLSearchParams(window.location.search).get("transport") === "main-thread") {
+      setPauseVisionTransportPreference("main-thread");
+    }
 
     for (const [index, sample] of manifest.samples.entries()) {
       try {
         const image = await loadImage(sample.frame);
-        const evidence = await detectFacesInRegressionFrame(image);
+        const evidence = await detectFacesInRegressionFrame(image, candidateId);
         const targets = evidence.status === "ready"
           ? [
               ...evidence.faces.map((face) => ({
@@ -138,6 +156,7 @@ export function VisionRegressionLab() {
           appVersion: APP_VERSION,
           gitCommit: process.env.NEXT_PUBLIC_GIT_COMMIT_SHA ?? "working-tree",
           platform: navigator.userAgent,
+          visionTransport: getPauseVisionTransportStatus().last ?? "none",
         },
         configurationReference: {
           appVersion: APP_VERSION,
@@ -148,7 +167,7 @@ export function VisionRegressionLab() {
           width: manifest.source.width,
           height: manifest.source.height,
         },
-        vision: PAUSE_VISION_CONFIG,
+        vision: PAUSE_VISION_CANDIDATES[candidateId],
       },
     });
     window.__ADMIND_VISION_REGRESSION__ = nextReport;

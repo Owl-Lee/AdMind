@@ -60,6 +60,8 @@ export type RegressionPredictionTarget = NormalizedRect & {
   kind: "face" | "subject";
   label: string;
   source: string;
+  /** Bands of one segmented silhouette share a group and are matched as one box. */
+  maskGroup?: string;
 };
 
 export type RegressionPrediction = {
@@ -108,6 +110,7 @@ export type RegressionProvenance = {
     appVersion: string;
     gitCommit: string;
     platform: string;
+    visionTransport?: string;
   };
   configurationReference: {
     appVersion: string;
@@ -125,6 +128,7 @@ export type RegressionProvenance = {
     wasmAssets?: readonly { path: string; sha256: string }[];
     faceModel: { path: string; sha256: string };
     objectModel: { path: string; sha256: string };
+    segmentationModel?: { path: string; sha256: string; personCategory: number };
     thresholds: {
       facePrimary: number;
       faceMirrored: number;
@@ -135,6 +139,15 @@ export type RegressionProvenance = {
     };
     filters?: {
       weakCropRequiresFaceForLabels: readonly string[];
+      personMask?: {
+        grid: { readonly columns: number; readonly rows: number };
+        cellThreshold: number;
+        minComponentCells: number;
+        bandRows: number;
+        minDetectorSupport: number;
+        source: string;
+        labels: readonly string[];
+      };
     };
     availability?: {
       requiredDetectors: readonly string[];
@@ -174,7 +187,39 @@ export function intersectionOverUnion(a: NormalizedRect, b: NormalizedRect) {
   return union > 0 ? intersection / union : 0;
 }
 
-function matchTargets(expected: RegressionTarget[], predicted: RegressionPredictionTarget[], minimumIou: number) {
+/**
+ * Collapses the horizontal bands of one segmented silhouette into the single
+ * box a reviewer would draw, so target matching stays one-prediction-per-object.
+ * Predictions without `maskGroup` (every v0.2.7/v0.4.0 report) are unchanged.
+ */
+export function mergeMaskGroupTargets(predicted: RegressionPredictionTarget[]) {
+  const merged: RegressionPredictionTarget[] = [];
+  const groups = new Map<string, RegressionPredictionTarget>();
+  for (const target of predicted) {
+    if (!target.maskGroup) {
+      merged.push(target);
+      continue;
+    }
+    const group = groups.get(target.maskGroup);
+    if (!group) {
+      const copy = { ...target };
+      groups.set(target.maskGroup, copy);
+      merged.push(copy);
+      continue;
+    }
+    const right = Math.max(group.x + group.width, target.x + target.width);
+    const bottom = Math.max(group.y + group.height, target.y + target.height);
+    group.x = Math.min(group.x, target.x);
+    group.y = Math.min(group.y, target.y);
+    group.width = right - group.x;
+    group.height = bottom - group.y;
+    group.confidence = Math.max(group.confidence, target.confidence);
+  }
+  return merged;
+}
+
+function matchTargets(expected: RegressionTarget[], rawPredicted: RegressionPredictionTarget[], minimumIou: number) {
+  const predicted = mergeMaskGroupTargets(rawPredicted);
   const remaining = new Set(predicted.map((_, index) => index));
   let truePositive = 0;
   let falseNegative = 0;
@@ -344,7 +389,7 @@ export function scoreVisionRegression(
         sampleId: sample.id,
         kind: "false-positive",
         expected: `${sample.protectionTargets.length} annotated target(s)`,
-        actual: `${prediction.targets.length} detected target(s)`,
+        actual: `${mergeMaskGroupTargets(prediction.targets).length} detected target(s)`,
       });
     }
   }
