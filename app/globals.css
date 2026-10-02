@@ -269,8 +269,10 @@ button { color: inherit; }
    A dark "screening room": the video is the hero, the decision sits beside it.
    Colour carries meaning: purple = brand, mint = AdMind decision,
    coral = traditional delivery, amber = caution.
+   The /regression evidence labs share these tokens through .am-labs.
    ============================================================ */
-.am-page {
+.am-page,
+.am-labs {
   --am-bg: #0b0a12;
   --am-bg-2: #110f1b;
   --am-surface: #16141f;
@@ -313,6 +315,9 @@ button { color: inherit; }
 .am-page button { cursor: pointer; }
 .am-page button:disabled { cursor: default; opacity: .55; }
 .am-page :focus-visible { outline: 2px solid var(--am-purple); outline-offset: 3px; border-radius: 8px; }
+.am-labs button, .am-labs input, .am-labs textarea, .am-labs select { font-family: inherit; }
+.am-labs :focus-visible { outline: 2px solid var(--am-purple); outline-offset: 3px; }
+.am-labs ::selection { color: #fff; background: rgba(149, 131, 255, .45); }
 .am-page h1, .am-page h2, .am-page h3 { margin: 0; text-wrap: balance; }
 .am-page a { color: inherit; text-decoration: none; }
 
