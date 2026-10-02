@@ -1,6 +1,20 @@
 export type UiLocale = "en" | "zh";
 
 const REPLACEMENTS: ReadonlyArray<readonly [string, string]> = [
+  ["最终拒绝与绝望", "Final rejection and despair"],
+  ["时间循环蒙太奇", "Time-loop montage"],
+  ["救援准备阶段", "Rescue preparation"],
+  ["起飞后边界", "Post-takeoff boundary"],
+  ["起飞后观察", "Post-takeoff observation"],
+  ["屋顶跌落", "Rooftop fall"],
+  ["循环重启", "Loop restarts"],
+  ["最终拒绝", "Final rejection"],
+  ["求婚被拒", "Proposal rejected"],
+  ["医院场景", "Hospital scene"],
+  ["循环重复", "Loop repeats"],
+  ["救援结束", "Rescue ends"],
+  ["直升机准备", "Helicopter preparation"],
+  ["直升机起飞", "Helicopter takeoff"],
   ["其他形式", "other format"],
   ["同一条广告照常交付：避开模型判定“不要打断”的时刻，换成", "The same ad is still delivered: it avoids the moment the model marked “do not interrupt” and switches to a "],
   ["模型：建议再等等", "model: wait longer"],
